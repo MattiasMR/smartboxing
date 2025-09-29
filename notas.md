@@ -1,0 +1,41 @@
+### Deploy
+```
+npx serverless deploy --stage dev --region $AWS_REGION
+```
+
+### Export en terminal para cognito
+```
+export AWS_REGION=us-east-1
+export USER_POOL_ID=us-east-1_o0vuKzOHc
+export USER_POOL_CLIENT_ID=14skfnveh2ik2bt31crj6udvv0
+```
+
+#### Hosted UI
+```
+CLIENT_ID='14skfnveh2ik2bt31crj6udvv0'
+CLIENT_SECRET='1o67n25f5op7ri61egda8f04n36vlp1o1d67edbskef5rbrs0pkv'
+CODE='b52b06da-501d-451a-b339-562cfed026a9'
+REDIRECT_URI='https://d84l1y8p4kdic.cloudfront.net'
+
+BASIC_AUTH=$(printf "%s:%s" "$CLIENT_ID" "$CLIENT_SECRET" | base64 -w 0)
+
+curl -sS -i -X POST \
+  https://us-east-1o0vukzohc.auth.us-east-1.amazoncognito.com/oauth2/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -H "Authorization: Basic $BASIC_AUTH" \
+  -d "grant_type=authorization_code&code=$CODE&redirect_uri=$REDIRECT_URI"
+
+```
+
+
+```
+
+ID_TOKEN='eyJraWQiOiJrdXhrY2JyOHpXWlY4OGdOVjRcLzFnNk5zVEVqck96aDYxNExYbXQwUUM5dz0iLCJhbGciOiJSUzI1NiJ9.eyJhdF9oYXNoIjoiOU9BYmlWdlZvUXZENk4weUk0eUZqdyIsInN1YiI6ImQ0YjgyNDc4LTIwMTEtNzA1Mi1kYmM3LTU5NTQyMzRkZGVjNiIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJpc3MiOiJodHRwczpcL1wvY29nbml0by1pZHAudXMtZWFzdC0xLmFtYXpvbmF3cy5jb21cL3VzLWVhc3QtMV9vMHZ1S3pPSGMiLCJjb2duaXRvOnVzZXJuYW1lIjoibWF0dGlhcyIsIm9yaWdpbl9qdGkiOiI1ZGQxYmU0OS03NThhLTRhOTctOGEzOC1kMjUyMjhmZGI5YTIiLCJhdWQiOiIxNHNrZm52ZWgyaWsyYnQzMWNyajZ1ZHZ2MCIsInRva2VuX3VzZSI6ImlkIiwiYXV0aF90aW1lIjoxNzU5MTA2MDE2LCJleHAiOjE3NTkxMDk2MTYsImlhdCI6MTc1OTEwNjAxNiwianRpIjoiZGY2ODM4YmItOWNlYi00MzY2LThhZTEtNTYxMDg3Y2YwNGU3IiwiZW1haWwiOiJtb3JhbGVzbWF0dGlhc0BnbWFpbC5jb20ifQ.x_zPkbCgpnZ3fiibNW2I9wDcbUzmI0DYkjPR--Udy48z-B0zAErN0hElBMc3eMvqnjkO7AR6e8o6LVOmEUUu6OhqAJEA3KQP5Uls-WdV5rncco1ZfrFhiGXNrkxhfAeG3PEzQ4GeMa4h6qFRFx6LIStVpg1bD-xkNaZlF5FDoJIWDN0R3XhTAxLki9sizpASK3nP-ScMDGdJ8Y-OVwEyTaTGT5MGpB4JaX7NVRButnCEFhSbL4DA6aCv-cWumXuRQvRYvlRm45npEHhEfLtpduVq9Wa1RK5XFQnvvthLNT1YGXJw0gpyug5yq6ZvXXJ3IXcxHfd1dZUd4vTJ9BIW_A'
+curl -sS -i \
+  -H "Authorization: Bearer $ID_TOKEN" \
+  https://s4w81ju5pc.execute-api.us-east-1.amazonaws.com/auth/me
+
+
+```
+
+eyJraWQiOiJrdXhrY2JyOHpXWlY4OGdOVjRcLzFnNk5zVEVqck96aDYxNExYbXQwUUM5dz0iLCJhbGciOiJSUzI1NiJ9.eyJhdF9oYXNoIjoiOU9BYmlWdlZvUXZENk4weUk0eUZqdyIsInN1YiI6ImQ0YjgyNDc4LTIwMTEtNzA1Mi1kYmM3LTU5NTQyMzRkZGVjNiIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJpc3MiOiJodHRwczpcL1wvY29nbml0by1pZHAudXMtZWFzdC0xLmFtYXpvbmF3cy5jb21cL3VzLWVhc3QtMV9vMHZ1S3pPSGMiLCJjb2duaXRvOnVzZXJuYW1lIjoibWF0dGlhcyIsIm9yaWdpbl9qdGkiOiI1ZGQxYmU0OS03NThhLTRhOTctOGEzOC1kMjUyMjhmZGI5YTIiLCJhdWQiOiIxNHNrZm52ZWgyaWsyYnQzMWNyajZ1ZHZ2MCIsInRva2VuX3VzZSI6ImlkIiwiYXV0aF90aW1lIjoxNzU5MTA2MDE2LCJleHAiOjE3NTkxMDk2MTYsImlhdCI6MTc1OTEwNjAxNiwianRpIjoiZGY2ODM4YmItOWNlYi00MzY2LThhZTEtNTYxMDg3Y2YwNGU3IiwiZW1haWwiOiJtb3JhbGVzbWF0dGlhc0BnbWFpbC5jb20ifQ.x_zPkbCgpnZ3fiibNW2I9wDcbUzmI0DYkjPR--Udy48z-B0zAErN0hElBMc3eMvqnjkO7AR6e8o6LVOmEUUu6OhqAJEA3KQP5Uls-WdV5rncco1ZfrFhiGXNrkxhfAeG3PEzQ4GeMa4h6qFRFx6LIStVpg1bD-xkNaZlF5FDoJIWDN0R3XhTAxLki9sizpASK3nP-ScMDGdJ8Y-OVwEyTaTGT5MGpB4JaX7NVRButnCEFhSbL4DA6aCv-cWumXuRQvRYvlRm45npEHhEfLtpduVq9Wa1RK5XFQnvvthLNT1YGXJw0gpyug5yq6ZvXXJ3IXcxHfd1dZUd4vTJ9BIW_A
