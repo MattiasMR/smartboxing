@@ -1,0 +1,11 @@
+[
+  {
+    "tenantId": "__TENANT__",
+    "userSub": "__USER_SUB__",
+    "settings": {
+      "theme": "dark",
+      "preferredStartHour": "08:00",
+      "dashboardCards": ["boxes","doctors","agenda"]
+    }
+  }
+]

@@ -1,0 +1,67 @@
+service: smartboxing-node
+frameworkVersion: '4'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  role: arn:aws:iam::058264413807:role/LabRole
+  region: ${env:AWS_REGION, 'us-east-1'}
+  stage: ${opt:stage, 'dev'}
+  httpApi:
+    cors: true
+    authorizers:
+      cognitoJwt:
+        identitySource: '$request.header.Authorization'
+        # evita referencias encadenadas: usa env directo
+        issuerUrl: https://cognito-idp.${env:AWS_REGION, 'us-east-1'}.amazonaws.com/${env:USER_POOL_ID}
+        audience:
+          - ${env:USER_POOL_CLIENT_ID}
+  environment:
+    T_CLIENTSET: ${self:service}-ClientSettings-${sls:stage}
+    T_USERSET:   ${self:service}-UserSettings-${sls:stage}
+
+functions:
+  authMe:
+    handler: backend/src/handlers/auth/me.handler
+    events:
+      - httpApi:
+          path: /auth/me
+          method: get
+          authorizer: cognitoJwt
+  personalizationGet:
+    handler: backend/src/handlers/personalization/get.handler
+    events:
+      - httpApi:
+          path: /personalization
+          method: get
+          authorizer: cognitoJwt
+    iamRoleStatements:
+      - Effect: Allow
+        Action: [ dynamodb:GetItem ]
+        Resource:
+          - { "Fn::GetAtt": [ ClientSettings, Arn ] }
+          - { "Fn::GetAtt": [ UserSettings, Arn ] }
+
+
+resources:
+  Resources:
+
+    ClientSettings:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.T_CLIENTSET}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - { AttributeName: tenantId, AttributeType: S }
+        KeySchema:
+          - { AttributeName: tenantId, KeyType: HASH }
+
+    UserSettings:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.T_USERSET}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - { AttributeName: userKey, AttributeType: S }   # <tenantId>#<sub>
+        KeySchema:
+          - { AttributeName: userKey, KeyType: HASH }

@@ -1,0 +1,12 @@
+[
+  "boxes:read",
+  "boxes:write",
+  "doctors:read",
+  "doctors:write",
+  "assignments:read",
+  "assignments:write",
+  "appointments:read",
+  "appointments:write",
+  "settings:write",
+  "users:assignRoles"
+]

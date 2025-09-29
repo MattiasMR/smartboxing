@@ -1,0 +1,31 @@
+[
+  {
+    "roleId": "admin",
+    "permissions": [
+      "boxes:read","boxes:write",
+      "doctors:read","doctors:write",
+      "assignments:read","assignments:write",
+      "appointments:read","appointments:write",
+      "settings:write",
+      "users:assignRoles"
+    ]
+  },
+  {
+    "roleId": "scheduler",
+    "permissions": [
+      "boxes:read",
+      "doctors:read",
+      "assignments:read","assignments:write",
+      "appointments:read","appointments:write"
+    ]
+  },
+  {
+    "roleId": "viewer",
+    "permissions": [
+      "boxes:read",
+      "doctors:read",
+      "assignments:read",
+      "appointments:read"
+    ]
+  }
+]

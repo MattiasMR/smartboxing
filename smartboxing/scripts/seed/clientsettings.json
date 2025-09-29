@@ -1,0 +1,13 @@
+[
+  {
+    "tenantId": "demo",
+    "settings": {
+      "brandText": "Smartboxing Demo",
+      "primaryColor": "#0ea5e9",
+      "secondaryColor": "#0369a1",
+      "logoUrl": "https://via.placeholder.co/200x40?text=Demo",
+      "dateFormat": "YYYY-MM-DD",
+      "timeSlotMinutes": 30
+    }
+  }
+]
