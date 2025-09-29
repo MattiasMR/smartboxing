@@ -70,6 +70,22 @@
   font-weight: 400;
 }
 
+/* Estilos específicos para logo-section en CognitoLoginPage */
+.logo-section h1 {
+  color: #000000 !important; /* Color fijo verde médico */
+  font-size: 1.8em;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.5px;
+}
+
+.logo-section p {
+  color: #555 !important; /* Color fijo gris oscuro */
+  font-size: 1em;
+  margin: 0;
+  font-weight: 400;
+}
+
 .login-form {
   display: flex;
   flex-direction: column;

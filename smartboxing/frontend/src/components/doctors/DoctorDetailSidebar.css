@@ -1,14 +1,15 @@
 /* DoctorDetailSidebar.css */
 
 .doctor-detail-sidebar {
-  background-color: #fff;
-  border: 1px solid #e0e0e0;
+  background-color: var(--background-primary);
+  border: 1px solid var(--border-primary);
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 0;
   height: fit-content;
   position: sticky;
   top: 20px;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .doctor-detail-sidebar.placeholder {
@@ -53,8 +54,9 @@
 .kpi-section h4 {
   margin: 0 0 10px 0;
   font-size: 1em;
-  color: #333;
+  color: var(--text-primary);
   font-weight: 600;
+  transition: color 0.3s ease;
 }
 
 .doctor-status-badge {

@@ -17,13 +17,14 @@
 
 .agenda-calendar-area {
   flex-grow: 1;
-  background-color: #fff;
+  background-color: var(--background-tertiary); /* Gris más oscuro como en personalización */
   padding: 20px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   display: flex; /* To make react-big-calendar take full height */
   flex-direction: column; /* Ensure calendar itself can stretch */
   min-height: 0; /* Important for flex child to shrink */
+  transition: background-color 0.3s ease;
 }
 
 .agenda-calendar-area .rbc-calendar {
@@ -332,17 +333,19 @@
   flex-direction: column;
   gap: 20px;
   padding: 20px;
-  background-color: #f8f9fa; /* Light background for sidebar */
+  background-color: var(--background-tertiary); /* Color oscuro como en personalización */
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   overflow-y: auto; /* Scroll if content exceeds height */
+  transition: background-color 0.3s ease;
 }
 
 .agenda-controls-sidebar .control-group {
-  background-color: #fff;
+  background-color: var(--background-primary);
   padding: 15px;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  transition: background-color 0.3s ease;
 }
 .agenda-controls-sidebar .control-group h4 {
     margin-top: 0;

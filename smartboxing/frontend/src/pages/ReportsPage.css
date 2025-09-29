@@ -1,9 +1,10 @@
 /* src/pages/ReportsPage.css */
 .reports-page-container {
   padding: 20px;
-  background-color: #e9ecef;
+  background-color: var(--background-secondary);
   font-family: 'Inter', sans-serif;
   min-height: 100vh;
+  transition: background-color 0.3s ease;
 }
 
 /* Enhanced date range prompt */

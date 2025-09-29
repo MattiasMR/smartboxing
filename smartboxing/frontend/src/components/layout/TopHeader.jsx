@@ -4,7 +4,7 @@ import { FaBars } from 'react-icons/fa';
 import { useCognitoAuth } from '../../context/CognitoAuthContext';
 import { useNavigate } from 'react-router-dom';
 import { getCustomLogo } from '../../utils/imageUtils';
-import defaultLogo from '../../assets/hospital-logo.png';
+import defaultLogo from '../../assets/smartboxingLogo.jpg';
 import './TopHeader.css';
 
 const userAvatar = 'https://i.pravatar.cc/40';

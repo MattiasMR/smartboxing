@@ -75,8 +75,9 @@
 .schedule-header h3 {
   margin: 0;
   font-size: 1.5em;
-  color: #333;
+  color: var(--text-primary);
   font-weight: 600;
+  transition: color 0.3s ease;
 }
 
 /* Contenedor de tarjetas de horarios */
@@ -119,7 +120,8 @@
 
 .schedule-card-time strong {
   font-size: 1.1em;
-  color: #333;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
 }
 
 .schedule-card.medical .schedule-card-time strong {
@@ -137,7 +139,8 @@
 .schedule-card-details p {
   margin: 3px 0;
   font-size: 0.95em;
-  color: #555;
+  color: var(--text-secondary);
+  transition: color 0.3s ease;
 }
 
 .non-medical-label {

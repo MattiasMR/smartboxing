@@ -28,8 +28,9 @@ const DEFAULT_THEME = {
   
   // Colores de fondo
   backgroundPrimary: '#ffffff',
-  backgroundSecondary: '#f8f9fa',
+  backgroundSecondary: '#f8f9fa', 
   backgroundGray: '#e9ecef',
+  backgroundTertiary: '#2D2D2D', // Color favorito para elementos destacados
   
   // Colores de texto
   textPrimary: '#333333',
@@ -62,6 +63,9 @@ export const useTheme = () => {
     const secondaryHover = darkenColor(newTheme.secondaryColor, 0.15);
     root.style.setProperty('--hover-primary', primaryHover);
     root.style.setProperty('--hover-secondary', secondaryHover);
+    
+    // Aplicar colores de fondo especiales
+    root.style.setProperty('--background-tertiary', newTheme.backgroundTertiary || '#2D2D2D');
     
     // Aplicar modo oscuro/claro
     if (newTheme.darkMode) {

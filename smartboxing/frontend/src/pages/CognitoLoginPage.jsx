@@ -62,7 +62,7 @@ function CognitoLoginPage() {
   // Dynamic background style
   const backgroundStyle = {
     backgroundImage: bgImgSrc 
-      ? `linear-gradient(rgba(0, 121, 107, 0.4), rgba(0, 121, 107, 0.4)), url(${bgImgSrc})`
+      ? `url(${bgImgSrc})`
       : `linear-gradient(135deg, #00796b 0%, #004d40 100%)`,
     transition: 'background-image 0.5s ease-in-out'
   };

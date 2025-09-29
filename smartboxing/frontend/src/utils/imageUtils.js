@@ -1,6 +1,7 @@
 // src/utils/imageUtils.js
 // Import default images
-import hospitalLogo from '../assets/hospital-logo.png';
+import hospitalLogo from '../assets/smartboxingLogo.jpg';
+import hospitalBg from '../assets/hospital-bg-optimized.jpg';
 
 /**
  * Utilidades para manejo de imágenes en el sistema de personalización
@@ -262,5 +263,5 @@ export const IMAGE_STORAGE_KEYS = {
  */
 export const DEFAULT_IMAGES = {
   LOGO: hospitalLogo,
-  LOGIN_BACKGROUND: '/hospital-bg-optimized.jpg'
+  LOGIN_BACKGROUND: hospitalBg
 };
