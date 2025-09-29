@@ -1,0 +1,165 @@
+/* Container for the back button and page header */
+.page-header-container {
+  margin: 20px 0;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.page-header-title {
+  margin: 0;
+  font-size: 1.7em; /* Increased from 1.5em to 1.7em */
+  color: #333;
+  font-weight: 600; /* Made slightly bolder */
+  flex-shrink: 0; /* Evita que el título se encoja */
+}
+
+.page-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px; /* Reducido para acomodar el buscador */
+  flex-grow: 1; /* Permite que los controles ocupen el espacio disponible */
+  justify-content: flex-end; /* Alinea los elementos (buscador y botón) a la derecha */
+}
+
+/* Estilos para el contenedor del buscador dentro del PageHeader */
+.search-box-container-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* flex-grow: 1; /* Descomentar si quieres que el buscador ocupe más espacio */
+  /* max-width: 300px; /* Ajusta según necesidad */
+}
+
+/* Estilos para el input de búsqueda dentro del PageHeader */
+.search-box-input-header {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.9em; /* Ligeramente más pequeño para PageHeader */
+  min-width: 200px;
+  /* width: 100%; /* Ocupa el espacio de su contenedor si flex-grow está activo en el padre */
+}
+
+.search-box-input-header:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 0 0.15rem rgba(0,123,255,.25);
+}
+
+.page-header-filter-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 15px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+  flex-shrink: 0; /* Evita que el botón se encoja */
+  transition: background-color 0.2s ease;
+}
+
+.page-header-filter-button:hover {
+  background-color: #f8f9fa;
+}
+
+/* Mobile responsive improvements */
+@media (max-width: 768px) {
+  .page-header-container {
+    margin: 10px 0;
+  }
+  
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px 15px; /* Reduced padding for lower height */
+    min-height: 60px; /* Reduced from 80px to 60px */
+  }
+  
+  .page-header-title {
+    font-size: 1.6em; /* Increased text size from 1.4em to 1.6em */
+    text-align: center;
+    font-weight: 700; /* Made bolder */
+  }
+  
+  .page-header-controls {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  
+  .search-box-input-header {
+    min-width: 150px;
+    flex-grow: 1;
+    font-size: 16px; /* Prevent zoom on iOS */
+    padding: 12px 15px; /* Inputs más grandes */
+    min-height: 44px; /* Altura mínima para toques */
+  }
+  
+  .page-header-filter-button, .filter-button {
+    padding: 14px 20px; /* Botones más grandes */
+    font-size: 1em;
+    min-height: 48px; /* Altura mínima para toques */
+    border-radius: 8px;
+    font-weight: 500;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header-container {
+    margin: 8px 0;
+  }
+  
+  .page-header {
+    padding: 10px 12px;
+    gap: 12px;
+  }
+  
+  .page-header-title {
+    font-size: 1.2em;
+  }
+  
+  .page-header-controls {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .search-box-container-header {
+    width: 100%;
+  }
+  
+  .search-box-input-header {
+    width: 100%;
+    padding: 12px;
+    min-width: auto;
+  }
+  
+  .page-header-filter-button {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 15px;
+  }
+}
+
+@media (max-width: 360px) {
+  .page-header {
+    padding: 8px 10px;
+  }
+  
+  .page-header-title {
+    font-size: 1.1em;
+  }
+  
+  .search-box-input-header {
+    padding: 14px 10px;
+  }
+}

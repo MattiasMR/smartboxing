@@ -1,0 +1,69 @@
+/* src/components/boxes/BoxGrid.css */
+.box-grid-wrapper {
+  width: 100%;
+}
+
+.box-group-container {
+  margin-bottom: 30px;
+  background-color: #e9ecef;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.box-group-title {
+  margin-left: 10px;
+  color: #fff;
+  background-color: rgba(0,0,0,0.5);
+  padding: 5px 15px;
+  border-radius: 20px;
+  display: inline-block;
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+.box-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  padding: 0 10px;
+}
+
+/* Mobile responsive improvements */
+@media (max-width: 768px) {
+  .box-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+    padding: 0 5px;
+  }
+
+  .box-group-container {
+    margin-bottom: 20px;
+    padding: 15px;
+  }
+  
+  .box-group-title {
+    margin-left: 5px;
+    padding: 4px 12px;
+    font-size: 1.1em;
+  }
+}
+
+@media (max-width: 480px) {
+  .box-grid {
+    grid-template-columns: 1fr; /* Una columna en pantallas muy pequeñas */
+    gap: 10px;
+    padding: 0;
+  }
+
+  .box-group-container {
+    margin-bottom: 15px;
+    padding: 12px;
+  }
+  
+  .box-group-title {
+    margin-left: 0;
+    margin-bottom: 8px;
+    padding: 3px 10px;
+    font-size: 1em;
+  }
+}

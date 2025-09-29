@@ -1,0 +1,335 @@
+/* frontend/src/components/boxes/BoxDetailPage.css */
+
+/* Botón de volver */
+.back-button-container {
+  padding: 20px;
+  background-color: #fff;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #00796b 0%, #004d40 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 121, 107, 0.2);
+}
+
+.back-button:hover {
+  background: linear-gradient(135deg, #004d40 0%, #00251a 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 121, 107, 0.3);
+}
+
+.back-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 121, 107, 0.2);
+}
+
+.back-button svg {
+  font-size: 16px;
+}
+
+.timetable-container {
+  display: grid;
+  grid-template-columns: 1fr; /* Single column for now, can be adjusted */
+  gap: 15px;
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.timeslot {
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column; /* Stack time and details vertically */
+}
+
+.timeslot.assigned {
+  border-left: 5px solid #4CAF50; /* Green for assigned */
+}
+
+.timeslot.free {
+  border-left: 5px solid #FFC107; /* Amber for free */
+  /* opacity: 0.7; */ /* Optional: make free slots less prominent */
+}
+
+.timeslot-time {
+  font-size: 1.1em;
+  color: #333;
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px dashed #eee;
+}
+
+.timeslot-details p {
+  margin: 5px 0;
+  font-size: 0.95em;
+  color: #555;
+}
+
+.timeslot-details p strong {
+  color: #333;
+}
+
+/* Style for the back to dashboard link */
+.back-to-dashboard-link {
+  display: inline-block;
+  /* margin-top: 5px; // Removed, handled by its new container */
+  /* margin-left: 20px; // Removed, handled by its new container */
+  padding: 8px 15px;
+  background-color: transparent; /* Making it look more like a simple link */
+  color: #007bff; /* Standard link color */
+  text-decoration: none;
+  border-radius: 5px;
+  font-size: 0.9em;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.back-to-dashboard-link:hover {
+  color: #0056b3;
+  background-color: #e9ecef; /* Light background on hover */
+}
+
+/* Styles for the refactored BoxDetailPage assignment blocks */
+.timetable-container-refactored {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Responsive grid */
+  gap: 15px;
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.assignment-block {
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  cursor: pointer;
+  transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.assignment-block:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+.assignment-block.medical {
+  border-left: 5px solid #2196F3; /* Blue for medical assignments */
+}
+
+.assignment-block.non-medical {
+  border-left: 5px solid #9C27B0; /* Purple for non-medical assignments */
+}
+
+.assignment-time {
+  font-size: 1.1em;
+  font-weight: bold;
+}
+
+/* New styles for BoxDetailPage layout with sidebar */
+.box-detail-page-container { /* New top-level container */
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Make the page take full viewport height */
+  /* The App.jsx .app-layout already has a top-header of 60px (approx) */
+  /* So, this container effectively starts below the main app header */
+}
+
+/* This is the bar with the 'Volver al Dashboard' link */
+.box-detail-top-bar {
+  padding: 10px 20px;
+  background-color: #f0f0f0;
+  border-bottom: 1px solid #ddd;
+  flex-shrink: 0; /* Prevent this bar from shrinking */
+}
+
+.box-detail-page-layout {
+  display: flex;
+  flex-direction: row;
+  gap: 0; /* Remove gap, sidebar will have its own padding/border */
+  flex-grow: 1; /* Allow this layout to grow and fill the container height */
+  overflow: hidden; /* Prevent internal scrolling from breaking layout */
+  /* This layout now starts directly under .box-detail-top-bar */
+}
+
+.main-content {
+  flex-grow: 1; /* Main content takes available space */
+  padding: 0px 20px 20px;
+  overflow-y: auto; /* Allow main content to scroll if it overflows */
+  height: 100%; /* Ensure it tries to fill the parent (.box-detail-page-layout) height */
+}
+
+.sidebar-container {
+  width: 300px; /* Fixed width for the sidebar */
+  flex-shrink: 0; /* Prevent sidebar from shrinking */
+  /* background-color: #f8f9fa; /* Moved to BoxDetailSidebar.css */
+  /* padding: 20px; /* Moved to BoxDetailSidebar.css */
+  overflow: hidden; /* Let the child BoxDetailSidebar handle its own scroll */
+  height: 100%; /* Make sidebar container take full height of its parent flex row */
+  display: flex; /* To make the child BoxDetailSidebar fill this container */
+  flex-direction: column;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .timetable-container-refactored {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+    padding: 15px;
+  }
+  
+  .assignment-block {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .back-button-container {
+    padding: 15px;
+  }
+  
+  .back-button {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+  
+  .back-button svg {
+    font-size: 14px;
+  }
+
+  .box-detail-page-layout {
+    flex-direction: column;
+    padding: 0px;
+    gap: 15px;
+  }
+
+  .main-content {
+    padding: 10px;
+    height: auto;
+    overflow-y: visible;
+  }
+
+  .sidebar-container {
+    width: 100%;
+    margin-top: 0;
+    padding: 0;
+    max-height: none;
+    height: auto;
+    order: -1; /* Put sidebar on top on mobile */
+  }
+  
+  .timetable-container,
+  .timetable-container-refactored {
+    padding: 15px 10px;
+    gap: 10px;
+  }
+  
+  .timetable-container-refactored {
+    grid-template-columns: 1fr;
+  }
+  
+  .assignment-block {
+    padding: 12px;
+  }
+  
+  .timeslot {
+    padding: 12px;
+  }
+  
+  .timeslot-time {
+    font-size: 1em;
+  }
+  
+  .timeslot-details p {
+    font-size: 0.9em;
+  }
+  
+  .back-to-dashboard-link {
+    padding: 10px 12px;
+    font-size: 0.9em;
+  }
+}
+
+@media (max-width: 480px) {
+  .back-button-container {
+    padding: 10px;
+  }
+  
+  .back-button {
+    padding: 8px 12px;
+    font-size: 12px;
+    gap: 6px;
+  }
+  
+  .back-button svg {
+    font-size: 12px;
+  }
+
+  .main-content {
+    padding: 5px;
+  }
+  
+  .timetable-container,
+  .timetable-container-refactored {
+    padding: 10px 5px;
+    gap: 8px;
+  }
+  
+  .assignment-block {
+    padding: 10px;
+  }
+  
+  .timeslot {
+    padding: 10px;
+  }
+  
+  .timeslot-time {
+    font-size: 0.95em;
+    margin-bottom: 8px;
+  }
+  
+  .timeslot-details p {
+    font-size: 0.85em;
+    margin: 3px 0;
+  }
+  
+  .back-to-dashboard-link {
+    padding: 12px 10px;
+    font-size: 0.85em;
+  }
+}
+
+@media (max-width: 360px) {
+  .timetable-container,
+  .timetable-container-refactored {
+    padding: 8px 3px;
+  }
+  
+  .assignment-block,
+  .timeslot {
+    padding: 8px;
+  }
+  
+  .timeslot-time {
+    font-size: 0.9em;
+  }
+  
+  .timeslot-details p {
+    font-size: 0.8em;
+  }
+}

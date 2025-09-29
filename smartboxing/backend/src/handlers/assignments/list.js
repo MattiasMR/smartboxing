@@ -1,44 +1,85 @@
-import { QueryCommand } from "@aws-sdk/lib-dynamodb";
-import { doc } from "../../lib/db.js";
-import { assertFreshJwt } from "../../lib/jwtGuard.js";
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const { DynamoDBDocumentClient, ScanCommand, QueryCommand } = require("@aws-sdk/lib-dynamodb");
+const { userPermissions, requirePerm } = require("../../lib/authz.js");
 
-const T_ASSIGN = process.env.T_ASSIGN;
+const ddb = new DynamoDBClient({});
+const doc = DynamoDBDocumentClient.from(ddb);
+const T_BOX_ASSIGNMENTS = process.env.T_BOX_ASSIGNMENTS;
 
-export const handler = async (event) => {
-  const c = event.requestContext.authorizer.jwt.claims;
-  assertFreshJwt(c);
-  const q = event.queryStringParameters || {};
-  const box = q.box || q.box_id;
-  const doctor = q.doctor;
-  const on_date = q.on_date; // YYYY-MM-DD
+exports.handler = async (event) => {
+  try {
+    // Parse JWT claims from authorizer
+    const claims = event.requestContext.authorizer.jwt.claims;
+    const tenantId = claims['custom:tenantId'] || 'demo';
+    
+    // Check permissions
+    const perms = await userPermissions(tenantId, claims.sub);
+    requirePerm(perms, 'assignments:read');
 
-  // Elegimos el índice según parámetro prioritario
-  if (box) {
-    const r = await doc.send(new QueryCommand({
-      TableName: T_ASSIGN, IndexName: "AssignmentsByBox",
-      KeyConditionExpression: "boxId = :b",
-      ExpressionAttributeValues: { ":b": box }
-    }));
-    return { statusCode: 200, body: JSON.stringify(r.Items || []) };
+    const { box, doctor, on_date } = event.queryStringParameters || {};
+    
+    let assignments = [];
+
+    if (box) {
+      // Use GSI to get assignments for specific box
+      const result = await doc.send(new QueryCommand({
+        TableName: T_BOX_ASSIGNMENTS,
+        IndexName: 'AssignmentsByBox',
+        KeyConditionExpression: 'boxId = :boxId',
+        ExpressionAttributeValues: {
+          ':boxId': box
+        }
+      }));
+      assignments = result.Items || [];
+    } else if (doctor) {
+      // Use GSI to get assignments for specific doctor
+      const result = await doc.send(new QueryCommand({
+        TableName: T_BOX_ASSIGNMENTS,
+        IndexName: 'AssignmentsByDoctor',
+        KeyConditionExpression: 'doctorId = :doctorId',
+        ExpressionAttributeValues: {
+          ':doctorId': doctor
+        }
+      }));
+      assignments = result.Items || [];
+    } else if (on_date) {
+      // Use GSI to get assignments for specific date
+      const result = await doc.send(new QueryCommand({
+        TableName: T_BOX_ASSIGNMENTS,
+        IndexName: 'AssignmentsByDate',
+        KeyConditionExpression: 'date = :date',
+        ExpressionAttributeValues: {
+          ':date': on_date
+        }
+      }));
+      assignments = result.Items || [];
+    } else {
+      // Get all assignments
+      const result = await doc.send(new ScanCommand({
+        TableName: T_BOX_ASSIGNMENTS
+      }));
+      assignments = result.Items || [];
+    }
+
+    // Sort by start_time
+    assignments.sort((a, b) => (a.start_time || '').localeCompare(b.start_time || ''));
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ assignments })
+    };
+  } catch (error) {
+    if (error.statusCode === 403) {
+      return {
+        statusCode: 403,
+        body: JSON.stringify({ message: error.message, code: 'PERMISSION_DENIED' })
+      };
+    }
+    
+    console.error('Error listing assignments:', error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ message: 'Internal Server Error', code: 'ASSIGNMENTS_LIST_ERROR' })
+    };
   }
-  if (doctor) {
-    const r = await doc.send(new QueryCommand({
-      TableName: T_ASSIGN, IndexName: "AssignmentsByDoctor",
-      KeyConditionExpression: "doctorId = :d",
-      ExpressionAttributeValues: { ":d": doctor }
-    }));
-    return { statusCode: 200, body: JSON.stringify(r.Items || []) };
-  }
-  if (on_date) {
-    const r = await doc.send(new QueryCommand({
-      TableName: T_ASSIGN, IndexName: "AssignmentsByDate",
-      KeyConditionExpression: "#d = :day",
-      ExpressionAttributeNames: { "#d":"date" },
-      ExpressionAttributeValues: { ":day": on_date }
-    }));
-    // Overlap exacto por hora si quieres: filtra start/end en JS
-    return { statusCode: 200, body: JSON.stringify(r.Items || []) };
-  }
-  // sin filtros: (no hay listar todo por GSI), podrías usar Scan si dataset es chico
-  return { statusCode: 400, body: JSON.stringify({ error: "Faltan filtros" }) };
 };

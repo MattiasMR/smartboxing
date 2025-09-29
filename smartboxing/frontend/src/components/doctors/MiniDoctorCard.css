@@ -1,0 +1,50 @@
+/* src/components/doctors/MiniDoctorCard.css */
+.mini-doctor-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  padding: 12px 15px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+.mini-doctor-card:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.mini-doctor-info {
+  flex-grow: 1;
+  margin-right: 10px;
+}
+
+.mini-doctor-name {
+  font-size: 1.1em; /* Increased from 0.95em to 1.1em */
+  font-weight: 600;
+  color: #333;
+  margin-top: 0;
+  margin-bottom: 3px;
+}
+
+.mini-doctor-specialty {
+  font-size: 0.95em; /* Increased from 0.8em to 0.95em */
+  color: #555;
+  margin: 0;
+}
+
+.mini-details-button {
+  background-color: #00796b; /* Emerald/Water Green */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 14px; /* Increased padding */
+  font-size: 0.9em; /* Increased from 0.8em to 0.9em */
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.mini-details-button:hover {
+  background-color: #004d40; /* Darker shade of Emerald/Water Green */
+}

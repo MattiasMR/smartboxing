@@ -1,0 +1,156 @@
+/* src/components/layout/TopHeader.css */
+.top-header {
+  background-color: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 15px 20px;
+  height: 65px; /* Increased from 40px to 65px */
+  display: flex;
+  align-items: center;
+}
+
+.top-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.header-logo {
+  height: 50px; /* Increased from 40px to 50px to match taller header */
+}
+
+.hamburger-btn {
+  display: none; /* Oculto por defecto en desktop */
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  cursor: pointer;
+  color: #333;
+  padding: 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  /* Better touch target */
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  /* Asegurar que el botón sea interactivo */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.hamburger-btn:hover {
+  background-color: #f0f0f0;
+}
+
+.hamburger-btn:active {
+  background-color: #e0e0e0;
+  transform: scale(0.95);
+}
+
+.logout-btn {
+  background: none;
+  border: 1px solid #ccc;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #333;
+  font-size: 0.9em;
+  transition: background-color 0.2s ease;
+}
+
+.logout-btn:hover {
+  background-color: #f8f9fa;
+}
+
+.header-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Regla para pantallas pequeñas */
+@media (max-width: 768px) {
+  .top-header {
+    padding: 16px 15px; /* Increased padding for more height */
+    height: 85px; /* Increased from 70px to 85px */
+  }
+  
+  .hamburger-btn {
+    display: flex !important; /* Visible en móvil - important to override the display: none */
+    min-width: 52px; /* Increased button size */
+    min-height: 52px; /* Increased button size */
+    font-size: 1.6em; /* Increased icon size */
+  }
+  
+  .header-left {
+    gap: 12px;
+  }
+  
+  .header-logo {
+    height: 45px; /* Increased logo size */
+  }
+  
+  /* Hide center content on small screens */
+  .header-center {
+    display: none;
+  }
+  
+  .header-right {
+    gap: 10px;
+  }
+  
+  .logout-btn {
+    padding: 12px 16px; /* Increased button padding */
+    font-size: 1em; /* Increased text size */
+    min-height: 48px; /* Added minimum height for touch targets */
+    min-width: 80px; /* Added minimum width */
+  }
+}
+
+@media (max-width: 480px) {
+  .top-header {
+    padding: 14px 10px; /* Increased padding */
+    height: 80px; /* Increased height */
+  }
+  
+  .header-logo {
+    height: 40px; /* Increased from 30px to 40px */
+  }
+  
+  .hamburger-btn {
+    font-size: 1.5em; /* Increased from 1.3em */
+    padding: 8px; /* Increased from 6px */
+    min-width: 48px; /* Increased from 40px */
+    min-height: 48px; /* Increased from 40px */
+  }
+  
+  /* Simplify right content */
+  .header-right img {
+    width: 35px; /* Increased from 30px */
+    height: 35px; /* Increased from 30px */
+    margin-right: 8px; /* Increased from 6px */
+  }
+  
+  .logout-btn {
+    padding: 12px 12px; /* Increased padding */
+    font-size: 0.9em; /* Increased from 0.8em */
+    min-height: 44px; /* Added minimum height */
+    min-width: 75px; /* Added minimum width */
+  }
+}

@@ -1,0 +1,138 @@
+/* src/components/boxes/BoxCard.css */
+.box-card {
+  background-color: #ffffff;
+  border: 1px solid #e9ecef;
+  border-radius: 16px; /* More rounded corners */
+  padding: 20px;
+  margin: 12px;
+  /* Making the card bigger and square */
+  width: 210px;
+  height: 210px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column; /* Arrange content vertically */
+  justify-content: space-between; /* Pushes header to top, footer to bottom */
+  text-align: center; /* Align text to the left */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.box-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
+
+.box-card-header h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.5em; /* Larger title */
+  color: #1c1c1c;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1em;
+  font-weight: 500;
+  color: #555;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.status-dot.free { background-color: #28a745; }
+.status-dot.occupied { background-color: #dc3545; }
+.status-dot.disabled { background-color: #6c757d; }
+
+.occupation-footer {
+  width: 100%;
+}
+
+.occupation-label {
+  margin: 0 0 5px 0;
+  font-size: 0.8em;
+  color: #6c757d;
+}
+
+/* New styles for the two-part bar */
+.occupation-bar-container {
+  display: flex;
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden; /* This is important to keep the rounded corners */
+  background-color: #28a745; /* Default background is green (100% free) */
+}
+
+.occupation-bar-part { /* Renamed from occupation-bar-red and occupation-bar-green */
+  height: 100%;
+  /* transition: width 0.3s ease-in-out; */ /* Optional: for smooth animation */
+}
+
+/* Mobile responsive improvements */
+@media (max-width: 768px) {
+  .box-card {
+    width: calc(50% - 16px);
+    height: 180px;
+    margin: 8px;
+    padding: 16px;
+  }
+  
+  .box-card-header h3 {
+    font-size: 1.3em;
+  }
+  
+  .status-indicator {
+    font-size: 0.9em;
+  }
+  
+  .occupation-label {
+    font-size: 0.75em;
+  }
+}
+
+@media (max-width: 480px) {
+  .box-card {
+    width: calc(100% - 16px);
+    height: 160px;
+    margin: 4px 8px;
+    padding: 14px;
+  }
+  
+  .box-card-header h3 {
+    font-size: 1.2em;
+    margin-bottom: 6px;
+  }
+  
+  .status-indicator {
+    font-size: 0.85em;
+  }
+  
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    margin-right: 6px;
+  }
+  
+  .occupation-label {
+    font-size: 0.7em;
+  }
+  
+  .occupation-bar-container {
+    height: 6px;
+  }
+}
+
+@media (max-width: 360px) {
+  .box-card {
+    height: 140px;
+    padding: 12px;
+  }
+  
+  .box-card-header h3 {
+    font-size: 1.1em;
+  }
+}

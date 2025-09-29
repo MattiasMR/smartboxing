@@ -1,0 +1,229 @@
+/* Global responsive utilities */
+
+/* Prevent horizontal scroll on mobile */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  /* Ensure proper viewport behavior */
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+body {
+  overflow-x: hidden;
+  width: 100%;
+  min-width: 320px; /* Minimum width for very small screens */
+}
+
+/* Force responsive behavior */
+.container,
+.main-content,
+[class*="container"],
+[class*="wrapper"] {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Better touch handling */
+button, 
+a,
+[role="button"] {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Improve touch targets on mobile */
+@media (max-width: 768px) {
+  button, 
+  input[type="button"],
+  input[type="submit"],
+  .clickable {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better touch response */
+  button:active,
+  .clickable:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+  }
+  
+  /* Improve form inputs on mobile */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="date"],
+  input[type="number"],
+  textarea,
+  select {
+    font-size: 16px; /* Prevent zoom on iOS */
+    padding: 12px;
+  }
+}
+
+/* Better focus states for accessibility */
+button:focus,
+input:focus,
+select:focus,
+textarea:focus,
+[tabindex]:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+/* Responsive images */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Better text wrapping */
+.text-wrap {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* Responsive utilities */
+.mobile-only {
+  display: none;
+}
+
+.desktop-only {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .mobile-only {
+    display: block;
+  }
+  
+  .desktop-only {
+    display: none;
+  }
+  
+  .mobile-hide {
+    display: none !important;
+  }
+  
+  .mobile-center {
+    text-align: center !important;
+  }
+  
+  .mobile-full-width {
+    width: 100% !important;
+  }
+}
+
+/* Loading states */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Smooth transitions */
+* {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+/* Prevent text selection on UI elements */
+button,
+.nav-item,
+.card-header,
+.control-button {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Better scrollbar on webkit browsers */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .box-card,
+  .doctor-card,
+  .report-card,
+  .detail-card {
+    border: 2px solid #000 !important;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Login page responsive fixes */
+@media (min-width: 769px) {
+  .login-page {
+    padding: 20px !important;
+  }
+  
+  .login-container {
+    width: auto !important;
+    max-width: 480px !important;
+    min-width: 440px !important;
+    margin: 0 !important;
+  }
+}
+
+@media (min-width: 1200px) {
+  .login-container {
+    max-width: 520px !important;
+    min-width: 520px !important;
+    padding: 50px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .login-container {
+    margin: 15px !important;
+    width: calc(100% - 30px) !important;
+    max-width: none !important;
+    min-width: auto !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-page {
+    padding: 10px !important;
+  }
+  
+  .login-container {
+    margin: 10px !important;
+    width: calc(100% - 20px) !important;
+  }
+}

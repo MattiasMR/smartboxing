@@ -1,0 +1,450 @@
+/* Automated Report Summary Page Styles */
+
+.data-point--full-width {
+  grid-column: 1 / -1;
+}
+
+.analyst-page-container {
+  padding: 0;
+}
+
+.analyst-content {
+  padding: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+  background-color: #f4f6f8;
+  min-height: calc(100vh - 60px);
+}
+
+.analyst-description {
+  font-size: 1em;
+  color: #555;
+  margin-bottom: 25px;
+  line-height: 1.6;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.analyst-form {
+  background-color: #fff;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 30px;
+}
+
+.date-range-container {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+  align-items: end;
+}
+
+.date-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.date-input-group label {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.9em;
+}
+
+.date-input-group input[type="date"] {
+  padding: 12px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 1em;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.date-input-group input[type="date"]:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
+  outline: none;
+}
+
+.date-input-group input[type="date"]:disabled {
+  background-color: #f8f9fa;
+  color: #6c757d;
+}
+
+.analyst-submit-btn {
+  padding: 12px 24px;
+  background-color: #00796b;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: 600;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  align-self: flex-end;
+  white-space: nowrap;
+}
+
+.analyst-submit-btn:hover:not(:disabled) {
+  background-color: #005a4f;
+  transform: translateY(-1px);
+}
+
+.analyst-submit-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.analyst-error {
+  color: #dc3545;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+/* --- SECCIÓN DE RESPUESTA --- */
+.analyst-answer-section {
+  background-color: #fff;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 25px;
+}
+
+.analyst-answer-section h4 {
+  margin-top: 0;
+  color: #00796b;
+  margin-bottom: 15px;
+  font-size: 1.3em;
+  font-weight: 600;
+  border-bottom: 2px solid #e6f2f1;
+  padding-bottom: 10px;
+}
+
+/* ✅ 1. CSS PARA MARKDOWN MEJORADO */
+.analyst-answer {
+  font-size: 1em;
+  color: #333;
+  line-height: 1.7;
+  /* Se elimina 'white-space: pre-wrap' ya que ReactMarkdown genera HTML */
+}
+
+/* Estilos para los elementos que genera ReactMarkdown */
+.analyst-answer h1,
+.analyst-answer h2,
+.analyst-answer h3,
+.analyst-answer h4 {
+  margin-top: 24px;
+  margin-bottom: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #2c3e50;
+}
+.analyst-answer p {
+  margin-bottom: 16px;
+}
+.analyst-answer ul,
+.analyst-answer ol {
+  margin-bottom: 16px;
+  padding-left: 2em;
+}
+.analyst-answer li {
+  margin-bottom: 8px;
+}
+.analyst-answer strong {
+    color: #005a4f;
+}
+
+/* --- SECCIÓN DE DATOS CLAVE --- */
+.data-points-summary {
+  margin-bottom: 25px; /* Cambiado de margin-top para espaciar con el bloque siguiente */
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.data-points-summary h5 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+.data-points-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 15px;
+}
+
+/* ✅ 2. CSS CORREGIDO PARA RESPONSIVIDAD DE DATOS CLAVE */
+.data-point {
+  background-color: #fff;
+  padding: 15px;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  gap: 10px;
+}
+
+.data-label {
+  font-weight: 600;
+  color: #495057;
+  margin-right: 10px;
+  flex-shrink: 0; /* Evita que la etiqueta se encoja */
+}
+
+.data-value {
+  font-weight: 700;
+  color: #00796b;
+  text-align: right;
+  /* Se elimina 'flex-shrink: 0' */
+  /* Propiedades clave para que el texto se divida y no se desborde */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  min-width: 0; /* Ayuda a flexbox a calcular el tamaño correctamente */
+}
+
+/* --- SECCIÓN DE CARGA --- */
+.analyst-loading {
+  margin-top: 20px;
+  padding: 30px;
+  text-align: center;
+  color: #555;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.analyst-loading p {
+  font-style: italic;
+  margin-bottom: 20px;
+  font-size: 1.1em;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #00796b;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* --- DISEÑO RESPONSIVO --- */
+@media (max-width: 1024px) {
+  .analyst-content {
+    max-width: 95%;
+    padding: 18px;
+  }
+  
+  .data-points-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .analyst-content {
+    padding: 15px 12px;
+    max-width: 100%;
+  }
+  
+  .analyst-description {
+    padding: 15px;
+    font-size: 0.95em;
+    margin-bottom: 20px;
+  }
+  
+  .analyst-form {
+    padding: 20px;
+    margin-bottom: 25px;
+  }
+  
+  .date-range-container {
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch;
+  }
+  
+  .date-input-group input[type="date"] {
+    padding: 14px 12px;
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+  
+  .analyst-submit-btn {
+    align-self: stretch;
+    width: 100%;
+    padding: 14px 24px;
+  }
+  
+  .data-points-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .data-point {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 15px;
+  }
+  
+  .data-value {
+    text-align: left;
+    width: 100%;
+  }
+  
+  .data-label {
+    margin-right: 0;
+  }
+  
+  .analyst-loading {
+    padding: 25px 15px;
+  }
+  
+  .analyst-summary {
+    padding: 15px;
+  }
+  
+  .summary-content {
+    font-size: 0.95em;
+  }
+}
+
+@media (max-width: 480px) {
+  .analyst-content {
+    padding: 10px 8px;
+    min-height: calc(100vh - 50px);
+  }
+  
+  .analyst-description {
+    padding: 12px;
+    font-size: 0.9em;
+    margin-bottom: 15px;
+  }
+  
+  .analyst-form {
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .date-range-container {
+    gap: 12px;
+  }
+  
+  .date-input-group label {
+    font-size: 0.85em;
+  }
+  
+  .date-input-group input[type="date"] {
+    padding: 16px 12px; /* Larger for easier touch */
+  }
+  
+  .analyst-submit-btn {
+    padding: 16px 24px;
+    font-size: 1.05em;
+  }
+  
+  .data-points-grid {
+    gap: 10px;
+  }
+  
+  .data-point {
+    padding: 10px 12px;
+    gap: 6px;
+  }
+  
+  .data-label {
+    font-size: 0.85em;
+  }
+  
+  .data-value {
+    font-size: 0.9em;
+  }
+  
+  .analyst-loading {
+    padding: 20px 12px;
+  }
+  
+  .analyst-loading p {
+    font-size: 1em;
+  }
+  
+  .loading-spinner {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .analyst-summary {
+    padding: 12px;
+  }
+  
+  .summary-content {
+    font-size: 0.9em;
+    line-height: 1.5;
+  }
+  
+  .summary-content h1 {
+    font-size: 1.4em;
+  }
+  
+  .summary-content h2 {
+    font-size: 1.2em;
+  }
+  
+  .summary-content h3 {
+    font-size: 1.1em;
+  }
+}
+
+@media (max-width: 360px) {
+  .analyst-content {
+    padding: 8px 5px;
+  }
+  
+  .analyst-description {
+    padding: 10px;
+  }
+  
+  .analyst-form {
+    padding: 12px;
+  }
+  
+  .date-input-group input[type="date"] {
+    padding: 18px 10px;
+  }
+  
+  .analyst-submit-btn {
+    padding: 18px 20px;
+  }
+  
+  .data-point {
+    padding: 8px 10px;
+  }
+  
+  .analyst-summary {
+    padding: 10px;
+  }
+}

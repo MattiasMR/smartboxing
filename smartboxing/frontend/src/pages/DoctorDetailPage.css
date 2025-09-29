@@ -1,0 +1,259 @@
+/* DoctorDetailPage.css - Refactorizado para seguir el patrón de BoxDetailPage */
+
+/* Contenedor principal */
+.doctor-detail-page-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f5f7fa;
+}
+
+/* Botón de volver */
+.back-button-container {
+  padding: 20px;
+  background-color: #fff;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #00796b 0%, #004d40 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 121, 107, 0.2);
+}
+
+.back-button:hover {
+  background: linear-gradient(135deg, #004d40 0%, #00251a 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 121, 107, 0.3);
+}
+
+.back-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 121, 107, 0.2);
+}
+
+.back-button svg {
+  font-size: 16px;
+}
+
+/* Layout principal con 2 columnas */
+.doctor-detail-page-layout {
+  display: grid;
+  grid-template-columns: 1fr 350px; /* Contenido principal + Sidebar */
+  gap: 20px;
+  padding: 20px;
+  flex: 1;
+}
+
+/* Contenido principal */
+.main-content {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.schedule-header {
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.schedule-header h3 {
+  margin: 0;
+  font-size: 1.5em;
+  color: #333;
+  font-weight: 600;
+}
+
+/* Contenedor de tarjetas de horarios */
+.schedule-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px;
+}
+
+/* Tarjetas individuales de horarios */
+.schedule-card {
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.schedule-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.schedule-card.medical {
+  border-left: 4px solid #00796b;
+}
+
+.schedule-card.non-medical {
+  border-left: 4px solid #6c757d;
+}
+
+.schedule-card-time {
+  flex: 0 0 auto;
+  margin-right: 20px;
+}
+
+.schedule-card-time strong {
+  font-size: 1.1em;
+  color: #333;
+}
+
+.schedule-card.medical .schedule-card-time strong {
+  color: #00796b;
+}
+
+.schedule-card.non-medical .schedule-card-time strong {
+  color: #6c757d;
+}
+
+.schedule-card-details {
+  flex: 1;
+}
+
+.schedule-card-details p {
+  margin: 3px 0;
+  font-size: 0.95em;
+  color: #555;
+}
+
+.non-medical-label {
+  color: #6c757d !important;
+  font-weight: bold;
+  font-style: italic;
+  margin-top: 5px !important;
+}
+
+/* Sin agenda programada */
+.no-schedule {
+  text-align: center;
+  padding: 40px 20px;
+  color: #888;
+  font-style: italic;
+}
+
+/* Contenedor del sidebar */
+.sidebar-container {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .doctor-detail-page-layout {
+    grid-template-columns: 1fr 300px; /* Sidebar más pequeño */
+    gap: 15px;
+  }
+}
+
+@media (max-width: 900px) {
+  .doctor-detail-page-layout {
+    grid-template-columns: 1fr; /* Una sola columna */
+    gap: 20px;
+  }
+  
+  .main-content {
+    order: 2; /* Sidebar arriba en móvil */
+  }
+  
+  .sidebar-container {
+    order: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .doctor-detail-page-layout {
+    padding: 15px;
+  }
+  
+  .main-content {
+    padding: 15px;
+  }
+  
+  .schedule-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .schedule-card-time {
+    margin-right: 0;
+  }
+  
+  .schedule-card-details p {
+    margin: 2px 0;
+  }
+  
+  .back-button-container {
+    padding: 15px;
+  }
+  
+  .back-button {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+  
+  .back-button svg {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .doctor-detail-page-layout {
+    padding: 10px;
+  }
+  
+  .main-content {
+    padding: 12px;
+  }
+  
+  .schedule-header h3 {
+    font-size: 1.3em;
+  }
+  
+  .schedule-card {
+    padding: 12px;
+  }
+  
+  .schedule-card-time strong {
+    font-size: 1em;
+  }
+  
+  .schedule-card-details p {
+    font-size: 0.9em;
+  }
+  
+  .back-button-container {
+    padding: 10px;
+  }
+  
+  .back-button {
+    padding: 8px 12px;
+    font-size: 12px;
+    gap: 6px;
+  }
+  
+  .back-button svg {
+    font-size: 12px;
+  }
+}

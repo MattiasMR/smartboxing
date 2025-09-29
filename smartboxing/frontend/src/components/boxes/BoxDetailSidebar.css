@@ -1,0 +1,230 @@
+.box-detail-sidebar {
+  width: 100%; /* Take full width of its parent (.sidebar-container) */
+  height: 100%; /* Take full height of its parent (.sidebar-container) */
+  background-color: #f8f9fa;
+  border-left: 1px solid #dee2e6;
+  padding: 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Prevent double scrollbars, child elements will scroll */
+}
+
+/* Remove .open and .placeholder styles related to transform, as it's no longer sliding */
+.box-detail-sidebar.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+}
+
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px; /* Adjusted margin */
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0; /* Prevent header from shrinking */
+}
+
+.sidebar-header h3 {
+  margin: 0;
+  font-size: 1.2em; /* Adjusted size */
+  color: #343a40;
+}
+
+.close-sidebar-btn {
+  /* This button might not be needed if the sidebar is always visible in this context */
+  /* display: none; */ /* Example: hide if not used */
+  background: none;
+  border: none;
+  font-size: 1.8em;
+  cursor: pointer;
+  color: #6c757d;
+  padding: 0 5px;
+}
+.close-sidebar-btn:hover {
+    color: #343a40;
+}
+
+.sidebar-content {
+  flex-grow: 1; /* Allow content to take available space */
+  overflow-y: auto; /* Enable scrolling for the content area if it overflows */
+}
+
+.sidebar-content h4 {
+  font-size: 1.05em; /* Adjusted size */
+  color: #00796b; /* Theme color */
+  margin-top: 15px; /* Adjusted margin */
+  margin-bottom: 8px; /* Adjusted margin */
+}
+.sidebar-content h4:first-child {
+    margin-top: 0;
+}
+
+
+.equipment-list {
+  list-style-type: none;
+  padding-left: 0;
+  margin-bottom: 15px;
+  /* Max height and scroll for equipment list specifically if needed */
+  /* For example, if you want only this list to scroll after 3 items: */
+  /* max-height: 150px; /* Adjust based on item height, e.g., 3 items * (line-height + padding) */
+  /* overflow-y: auto; */
+}
+
+.equipment-list li {
+  background-color: #e9ecef;
+  padding: 7px 10px; /* Adjusted padding */
+  border-radius: 4px;
+  margin-bottom: 5px; /* Adjusted margin */
+  font-size: 0.9em; /* Adjusted size */
+  color: #495057;
+}
+
+.sidebar-content p {
+    font-size: 0.9em; /* Adjusted size */
+    color: #495057;
+    line-height: 1.5;
+}
+
+.sidebar-content hr {
+    border: 0;
+    border-top: 1px solid #e0e0e0;
+    margin: 15px 0; /* Adjusted margin */
+}
+
+/* Status specific styles */
+.status-enabled {
+  color: green;
+  font-weight: bold;
+}
+
+.status-disabled {
+  color: red;
+  font-weight: bold;
+}
+
+.status-occupied {
+  color: orange;
+}
+
+.status-available {
+  color: green;
+}
+
+.status-upcoming {
+  color: #007bff; /* Bootstrap primary blue */
+}
+
+.status-maintenance {
+  color: #6c757d; /* Bootstrap secondary grey */
+}
+
+.occupancy-bar-container {
+    width: 100%;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    height: 20px; /* Or your preferred height */
+    margin-top: 5px;
+    overflow: hidden; /* Ensures the inner bar respects the border radius */
+}
+
+.occupancy-bar {
+    height: 100%;
+    background-color: #007bff; /* Or a color based on percentage */
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8em;
+    font-weight: bold;
+    transition: width 0.5s ease-in-out;
+}
+
+/* Mobile responsive improvements */
+@media (max-width: 768px) {
+  .box-detail-sidebar {
+    padding: 15px;
+    border-left: none;
+    border-top: 1px solid #dee2e6;
+    height: auto;
+    max-height: none;
+  }
+  
+  .sidebar-header {
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+  }
+  
+  .sidebar-header h3 {
+    font-size: 1.1em;
+  }
+  
+  .close-sidebar-btn {
+    font-size: 1.5em;
+  }
+  
+  .sidebar-content {
+    gap: 12px;
+  }
+  
+  .sidebar-content p {
+    font-size: 0.85em;
+  }
+  
+  .equipment-list li {
+    padding: 5px 8px;
+    font-size: 0.85em;
+  }
+  
+  .occupancy-bar-container {
+    height: 18px;
+  }
+  
+  .occupancy-bar {
+    font-size: 0.75em;
+  }
+}
+
+@media (max-width: 480px) {
+  .box-detail-sidebar {
+    padding: 12px;
+  }
+  
+  .sidebar-header {
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+  }
+  
+  .sidebar-header h3 {
+    font-size: 1em;
+  }
+  
+  .sidebar-content {
+    gap: 10px;
+  }
+  
+  .sidebar-content p {
+    font-size: 0.8em;
+  }
+  
+  .equipment-list li {
+    padding: 4px 6px;
+    font-size: 0.8em;
+    margin-bottom: 3px;
+  }
+  
+  .occupancy-bar-container {
+    height: 16px;
+  }
+  
+  .occupancy-bar {
+    font-size: 0.7em;
+  }
+}
+

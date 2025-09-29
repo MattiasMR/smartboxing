@@ -1,0 +1,815 @@
+/* src/pages/ReportsPage.css */
+.reports-page-container {
+  padding: 20px;
+  background-color: #e9ecef;
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+}
+
+/* Enhanced date range prompt */
+.chart-filters-container {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.chart-filters-container::before {
+  content: "Seleccionar rango:";
+  font-size: 0.85em;
+  color: #666;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Filtros de fecha en el header de la tarjeta del gráfico */
+.chart-filters-container {
+  display: flex;
+  gap: 12px;
+}
+
+.chart-filters-container input[type="date"] {
+  border: 1px solid #ced4da;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 0.85em;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  transition: border-color 0.2s ease;
+}
+
+.chart-filters-container input[type="date"]:focus {
+  outline: none;
+  border-color: #00796b;
+  box-shadow: 0 0 0 3px rgba(0, 121, 107, 0.1);
+}
+
+/* Estilos para tarjeta de gráfico con filtros */
+.chart-card-with-filters .report-card-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.date-filters-container {
+  display: flex;
+  justify-content: flex-start; /* Align to left */
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.date-filters-container input[type="date"] {
+  border: 1px solid #ced4da;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 0.9em;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.report-card {
+  background-color: #fff;
+  padding: 20px; /* Uniform padding */
+  border-radius: 10px; /* Slightly softer radius */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06); /* Softer shadow */
+  display: flex;
+  flex-direction: column;
+}
+
+.report-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 15px 0;
+  border-bottom: 1px solid #e9ecef; /* Subtle separator */
+}
+
+.report-card h3 {
+  margin: 0;
+  font-size: 1.15em;   /* Slightly larger for better proportion */
+  font-weight: 600;   /* Semi-bold */
+  color: #343a40;    /* Darker grey for titles */
+}
+
+.report-card-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow-y: auto;
+}
+
+/* Layout principal: gráfico izq, rankings der, especialidades abajo */
+.reports-grid-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr; /* Gráfico más ancho, rankings más estrecho */
+  grid-template-rows: auto 1fr; /* Primera fila auto, segunda fila toma el resto */
+  gap: 20px;
+  min-height: 70vh; /* Altura mínima para usar bien el espacio */
+}
+
+/* Sección del gráfico - izquierda */
+.chart-section {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+/* Sección de rankings - derecha */
+.rankings-section {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Estilos específicos para tarjetas de TOP ranking */
+.top-ranking-card {
+  height: calc(50% - 10px); /* Ocupa la mitad del espacio disponible menos el gap */
+  min-height: 200px;
+}
+
+/* Estilos para items de ranking con medallas TOP 3 */
+.ranking-item {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  margin-bottom: 6px;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;
+}
+
+.ranking-item:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Medalla para indicar posición TOP 3 */
+.ranking-medal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-weight: bold;
+  font-size: 0.75rem;
+  margin-right: 8px;
+  flex-shrink: 0;
+  color: white;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.ranking-medal.gold {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  border: 1px solid #FFD700;
+}
+
+.ranking-medal.silver {
+  background: linear-gradient(135deg, #C0C0C0, #808080);
+  border: 1px solid #C0C0C0;
+}
+
+.ranking-medal.bronze {
+  background: linear-gradient(135deg, #CD7F32, #8B4513);
+  border: 1px solid #CD7F32;
+}
+
+.ranking-item .ranking-name {
+  flex: 1;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.ranking-item .ranking-value {
+  font-weight: 600;
+  color: #00796b;
+  background-color: #e6f2f1;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.85em;
+}
+
+.top-ranking-card .report-card-content {
+  overflow-y: auto;
+  max-height: 100%;
+}
+
+/* Medallas para el TOP 3 */
+.ranking-list .rank-number {
+  font-weight: 700;
+  font-size: 0.9em;
+  min-width: 28px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.ranking-list li:nth-child(1) .rank-number {
+  color: #FFD700;
+  background-color: #FFF8DC;
+  border: 2px solid #FFD700;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+
+.ranking-list li:nth-child(2) .rank-number {
+  color: #C0C0C0;
+  background-color: #F8F8FF;
+  border: 2px solid #C0C0C0;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+
+.ranking-list li:nth-child(3) .rank-number {
+  color: #CD7F32;
+  background-color: #FDF5E6;
+  border: 2px solid #CD7F32;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+
+/* Sección de especialidades - abajo, ocupa todo el ancho */
+.specialties-section {
+  grid-column: 1 / -1; /* Ocupa ambas columnas */
+  grid-row: 2;
+  max-height: 300px; /* Vuelto al tamaño original */
+}
+
+.specialties-section .report-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.specialties-section .report-card-content {
+  flex: 1;
+  overflow-y: auto;
+  max-height: calc(300px - 80px); /* Ajustado para el nuevo header */
+}
+
+/* Lista horizontal para especialidades con scroll mejorado */
+/* Lista horizontal para especialidades TOP 3 */
+.ranking-list-horizontal {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 8px;
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  overflow-y: auto;
+  max-height: 100%;
+}
+
+.ranking-list-horizontal li {
+  padding: 8px 10px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  font-size: 0.9em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #e9ecef;
+  transition: background-color 0.2s ease;
+}
+
+.ranking-list-horizontal li:hover {
+  background-color: #e9ecef;
+}
+
+/* Estilos mejorados para listas de ranking */
+.ranking-list li {
+  padding: 10px 8px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #f1f3f5;
+  font-size: 0.95em;
+  min-height: 44px;
+  gap: 10px;
+}
+
+.ranking-list .rank-number {
+  font-weight: 700;
+  color: #666;
+  font-size: 0.85em;
+  min-width: 24px;
+  flex-shrink: 0;
+}
+
+.ranking-list .rank-name {
+  flex: 1;
+  word-break: break-word;
+  line-height: 1.3;
+}
+
+.ranking-list .rank-value {
+  font-weight: 600;
+  color: #00796b;
+  background-color: #e6f2f1;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.chart-container,
+.chart-container-large {
+  position: relative;
+  width: 100%;
+  flex-grow: 1;
+  min-height: 250px;
+  overflow: hidden; /* Prevenir desbordamiento */
+}
+
+.chart-container-large {
+  min-height: 420px;
+}
+
+/* Asegurar que las listas scrolleables funcionen bien */
+.scrollable-list-card .report-card-content {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #ccc #f1f1f1;
+}
+
+.scrollable-list-card .report-card-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollable-list-card .report-card-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.scrollable-list-card .report-card-content::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.scrollable-list-card .report-card-content::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+/* Scroll para la sección de especialidades */
+.specialties-section .report-card-content::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.specialties-section .report-card-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.specialties-section .report-card-content::-webkit-scrollbar-thumb {
+  background: #00796b;
+  border-radius: 4px;
+}
+
+.specialties-section .report-card-content::-webkit-scrollbar-thumb:hover {
+  background: #004d43;
+}
+
+
+.ranking-list {
+  list-style-type: none;
+  padding-left: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  max-height: 100%;
+}
+
+.ranking-list li {
+  padding: 8px 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f1f3f5;
+  font-size: 0.95em;
+  min-height: 36px;
+  word-break: break-word;
+}
+
+.ranking-list li:last-child {
+  border-bottom: none;
+}
+
+.ranking-list span {
+  font-weight: 600;
+  color: #00796b;
+  background-color: #e6f2f1;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+/* Card for scrollable lists like Doctor Ranking and All Specialties */
+.scrollable-list-card .report-card-content {
+  overflow-y: auto;
+  max-height: calc(100% - 40px); /* Adjust based on title height or use a fixed max-height */
+}
+
+.scrollable-list-card.full-height-card {
+  height: 100%; /* Ensure it tries to take full grid cell height */
+}
+
+.scrollable-list-card.full-height-card .report-card-content {
+   max-height: none; /* Allow content to determine scroll within its flex container */
+   /* If this card is in .side-chart-column which is a flex container, 
+      and .report-card has height: 100%, then this should work. 
+      The .report-card-content already has overflow-y: auto. 
+      The key is that .report-card itself needs a defined height or max-height 
+      for overflow-y on its child to work effectively without expanding the parent indefinitely.
+      Since .reports-grid-complex uses align-items: stretch, the .report-card 
+      in .side-chart-column should stretch. */
+}
+
+
+/* RESPONSIVIDAD PARA EL NUEVO LAYOUT */
+
+/* Tablets grandes */
+@media (max-width: 1200px) {
+  .reports-grid-layout {
+    grid-template-columns: 1.5fr 1fr; /* Ajustar proporciones */
+    gap: 15px;
+  }
+  
+  .ranking-list-horizontal {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 6px;
+  }
+}
+
+/* Tablets medianas */
+@media (max-width: 992px) {
+  .reports-page-container {
+    padding: 15px;
+  }
+  
+  .reports-grid-layout {
+    grid-template-columns: 1fr; /* Una sola columna */
+    grid-template-rows: auto auto auto; /* Tres filas */
+    gap: 15px;
+  }
+  
+  .chart-section {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  
+  .rankings-section {
+    grid-column: 1;
+    grid-row: 2;
+    flex-direction: row; /* Horizontal en tablets */
+    gap: 15px;
+  }
+  
+  .top-ranking-card {
+    height: auto;
+    min-height: 180px;
+    flex: 1; /* Ocupan el mismo espacio */
+  }
+  
+  .specialties-section {
+    grid-column: 1;
+    grid-row: 3;
+    max-height: 250px;
+  }
+  
+  .specialties-section .report-card-content {
+    max-height: calc(250px - 80px);
+  }
+  
+  .ranking-list-horizontal {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+  
+  .chart-filters-container {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .chart-filters-container input[type="date"] {
+    min-width: 120px;
+  }
+  
+  .report-card-header {
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: flex-start;
+  }
+}
+
+/* Móviles */
+/* Tablets medianas */
+@media (max-width: 768px) {
+  .reports-page-container {
+    padding: 12px 8px;
+  }
+  
+  .reports-grid-layout {
+    gap: 12px;
+  }
+  
+  .rankings-section {
+    gap: 12px;
+    flex-direction: column; /* Rankings verticalmente en tablets */
+  }
+  
+  .top-ranking-card {
+    height: auto;
+    min-height: 140px;
+    max-height: none; /* Sin límite en tablets */
+  }
+  
+  .ranking-list {
+    padding: 5px;
+  }
+  
+  .ranking-item {
+    padding: 8px;
+    font-size: 0.9em;
+  }
+  
+  .ranking-medal {
+    width: 18px;
+    height: 18px;
+    font-size: 0.7rem;
+  }
+  
+  .ranking-list-horizontal {
+    grid-template-columns: 1fr 1fr; /* 2 columnas en tablets */
+    gap: 4px;
+    max-height: 200px;
+  }
+  
+  .ranking-list-horizontal li {
+    padding: 6px 8px;
+    font-size: 0.85em;
+  }
+  
+  .chart-filters-container {
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+  }
+  
+  .chart-filters-container input[type="date"] {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px; /* Prevenir zoom en iOS */
+    box-sizing: border-box;
+  }
+  
+  .report-card-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  
+  .report-card {
+    padding: 15px;
+  }
+  
+  .report-card h3 {
+    font-size: 1em;
+    margin-bottom: 10px;
+  }
+  
+  .chart-container-large {
+    min-height: 280px;
+  }
+}
+
+/* Móviles pequeños */
+@media (max-width: 480px) {
+  .reports-page-container {
+    padding: 8px 4px;
+  }
+  
+  .reports-grid-layout {
+    gap: 10px;
+  }
+  
+  .rankings-section {
+    gap: 8px;
+    flex-direction: column; /* Rankings verticalmente en móviles */
+  }
+  
+  .top-ranking-card {
+    height: auto;
+    min-height: 120px;
+    max-height: none;
+  }
+  
+  .ranking-list {
+    padding: 3px;
+  }
+  
+  .ranking-item {
+    padding: 6px;
+    font-size: 0.85em;
+    margin-bottom: 4px;
+  }
+  
+  .ranking-medal {
+    width: 16px;
+    height: 16px;
+    font-size: 0.6rem;
+    margin-right: 6px;
+  }
+  
+  .ranking-list-horizontal {
+    grid-template-columns: 1fr; /* Una sola columna en móviles pequeños */
+    gap: 3px;
+    max-height: 180px;
+  }
+  
+  .ranking-list-horizontal li {
+    padding: 5px 6px;
+    font-size: 0.8em;
+  }
+  
+  .chart-filters-container input[type="date"] {
+    padding: 12px 8px;
+    font-size: 16px;
+  }
+  
+  .report-card-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+  
+  .report-card {
+    padding: 10px;
+  }
+  
+  .report-card h3 {
+    font-size: 0.95em;
+    margin-bottom: 8px;
+  }
+  
+  .chart-container-large {
+    min-height: 220px;
+  }
+}
+
+/* Móviles muy pequeños */
+@media (max-width: 360px) {
+  .reports-page-container {
+    padding: 6px 2px;
+  }
+  
+  .page-header h1 {
+    font-size: 1.4rem;
+  }
+  
+  .reports-grid-layout {
+    gap: 8px;
+  }
+  
+  .rankings-section {
+    gap: 6px;
+    flex-direction: column;
+  }
+  
+  .top-ranking-card {
+    height: auto;
+    min-height: 100px;
+    max-height: none;
+  }
+  
+  .ranking-list {
+    padding: 2px;
+  }
+  
+  .ranking-item {
+    padding: 5px;
+    font-size: 0.8em;
+    margin-bottom: 3px;
+  }
+  
+  .ranking-medal {
+    width: 14px;
+    height: 14px;
+    font-size: 0.55rem;
+    margin-right: 4px;
+  }
+  
+  .ranking-list-horizontal {
+    max-height: 150px;
+  }
+  
+  .ranking-list-horizontal li {
+    padding: 4px 5px;
+    font-size: 0.75em;
+  }
+  
+  .chart-filters-container {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+  
+  .chart-filters-container input[type="date"] {
+    padding: 14px 10px;
+    font-size: 16px;
+  }
+}
+
+/* Mobile-first improvements for better mobile experience */
+@media (max-width: 768px) {
+  .reports-page-container {
+    background-color: #e9ecef; /* Keep consistent with other pages */
+    padding: 15px 10px;
+  }
+  
+  .report-card h3 {
+    font-size: 1.3em; /* Larger text */
+    font-weight: 700;
+  }
+  
+  .ranking-item .ranking-name {
+    font-size: 1.1em; /* Larger names */
+    font-weight: 600;
+  }
+  
+  .ranking-item .ranking-value {
+    font-size: 1em; /* Larger values */
+    padding: 6px 12px;
+  }
+  
+  .chart-filters-container::before {
+    font-size: 1em; /* Larger prompt text */
+    color: #495057;
+    font-weight: 600;
+  }
+  
+  .chart-filters-container input[type="date"] {
+    font-size: 16px;
+    padding: 12px 14px;
+    min-height: 48px; /* Touch-friendly */
+  }
+  
+  .ranking-list-horizontal li {
+    font-size: 1em; /* Larger specialty text */
+    padding: 12px 15px;
+    min-height: 48px;
+  }
+  
+  .ranking-medal {
+    width: 28px;
+    height: 28px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .reports-page-container {
+    background-color: #e9ecef; /* Keep consistent background */
+  }
+  
+  .report-card h3 {
+    font-size: 1.4em; /* Even larger text for small screens */
+  }
+  
+  .ranking-item .ranking-name {
+    font-size: 1.2em;
+  }
+  
+  .chart-filters-container::before {
+    font-size: 1.1em;
+    text-align: center;
+  }
+  
+  .report-card {
+    padding: 8px;
+  }
+  
+  .chart-container-large {
+    min-height: 180px;
+  }
+}
