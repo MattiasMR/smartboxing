@@ -8,11 +8,24 @@ const DoctorCard = ({ doctor }) => {
 
   let statusInfo = { text: 'Disponible', className: 'available' };
   
-  if (doctor.is_on_vacation_today) {
+  // Map real status values to display info
+  if (doctor.status === 'ON_VACATION') {
     statusInfo = { text: 'De Vacaciones', className: 'on-vacation' };
-  } else if (doctor.is_on_duty_today) {
-    statusInfo = { text: 'Trabajando Hoy', className: 'on-duty' };
+  } else if (doctor.status === 'ON_DUTY' || doctor.status === 'ACTIVE') {
+    statusInfo = { text: 'En Servicio', className: 'on-duty' };
   }
+  
+  // Helper function to map specialty_id to name
+  const getSpecialtyName = (specialtyId) => {
+    const specialtyMap = {
+      'spec-001': 'Cardiología',
+      'spec-002': 'Neurología', 
+      'spec-003': 'Pediatría',
+      'spec-004': 'Ginecología',
+      'spec-005': 'Traumatología'
+    };
+    return specialtyMap[specialtyId] || 'Medicina General';
+  };
 
   const handleViewDetails = () => {
     navigate(`/doctors/${doctor.id}`); // Navigate to doctor detail page
@@ -21,8 +34,8 @@ const DoctorCard = ({ doctor }) => {
   return (
     <div className="doctor-card">
       <div className="doctor-info">
-        <h3 className="doctor-name">{doctor.full_name}</h3>
-        <p className="doctor-specialty">{doctor.specialty?.name || 'Sin especialidad'}</p>
+        <h3 className="doctor-name">{doctor.name || doctor.full_name || 'Doctor sin nombre'}</h3>
+        <p className="doctor-specialty">{getSpecialtyName(doctor.specialty_id) || doctor.specialty?.name || 'Sin especialidad'}</p>
       </div>
       <div className="doctor-actions">
         <div className="doctor-status-container">

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import PageHeader from '../components/layout/PageHeader';
-import { fetchAssignments, fetchBoxDetails, fetchAppointments } from '../api/services'; // Added fetchAppointments
+import { fetchAssignments, fetchBoxDetails, fetchAppointments, fetchDoctors } from '../api/services'; // Added fetchDoctors
 import { format, parseISO, getHours, getMinutes, setHours, setMinutes, addMinutes, isBefore, isEqual } from 'date-fns'; // Added more date-fns functions
 import es from 'date-fns/locale/es';
 import '../components/boxes/BoxDetailPage.css';
@@ -40,21 +40,48 @@ function BoxDetailPage() {
   useEffect(() => {
     const loadAssignments = async () => {
       if (!boxId) return;
-      setIsLoading(true); // Set loading true at the beginning of data fetching for the day
+      setIsLoading(true);
       try {
-        const params = { 
-          box_id: boxId, // Ensure API uses box_id if that is the filter param name
-          on_date: format(selectedDate, 'yyyy-MM-dd') // Assuming API supports filtering by date
-        };
-        const assignmentsRes = await fetchAssignments(params);
-        // The backend should ideally filter by date. If not, client-side filtering is a fallback.
-        // For this refactor, we assume the API handles date filtering via `on_date`.
-        setAssignments(assignmentsRes.data.sort((a, b) => new Date(a.start_time) - new Date(b.start_time)));
+        console.log('🔍 Fetching assignments for box:', boxId, 'date:', format(selectedDate, 'yyyy-MM-dd'));
+        
+        // Get all assignments and doctors to populate data
+        const [assignmentsRes, doctorsRes] = await Promise.all([
+          fetchAssignments(),
+          fetchDoctors()
+        ]);
+        
+        const allAssignments = assignmentsRes.data?.assignments || assignmentsRes.data || [];
+        const allDoctors = doctorsRes.data?.doctors || doctorsRes.data || [];
+        
+        // Filter on frontend by box_id and date
+        const targetDate = format(selectedDate, 'yyyy-MM-dd');
+        const filteredAssignments = allAssignments.filter(assignment => {
+          const matchesBox = assignment.boxId === boxId;
+          const matchesDate = assignment.date === targetDate;
+          return matchesBox && matchesDate;
+        });
+        
+        // Populate doctor information
+        const enrichedAssignments = filteredAssignments.map(assignment => {
+          const doctor = allDoctors.find(doc => doc.id === assignment.doctorId);
+          return {
+            ...assignment,
+            doctor: doctor ? {
+              full_name: doctor.name,
+              specialty: {
+                name: mapSpecialtyId(doctor.specialty_id)
+              }
+            } : null
+          };
+        });
+        
+        console.log(`✅ Found ${enrichedAssignments.length} assignments for box ${boxId} on ${targetDate}`);
+        setAssignments(enrichedAssignments.sort((a, b) => new Date(a.start_time) - new Date(b.start_time)));
       } catch (err) {
         console.error("Error fetching assignments:", err);
         setError("No se pudieron cargar las asignaciones del box.");
       } finally {
-        setIsLoading(false); // Set loading false after all data for the day is fetched
+        setIsLoading(false);
       }
     };
     if (box) { // Only load assignments if box details are loaded
@@ -63,15 +90,47 @@ function BoxDetailPage() {
   }, [boxId, selectedDate, box]); // Add box to dependency array
 
   const handleAssignmentClick = async (assignment) => {
-    setSelectedAssignment(assignment);
+    // Enrich assignment with box information
+    const enrichedAssignment = {
+      ...assignment,
+      box: {
+        number: box?.number || 'N/A',
+        hallway: box?.hallway || 'N/A',
+        name: box?.name || 'Box desconocido'
+      }
+    };
+    
+    setSelectedAssignment(enrichedAssignment);
     try {
-      // Fetch appointments for this specific assignment
-      const appointmentsRes = await fetchAppointments({ assignment_id: assignment.id });
-      setAppointmentsForModal(appointmentsRes.data);
+      console.log('🔍 Fetching appointments for assignment:', assignment.id);
+      
+      // Get all appointments since API doesn't support filtering by assignment_id
+      const appointmentsRes = await fetchAppointments();
+      const allAppointments = appointmentsRes.data?.appointments || appointmentsRes.data || [];
+      
+      // Filter appointments for this assignment and date
+      const assignmentDate = assignment.date;
+      const assignmentStart = new Date(assignment.start_time);
+      const assignmentEnd = new Date(assignment.end_time);
+      
+      const filteredAppointments = allAppointments.filter(appointment => {
+        const appointmentDate = appointment.date;
+        const appointmentTime = new Date(appointment.start_time);
+        
+        // Check if appointment is on the same date and within assignment time range
+        return appointmentDate === assignmentDate &&
+               appointmentTime >= assignmentStart &&
+               appointmentTime < assignmentEnd;
+      });
+      
+      console.log(`✅ Found ${filteredAppointments.length} appointments for assignment ${assignment.id}`);
+      setAppointmentsForModal(filteredAppointments);
       setIsModalOpen(true);
     } catch (err) {
       console.error("Error fetching appointments for modal:", err);
-      // Optionally set an error state for the modal
+      // Set empty array as fallback
+      setAppointmentsForModal([]);
+      setIsModalOpen(true);
     }
   };
 
@@ -84,6 +143,10 @@ function BoxDetailPage() {
   // Helper to generate 30-minute slots for the modal
   const generateModalTimeSlots = (assignment) => {
     if (!assignment) return [];
+    
+    // Ensure appointmentsForModal is always an array
+    const appointments = Array.isArray(appointmentsForModal) ? appointmentsForModal : [];
+    
     const slots = [];
     let currentTime = parseISO(assignment.start_time);
     const endTime = parseISO(assignment.end_time);
@@ -94,7 +157,7 @@ function BoxDetailPage() {
         start: currentTime,
         end: slotEndTime,
         label: `${format(currentTime, 'HH:mm')} - ${format(slotEndTime, 'HH:mm')}`,
-        appointment: appointmentsForModal.find(app => {
+        appointment: appointments.find(app => {
           const appStartTime = parseISO(app.start_time);
           // Check if appointment starts exactly at this slot's start time
           return isEqual(appStartTime, currentTime);
@@ -137,8 +200,8 @@ function BoxDetailPage() {
                   </strong>
                 </div>
                 <div className="assignment-details">
-                  <p><strong>Médico:</strong> {assignment.doctor.full_name}</p>
-                  <p><strong>Especialidad:</strong> {assignment.doctor.specialty ? assignment.doctor.specialty.name : 'N/A'}</p>
+                  <p><strong>Médico:</strong> {assignment.doctor?.full_name || `Doctor ${assignment.doctorId}`}</p>
+                  <p><strong>Especialidad:</strong> {assignment.doctor?.specialty?.name || assignment.specialtyId || 'N/A'}</p>
                   {assignment.assignment_type === 'NON_MEDICAL' && (
                     <p style={{ color: '#6a0dad', fontWeight: 'bold' }}>HORA NO MÉDICA</p>
                   )}
@@ -164,6 +227,18 @@ function BoxDetailPage() {
       )}
     </div>
   );
+}
+
+// Helper function to map specialty ID to name
+function mapSpecialtyId(specialtyId) {
+  const specialtyMap = {
+    'spec-001': 'Cardiología',
+    'spec-002': 'Neurología', 
+    'spec-003': 'Pediatría',
+    'spec-004': 'Ginecología',
+    'spec-005': 'Traumatología'
+  };
+  return specialtyMap[specialtyId] || 'Medicina General';
 }
 
 export default BoxDetailPage;

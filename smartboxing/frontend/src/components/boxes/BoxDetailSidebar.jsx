@@ -17,10 +17,10 @@ function BoxDetailSidebar({ box, onClose }) {
       </div>
       <div className="sidebar-content">
         <h4>Características Disponibles:</h4>
-        {box.equipment && box.equipment.length > 0 ? (
+        {(box.equipment_list || box.equipment) && (box.equipment_list || box.equipment).length > 0 ? (
           <ul className="equipment-list">
-            {box.equipment.map(equip => (
-              <li key={equip.id || equip.name}>{equip.name}</li>
+            {(box.equipment_list || box.equipment).map((equip, index) => (
+              <li key={equip.id || equip.name || index}>{equip.name || equip}</li>
             ))}
           </ul>
         ) : (

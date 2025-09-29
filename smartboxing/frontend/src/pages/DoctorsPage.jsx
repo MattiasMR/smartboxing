@@ -17,17 +17,39 @@ function DoctorsPage() {
     // Establecemos un delay para no hacer una llamada a la API en cada tecla que se presiona.
     const timerId = setTimeout(() => {
       setIsLoading(true);
-      const params = {
-        search: searchTerm,
-        status: statusFilter,
-      };
-      // Quitamos los filtros vacíos para no enviar parámetros en blanco.
-      if (!params.search) delete params.search;
-      if (!params.status) delete params.status;
-
-      fetchDoctors(params)
-        .then(res => setDoctors(res.data))
-        .catch(err => console.error("Failed to fetch doctors:", err))
+      
+      console.log('🔍 Fetching doctors with filters:', { search: searchTerm, status: statusFilter });
+      
+      // Since API doesn't support filtering, get all doctors and filter on frontend
+      fetchDoctors()
+        .then(res => {
+          const allDoctors = res.data?.doctors || res.data || [];
+          console.log(`✅ Got ${allDoctors.length} doctors from API`);
+          
+          // Apply filters on frontend
+          let filteredDoctors = allDoctors;
+          
+          // Search filter
+          if (searchTerm) {
+            filteredDoctors = filteredDoctors.filter(doctor => 
+              doctor.name && doctor.name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+          }
+          
+          // Status filter  
+          if (statusFilter) {
+            filteredDoctors = filteredDoctors.filter(doctor => 
+              doctor.status === statusFilter
+            );
+          }
+          
+          console.log(`📋 Filtered to ${filteredDoctors.length} doctors`);
+          setDoctors(filteredDoctors);
+        })
+        .catch(err => {
+          console.error("Failed to fetch doctors:", err);
+          setDoctors([]);
+        })
         .finally(() => setIsLoading(false));
 
     }, 300); // Espera 300ms después de que el usuario deja de escribir/seleccionar.
@@ -54,8 +76,9 @@ function DoctorsPage() {
           className="status-select"
         >
           <option value="">Todos los Estados</option>
-          <option value="ON_DUTY">Trabajando Hoy</option>
-          <option value="AVAILABLE">Disponible</option>
+          <option value="ON_DUTY">En Servicio</option>
+          <option value="ACTIVE">Activo</option>
+          <option value="ON_VACATION">De Vacaciones</option>
         </select>
       </div>
 

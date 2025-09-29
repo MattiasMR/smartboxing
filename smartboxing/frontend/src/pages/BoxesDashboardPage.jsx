@@ -143,6 +143,10 @@ function BoxesDashboardPage() {
 
   // WebSocket connection effect
   useEffect(() => {
+    console.log('🔌 WebSocket disabled - using REST API only');
+    
+    // WebSocket disabled temporarily - using REST API only
+    /*
     // Small delay to avoid immediate connection attempts on mount
     const initTimeout = setTimeout(() => {
       if (isComponentMounted.current) {
@@ -169,6 +173,7 @@ function BoxesDashboardPage() {
         wsRef.current = null;
       }
     };
+    */
   }, [connectWebSocket]);
 
   // Cleanup on unmount

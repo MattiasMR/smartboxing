@@ -77,8 +77,17 @@ function AgendaPage() {
 }
 
   useEffect(() => {
-    fetchBoxes().then(res => setBoxes(res.data));
-    fetchDoctors().then(res => setDoctors(res.data));
+    console.log('🔍 Loading boxes and doctors for agenda');
+    fetchBoxes().then(res => {
+      const boxesData = res.data?.boxes || res.data || [];
+      console.log(`✅ Got ${boxesData.length} boxes for agenda`);
+      setBoxes(boxesData);
+    });
+    fetchDoctors().then(res => {
+      const doctorsData = res.data?.doctors || res.data || [];
+      console.log(`✅ Got ${doctorsData.length} doctors for agenda`);
+      setDoctors(doctorsData);
+    });
   }, []);
 
   useEffect(() => {
@@ -89,16 +98,47 @@ function AgendaPage() {
     setIsLoading(true);
     setEvents([]);
     const params = { [viewMode]: selectedId };
+    console.log('🔍 Fetching assignments with params:', params);
+    console.log('🔍 ViewMode:', viewMode, 'SelectedId:', selectedId);
     fetchAssignments(params)
       .then(res => {
-        const rawEvents = res.data.map(assign => ({
-          id: assign.id,
-          title: viewMode === 'box' ? assign.doctor.full_name : `Box ${assign.box.number}`,
-          start: new Date(assign.start_time),
-          end: new Date(assign.end_time),
-          isNonMedical: assign.assignment_type === 'NON_MEDICAL',
-          specialty: assign.doctor?.specialty?.name || 'N/A',
-        }));
+        console.log('📋 Raw assignments response:', res.data);
+        const assignmentsData = res.data?.assignments || res.data || [];
+        console.log('📋 Processing assignments:', assignmentsData);
+        
+        if (!Array.isArray(assignmentsData)) {
+          console.warn('⚠️ Assignments data is not an array:', assignmentsData);
+          setEvents([]);
+          return;
+        }
+
+        const rawEvents = assignmentsData.map(assign => {
+          console.log('📋 Processing assignment:', assign);
+          
+          // Determine title based on view mode
+          let title = 'Sin información';
+          if (viewMode === 'box') {
+            // When viewing by box, show doctor name
+            title = assign.doctor?.name || assign.doctor?.full_name || assign.doctorName || 'Doctor desconocido';
+          } else {
+            // When viewing by doctor, show box info
+            title = assign.box?.number ? `Box ${assign.box.number}` : 
+                   assign.boxNumber ? `Box ${assign.boxNumber}` : 
+                   assign.boxId ? `Box ${assign.boxId}` : 'Box desconocido';
+          }
+          
+          const event = {
+            id: assign.id,
+            title: title,
+            start: new Date(assign.start_time),
+            end: new Date(assign.end_time),
+            isNonMedical: assign.assignment_type === 'NON_MEDICAL',
+            specialty: assign.doctor?.specialty?.name || assign.specialtyName || 'N/A',
+          };
+          
+          console.log('📋 Mapped event:', event);
+          return event;
+        });
 
         const conflictIds = detectConflicts(rawEvents);
         setConflictCount(conflictIds.size);
@@ -115,17 +155,27 @@ function AgendaPage() {
       .finally(() => setIsLoading(false));
   }, [viewMode, selectedId]);
 
-  const boxOptions = useMemo(() =>
-    boxes.map(box => ({
+  const boxOptions = useMemo(() => {
+    if (!Array.isArray(boxes)) {
+      console.warn('boxes is not an array:', boxes);
+      return [];
+    }
+    return boxes.map(box => ({
       value: box.id,
-      label: `Box ${box.number}`
-    })), [boxes]);
+      label: `Box ${box.number || box.name || box.id}`
+    }));
+  }, [boxes]);
 
-  const doctorOptions = useMemo(() =>
-    doctors.map(doc => ({
+  const doctorOptions = useMemo(() => {
+    if (!Array.isArray(doctors)) {
+      console.warn('doctors is not an array:', doctors);
+      return [];
+    }
+    return doctors.map(doc => ({
       value: doc.id,
-      label: doc.full_name
-    })), [doctors]);
+      label: doc.name || doc.full_name || `Doctor ${doc.id}`
+    }));
+  }, [doctors]);
 
   const options = viewMode === 'box' ? boxOptions : doctorOptions;
   const selectedOption = options.find(option => option.value === selectedId);

@@ -49,7 +49,7 @@ function DoctorDetailPage() {
 
   return (
     <div className="doctor-detail-page-container">
-      <PageHeader title={doctorDetails ? `Dr. ${doctorDetails.full_name}` : 'Detalle del Médico'} />
+      <PageHeader title={doctorDetails ? `${doctorDetails.full_name}` : 'Detalle del Médico'} />
       
       <div className="doctor-detail-page-layout">
         <div className="main-content">
@@ -71,7 +71,15 @@ function DoctorDetailPage() {
                   </div>
                   <div className="schedule-card-details">
                     <p><strong>Día:</strong> {format(parseISO(item.start_time), 'EEEE', { locale: es })}</p>
-                    <p><strong>Box:</strong> {item.box.hallway}-{item.box.number}</p>
+                    <p><strong>Box:</strong> {
+                      item.box?.hallway && item.box?.number 
+                        ? `${item.box.hallway}-${item.box.number}`
+                        : item.box?.number 
+                        ? `Box ${item.box.number}`
+                        : item.boxId
+                        ? `Box ${item.boxId}`
+                        : 'Box no disponible'
+                    }</p>
                     {item.assignment_type === 'NON_MEDICAL' && (
                       <p className="non-medical-label">HORA NO MÉDICA</p>
                     )}

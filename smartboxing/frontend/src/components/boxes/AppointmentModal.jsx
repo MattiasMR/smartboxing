@@ -14,10 +14,10 @@ function AppointmentModal({ isOpen, onClose, assignment, appointments, generateT
         <button className="modal-close-button" onClick={onClose}>&times;</button>
         <h3>Citas para el Turno</h3>
         <p>
-          <strong>Médico:</strong> {assignment.doctor.full_name} ({assignment.doctor.specialty ? assignment.doctor.specialty.name : 'N/A'})
+          <strong>Médico:</strong> {assignment.doctor?.full_name || 'Doctor no disponible'} ({assignment.doctor?.specialty?.name || 'N/A'})
         </p>
         <p>
-          <strong>Box:</strong> {assignment.box.number} - {assignment.box.hallway}
+          <strong>Box:</strong> {assignment.box?.number || 'N/A'} - {assignment.box?.hallway || assignment.box?.name || 'N/A'}
         </p>
         <p>
           <strong>Horario del Turno:</strong> 
