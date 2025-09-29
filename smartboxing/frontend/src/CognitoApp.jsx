@@ -12,7 +12,9 @@ import AgendaPage from './pages/AgendaPage';
 import BoxDetailPage from './pages/BoxDetailPage';
 import DoctorDetailPage from './pages/DoctorDetailPage';
 import AnalystPage from './pages/AnalystPage';
+import PersonalizationPage from './pages/PersonalizationPage';
 import NotFoundPage from './pages/NotFoundPage';
+
 import { CognitoAuthProvider } from './context/CognitoAuthContext';
 
 function CognitoApp() {
@@ -34,6 +36,7 @@ function CognitoApp() {
             <Route path="reports" element={<ReportsPage />} />
             <Route path="agenda" element={<AgendaPage />} />
             <Route path="analista" element={<AnalystPage />} />
+            <Route path="personalizar" element={<PersonalizationPage />} />
           </Route>
         </Route>
         

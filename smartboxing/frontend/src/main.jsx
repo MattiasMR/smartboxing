@@ -6,6 +6,7 @@ import App from './App.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { initImageCache } from './utils/imageCache.js';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import './styles/theme-variables.css'; // Import CSS variables for theming
 import './styles/responsive-global.css'; // Import global responsive styles
 import './styles/production-responsive.css'; // Import production-specific responsive fixes
 

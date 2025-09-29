@@ -5,6 +5,7 @@ import { useCognitoAuth } from '../context/CognitoAuthContext';
 import hospitalLogo from '../assets/hospital-logo.png';
 import hospitalBg from '../assets/hospital-bg-optimized.jpg';
 import { useProgressiveImage } from '../hooks/useProgressiveImage';
+import { getCSSVariable } from '../utils/cssVariables';
 import './LoginPage.css';
 
 function LoginPage() {
@@ -53,8 +54,8 @@ function LoginPage() {
   // Dynamic background style based on image loading state
   const backgroundStyle = {
     backgroundImage: bgImgSrc 
-      ? `linear-gradient(rgba(0, 121, 107, 0.4), rgba(0, 121, 107, 0.4)), url(${bgImgSrc})`
-      : 'linear-gradient(135deg, #00796b 0%, #004d40 100%)',
+      ? `linear-gradient(rgba(var(--primary-color-rgb), 0.4), rgba(var(--primary-color-rgb), 0.4)), url(${bgImgSrc})`
+      : `linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%)`,
     transition: 'background-image 0.5s ease-in-out'
   };
 

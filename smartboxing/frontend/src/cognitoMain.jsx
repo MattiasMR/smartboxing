@@ -6,6 +6,7 @@ import CognitoApp from './CognitoApp.jsx';
 import { initImageCache } from './utils/imageCache.js';
 import { DEMO_MODE, API_CONFIG, COGNITO_CONFIG } from './config.js';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import './styles/theme-variables.css'; // Import CSS variables for theming
 import './styles/responsive-global.css';
 import './styles/production-responsive.css';
 

@@ -13,6 +13,7 @@ import getDay from 'date-fns/getDay';
 import es from 'date-fns/locale/es';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import './AgendaPage.css'; // Import the new CSS file
+import { THEME_COLORS } from '../utils/cssVariables';
 
 const locales = { 'es': es };
 const localizer = dateFnsLocalizer({
@@ -283,7 +284,7 @@ function AgendaPage() {
       <div className={isSidebar ? "control-group color-legend-sidebar" : "color-legend"}>
         {isSidebar && <h4>Leyenda</h4>}
         <div className={isSidebar ? "legend-item" : ""}>
-          <span className="legend-color-box" style={{ backgroundColor: '#00796b' }}></span>
+          <span className="legend-color-box" style={{ backgroundColor: THEME_COLORS.MEDICAL_HOURS() }}></span>
           <span className="legend-text">Horas Médicas</span>
         </div>
         <div className={isSidebar ? "legend-item" : ""}>
@@ -337,10 +338,10 @@ function AgendaPage() {
               event: CustomEventComponent,
             }}
             eventPropGetter={event => {
-              let backgroundColor = event.isNonMedical ? '#868e96' : '#00796b';
+              let backgroundColor = event.isNonMedical ? THEME_COLORS.NON_MEDICAL_HOURS() : THEME_COLORS.MEDICAL_HOURS();
 
               if (event.isConflicting) {
-                backgroundColor = '#d32f2f';
+                backgroundColor = THEME_COLORS.CONFLICT_HOURS();
               }
 
               return {

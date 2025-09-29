@@ -6,7 +6,7 @@ npx serverless deploy --stage dev --region $AWS_REGION
 ```
 CLIENT_ID='14skfnveh2ik2bt31crj6udvv0'
 CLIENT_SECRET='1o67n25f5op7ri61egda8f04n36vlp1o1d67edbskef5rbrs0pkv'
-CODE='8ed5af60-c58d-41ae-b765-57080c319c15'
+CODE='4735118e-2232-404d-97f9-6766d4763bec'
 REDIRECT_URI='https://d84l1y8p4kdic.cloudfront.net'
 
 BASIC_AUTH=$(printf "%s:%s" "$CLIENT_ID" "$CLIENT_SECRET" | base64 -w 0)
@@ -33,3 +33,8 @@ curl -sS -i \
 
 curl -sS -H "Authorization: Bearer $ID_TOKEN" \
   https://s4w81ju5pc.execute-api.us-east-1.amazonaws.com/permissions | jq .
+
+
+curl -H "Authorization: Bearer eyJraWQiOiJrdXhrY2JyOHpXWlY4OGdOVjRcLzFnNk5zVEVqck96aDYxNExYbXQwUUM5dz0iLCJhbGciOiJSUzI1NiJ9.eyJhdF9oYXNoIjoiNnB6eUpnV0xFLTQwZzdIOWRvRGxxUSIsInN1YiI6ImQ0YjgyNDc4LTIwMTEtNzA1Mi1kYmM3LTU5NTQyMzRkZGVjNiIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJpc3MiOiJodHRwczpcL1wvY29nbml0by1pZHAudXMtZWFzdC0xLmFtYXpvbmF3cy5jb21cL3VzLWVhc3QtMV9vMHZ1S3pPSGMiLCJjb2duaXRvOnVzZXJuYW1lIjoibWF0dGlhcyIsIm9yaWdpbl9qdGkiOiI0NDRhMWIwYi0wYzQwLTQzZGUtOTg2NS0yMmVkZDhmMzE1MmEiLCJhdWQiOiIxNHNrZm52ZWgyaWsyYnQzMWNyajZ1ZHZ2MCIsInRva2VuX3VzZSI6ImlkIiwiYXV0aF90aW1lIjoxNzU5MTA4MTM0LCJleHAiOjE3NTkxMTE3MzQsImlhdCI6MTc1OTEwODEzNCwianRpIjoiYmJlNzJiMDctODA3ZS00NDgzLThhYjMtNjgyNWVkYzI1ODY1IiwiZW1haWwiOiJtb3JhbGVzbWF0dGlhc0BnbWFpbC5jb20ifQ.qR8KPyGgJwPGb-Z0QMctZlasTwkU84i4BYJ8gtGxjCMFde25KRY6zKuO8QGJcDE6C8E0DKGx1ushSOkjtnFxnuKc7TPA9YltK2H7JrwxcQc6T9UUEWB3pY77DKW9ktzI2H9tpRzvpOVUOH9rY436JSp2YXVrPX9h6ibIu8q28IReaB20PLGuXmHLyt6I70qX8VFe8YJOVzZNrNxDhP-cS7lCKT0Nz9Y6lPH3pY4WZOX4ZNgHoKoaLYnzhWzzXkMSKuX_UsePTAeL_l9jnQi0ZxRf0cgYbjb0jSZ1KvGxZKcyj9D9JmQJb4gP1Hy8JaOVeMcKkchGTPn2Axq05o3aPA" https://s4w81ju5pc.execute-api.us-east-1.amazonaws.com/personalization
+
+

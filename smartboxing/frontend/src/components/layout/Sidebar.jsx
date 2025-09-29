@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './Sidebar.css';
-import { FaHome, FaTh, FaChartBar, FaCalendarAlt, FaUserMd, FaTimes, FaBrain } from 'react-icons/fa'; // Added FaBrain
+import { FaHome, FaTh, FaChartBar, FaCalendarAlt, FaUserMd, FaTimes, FaBrain, FaPalette } from 'react-icons/fa'; // Added FaBrain, FaPalette
 
 const mainNavItems = [
   { id: 'home', label: 'Home', icon: <FaHome />, path: '/' },
@@ -11,6 +11,7 @@ const mainNavItems = [
   { id: 'agenda', label: 'Agendas', icon: <FaCalendarAlt />, path: '/agenda' },
   { id: 'reports', label: 'Reportes', icon: <FaChartBar />, path: '/reports' },
   { id: 'analyst', label: 'Analista IA', icon: <FaBrain />, path: '/analista' }, // Added Analyst IA
+  { id: 'personalization', label: 'Personalizar', icon: <FaPalette />, path: '/personalizar' }, // Added Personalization
 ];
 
 function Sidebar({ isOpen, onClose }) {
