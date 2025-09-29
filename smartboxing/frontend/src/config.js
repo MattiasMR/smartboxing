@@ -3,6 +3,9 @@
 // Set this to true to bypass the login page for development and testing
 export const SKIP_LOGIN_FOR_DEVELOPMENT = false;
 
+// Demo mode - reduces API calls and logs for cleaner demo experience
+export const DEMO_MODE = false; // Set to false to enable all API calls
+
 // API Configuration
 export const API_CONFIG = {
   // New Serverless API

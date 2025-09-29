@@ -7,8 +7,8 @@ function BoxCard({ box }) {
 
   // Determinamos el estado principal a mostrar
   const isEnabled = box.operational_status === 'ENABLED';
-  // El estado de ocupación ahora viene calculado desde el backend
-  const displayStatus = isEnabled ? box.occupancy_status : 'DISABLED';
+  // El estado de ocupación ahora viene calculado desde el backend, con fallback
+  const displayStatus = isEnabled ? (box.occupancy_status || 'AVAILABLE') : 'DISABLED';
   
   // Asignamos una clase CSS basada en el estado a mostrar
   const statusClass = displayStatus.toLowerCase();

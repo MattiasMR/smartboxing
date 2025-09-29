@@ -49,7 +49,9 @@ function DashboardFilters({
                   onChange={onFilterChange}
                 >
                   <option value="">Todos</option>
-                  {hallwayOptions.map(hall => <option key={hall} value={hall}>{hall}</option>)}
+                  {hallwayOptions && hallwayOptions.map(hall => (
+                    <option key={hall} value={hall}>{hall}</option>
+                  ))}
                 </select>
               </div>
             </div>
