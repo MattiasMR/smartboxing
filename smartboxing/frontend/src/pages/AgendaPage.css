@@ -17,7 +17,7 @@
 
 .agenda-calendar-area {
   flex-grow: 1;
-  background-color: var(--background-tertiary); /* Gris más oscuro como en personalización */
+  background-color: var(--background-secondary); /* Dinámico: gris claro en modo claro, oscuro en modo oscuro */
   padding: 20px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -333,7 +333,7 @@
   flex-direction: column;
   gap: 20px;
   padding: 20px;
-  background-color: var(--background-tertiary); /* Color oscuro como en personalización */
+  background-color: var(--background-secondary); /* Dinámico: gris claro en modo claro, oscuro en modo oscuro */
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   overflow-y: auto; /* Scroll if content exceeds height */

@@ -30,7 +30,7 @@ const DEFAULT_THEME = {
   backgroundPrimary: '#ffffff',
   backgroundSecondary: '#f8f9fa', 
   backgroundGray: '#e9ecef',
-  backgroundTertiary: '#2D2D2D', // Color favorito para elementos destacados
+  backgroundTertiary: '#f1f3f4', // Dinámico: claro en modo claro, oscuro en modo oscuro
   
   // Colores de texto
   textPrimary: '#333333',
@@ -65,7 +65,7 @@ export const useTheme = () => {
     root.style.setProperty('--hover-secondary', secondaryHover);
     
     // Aplicar colores de fondo especiales
-    root.style.setProperty('--background-tertiary', newTheme.backgroundTertiary || '#2D2D2D');
+    root.style.setProperty('--background-tertiary', newTheme.darkMode ? '#2D2D2D' : '#f1f3f4');
     
     // Aplicar modo oscuro/claro
     if (newTheme.darkMode) {

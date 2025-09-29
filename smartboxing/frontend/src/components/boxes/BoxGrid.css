@@ -5,7 +5,7 @@
 
 .box-group-container {
   margin-bottom: 30px;
-  background-color: var(--background-tertiary); /* Color oscuro como en personalización */
+  background-color: var(--background-secondary); /* Dinámico: gris claro en modo claro, oscuro en modo oscuro */
   padding: 20px;
   border-radius: 12px;
   transition: background-color 0.3s ease;
