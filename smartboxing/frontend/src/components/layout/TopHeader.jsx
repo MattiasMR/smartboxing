@@ -3,19 +3,41 @@ import React, { useState, useEffect } from 'react';
 import { FaBars } from 'react-icons/fa';
 import { useCognitoAuth } from '../../context/CognitoAuthContext';
 import { useNavigate } from 'react-router-dom';
-import logo from '../../assets/hospital-logo.png';
+import { getCustomLogo } from '../../utils/imageUtils';
+import defaultLogo from '../../assets/hospital-logo.png';
 import './TopHeader.css';
 
 const userAvatar = 'https://i.pravatar.cc/40';
 
 function TopHeader({ onMenuClick, isOpen }) {
   const [now, setNow] = useState(new Date());
+  const [currentLogo, setCurrentLogo] = useState(defaultLogo);
   const { logout, user } = useCognitoAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     const timerId = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timerId);
+  }, []);
+
+  useEffect(() => {
+    // Load custom logo
+    const customLogo = getCustomLogo();
+    if (customLogo) {
+      setCurrentLogo(customLogo);
+    }
+
+    // Listen for logo changes
+    const handleLogoChange = (e) => {
+      const newLogo = e.detail ? e.detail : defaultLogo;
+      setCurrentLogo(newLogo);
+    };
+
+    window.addEventListener('logoChanged', handleLogoChange);
+    
+    return () => {
+      window.removeEventListener('logoChanged', handleLogoChange);
+    };
   }, []);
 
   const formattedDate = now.toLocaleDateString('es-CL', {
@@ -55,12 +77,12 @@ function TopHeader({ onMenuClick, isOpen }) {
           >
             <FaBars />
           </button>
-          <img src={logo} alt="Hospital Logo" className="header-logo" />
+          <img src={currentLogo} alt="Hospital Logo" className="header-logo" />
         </div>
         
         <div className="header-center" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '0.9em', color: '#555' }}>{formattedDate}</div>
-          <div style={{ fontFamily: 'monospace', fontSize: '1.2em', fontWeight: 'bold' }}>
+          <div style={{ fontSize: '0.9em', color: 'var(--text-secondary)' }}>{formattedDate}</div>
+          <div style={{ fontFamily: 'monospace', fontSize: '1.2em', fontWeight: 'bold', color: 'var(--text-primary)' }}>
             {formattedTime}
           </div>
         </div>

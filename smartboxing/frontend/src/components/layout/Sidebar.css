@@ -2,8 +2,8 @@
 .sidebar {
   width: 180px;
   flex-shrink: 0;
-  background-color: #ffffff;
-  border-right: 1px solid #e0e0e0;
+  background-color: var(--background-primary);
+  border-right: 1px solid var(--border-secondary);
   height: calc(100vh - 61px);
   position: sticky;
   top: 61px;
@@ -18,12 +18,14 @@
   padding: 15px 20px;
   display: flex;
   align-items: center;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-secondary);
   cursor: pointer;
 }
 .sidebar-header h2 {
   margin: 0;
   font-size: 1.1em;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
 }
 .back-arrow {
   margin-right: 10px;
@@ -38,14 +40,14 @@
 }
 .sidebar a, .sidebar .nav-button {
   text-decoration: none;
-  color: #333;
+  color: var(--text-primary);
   font-weight: 500;
   display: flex;
   align-items: center;
   gap: 15px;
   padding: 12px 10px;
   border-radius: 6px;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, color 0.3s ease;
   cursor: pointer;
   border: none;
   background: none;
@@ -60,7 +62,7 @@
   flex-shrink: 0;
 }
 .sidebar a:hover, .sidebar .nav-button:hover {
-  background-color: #f0f0f0;
+  background-color: var(--hover-bg);
 }
 .sidebar.collapsed .nav-label {
   display: none;
@@ -90,18 +92,18 @@
 }
 
 .mobile-close-btn:hover {
-  background-color: #f0f0f0;
+  background-color: var(--hover-bg);
 }
 
 /* Estilo específico para el icono del analista IA */
 .sidebar a[href="/analista"] svg {
-  color: #00796b;
+  color: var(--primary-color);
 }
 
 /* Active state for navigation items */
 .sidebar li.active a {
-  background-color: #e6f2f1;
-  color: #00796b;
+  background-color: rgba(var(--primary-color-rgb), 0.1);
+  color: var(--primary-color);
 }
 
 /* --- REGLAS PARA MÓVILES --- */
@@ -189,7 +191,7 @@
   margin-top: auto;
   padding: 15px;
   text-align: center;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--border-secondary);
 }
 
 .developed-by {

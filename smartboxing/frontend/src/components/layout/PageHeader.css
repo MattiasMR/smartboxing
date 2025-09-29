@@ -8,17 +8,19 @@
   justify-content: space-between;
   align-items: center;
   padding: 15px 20px;
-  background-color: #ffffff;
+  background-color: var(--background-primary);
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: var(--shadow-sm);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .page-header-title {
   margin: 0;
   font-size: 1.7em; /* Increased from 1.5em to 1.7em */
-  color: #333;
+  color: var(--text-primary);
   font-weight: 600; /* Made slightly bolder */
   flex-shrink: 0; /* Evita que el título se encoja */
+  transition: color 0.3s ease;
 }
 
 .page-header-controls {

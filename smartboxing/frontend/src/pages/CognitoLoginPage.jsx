@@ -1,8 +1,9 @@
 // src/pages/CognitoLoginPage.jsx
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useCognitoAuth } from '../context/CognitoAuthContext';
 import { useNavigate } from 'react-router-dom';
-import hospitalLogo from '../assets/hospital-logo.png';
+import { loadImageFromStorage, getCustomLogo, IMAGE_STORAGE_KEYS } from '../utils/imageUtils';
+import hospitalLogo from '../assets/smartboxingLogo.jpg';
 import hospitalBg from '../assets/hospital-bg-optimized.jpg';
 import { useProgressiveImage } from '../hooks/useProgressiveImage';
 import './LoginPage.css'; // Reuse existing styles
@@ -11,8 +12,41 @@ function CognitoLoginPage() {
   const { login, isAuthenticated } = useCognitoAuth();
   const navigate = useNavigate();
   
+  // Custom background and logo states
+  const [customBackground, setCustomBackground] = useState(null);
+  const [currentLogo, setCurrentLogo] = useState(hospitalLogo);
+  
+  // Load custom assets
+  useEffect(() => {
+    const storedBackground = loadImageFromStorage(IMAGE_STORAGE_KEYS.LOGIN_BACKGROUND);
+    const customLogo = getCustomLogo();
+    
+    if (storedBackground) setCustomBackground(storedBackground);
+    if (customLogo) setCurrentLogo(customLogo);
+    
+    // Listen for changes
+    const handleBackgroundChange = (e) => {
+      if (e.key === IMAGE_STORAGE_KEYS.LOGIN_BACKGROUND) {
+        setCustomBackground(e.newValue);
+      }
+    };
+    
+    const handleLogoChange = (e) => {
+      setCurrentLogo(e.detail || hospitalLogo);
+    };
+
+    window.addEventListener('storage', handleBackgroundChange);
+    window.addEventListener('logoChanged', handleLogoChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleBackgroundChange);
+      window.removeEventListener('logoChanged', handleLogoChange);
+    };
+  }, []);
+  
   // Progressive image loading for background
-  const { imgSrc: bgImgSrc, isLoading: bgIsLoading } = useProgressiveImage(hospitalBg);
+  const backgroundImageSrc = customBackground || hospitalBg;
+  const { imgSrc: bgImgSrc, isLoading: bgIsLoading } = useProgressiveImage(backgroundImageSrc);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -25,16 +59,28 @@ function CognitoLoginPage() {
     login(); // This will redirect to Cognito Hosted UI
   };
 
+  // Dynamic background style
+  const backgroundStyle = {
+    backgroundImage: bgImgSrc 
+      ? `linear-gradient(rgba(0, 121, 107, 0.4), rgba(0, 121, 107, 0.4)), url(${bgImgSrc})`
+      : `linear-gradient(135deg, #00796b 0%, #004d40 100%)`,
+    transition: 'background-image 0.5s ease-in-out'
+  };
+
   return (
-    <div className="login-page">
+    <div className="login-page" style={backgroundStyle}>
       {/* Background with progressive loading */}
-      
+      {bgIsLoading && (
+        <div className="background-loader">
+          <div className="loader-spinner"></div>
+        </div>
+      )}
       
       {/* Login form */}
       <div className="login-container">
         <div className="login-form">
           <div className="logo-section">
-            <img src={hospitalLogo} alt="Hospital Logo" className="hospital-logo" />
+            <img src={currentLogo} alt="Hospital Logo" className="hospital-logo" />
             <h1>SmartBoxing Healthcare</h1>
             <p>Sistema de Gestión Médica</p>
           </div>

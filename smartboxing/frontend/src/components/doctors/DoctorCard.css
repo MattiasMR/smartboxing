@@ -1,22 +1,22 @@
 /* src/components/doctors/DoctorCard.css */
 
 .doctor-card {
-  background-color: #fff;
+  background-color: var(--background-primary);
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: var(--shadow-md);
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0; /* Removido margin porque el gap lo maneja el contenedor */
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  border: 1px solid #f0f0f0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease;
+  border: 1px solid var(--border-light);
 }
 
 .doctor-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-  border-color: #e0e0e0;
+  box-shadow: var(--shadow-lg);
+  border-color: var(--border-primary);
 }
 
 .doctor-info {
@@ -27,15 +27,17 @@
   margin: 0 0 6px 0;
   font-size: 1.25em;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
   line-height: 1.3;
+  transition: color 0.3s ease;
 }
 
 .doctor-specialty {
   margin: 0;
-  color: #666;
+  color: var(--text-secondary);
   font-size: 1em;
   font-weight: 400;
+  transition: color 0.3s ease;
 }
 
 .doctor-actions {
@@ -66,13 +68,14 @@
 .status-text {
   font-size: 0.9em;
   font-weight: 500;
-  color: #555;
+  color: var(--text-secondary);
   white-space: nowrap;
+  transition: color 0.3s ease;
 }
 
 .details-button {
   padding: 10px 20px;
-  background-color: #00796b;
+  background-color: var(--primary-color);
   color: white;
   border: none;
   border-radius: 8px;
@@ -85,7 +88,7 @@
 }
 
 .details-button:hover {
-  background-color: #004d40;
+  background-color: var(--hover-primary);
   transform: translateY(-1px);
 }
 

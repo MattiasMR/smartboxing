@@ -134,10 +134,10 @@
   align-items: center;
   padding: 8px;
   margin-bottom: 6px;
-  background: white;
+  background: var(--background-primary);
   border-radius: 6px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.2s ease;
+  transition: box-shadow 0.2s ease, background-color 0.3s ease;
 }
 
 .ranking-item:hover {
@@ -184,7 +184,7 @@
 
 .ranking-item .ranking-value {
   font-weight: 600;
-  color: #00796b;
+  color: var(--primary-color);
   background-color: #e6f2f1;
   padding: 4px 8px;
   border-radius: 12px;
@@ -319,7 +319,7 @@
 
 .ranking-list .rank-value {
   font-weight: 600;
-  color: #00796b;
+  color: var(--primary-color);
   background-color: #e6f2f1;
   padding: 4px 8px;
   border-radius: 4px;
@@ -378,7 +378,7 @@
 }
 
 .specialties-section .report-card-content::-webkit-scrollbar-thumb {
-  background: #00796b;
+  background: var(--primary-color);
   border-radius: 4px;
 }
 
@@ -415,7 +415,7 @@
 
 .ranking-list span {
   font-weight: 600;
-  color: #00796b;
+  color: var(--primary-color);
   background-color: #e6f2f1;
   padding: 4px 8px;
   border-radius: 4px;

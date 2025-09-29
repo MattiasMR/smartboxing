@@ -30,12 +30,13 @@
 
 .mini-doctor-specialty {
   font-size: 0.95em; /* Increased from 0.8em to 0.95em */
-  color: #555;
+  color: var(--text-secondary);
   margin: 0;
+  transition: color 0.3s ease;
 }
 
 .mini-details-button {
-  background-color: #00796b; /* Emerald/Water Green */
+  background-color: var(--primary-color); /* Emerald/Water Green */
   color: white;
   border: none;
   border-radius: 5px;
@@ -46,5 +47,5 @@
 }
 
 .mini-details-button:hover {
-  background-color: #004d40; /* Darker shade of Emerald/Water Green */
+  background-color: var(--hover-primary); /* Darker shade of Emerald/Water Green */
 }

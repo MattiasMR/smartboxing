@@ -64,9 +64,13 @@ function ReportsPage() {
                     dataPoints[index] = item.count;
                 }
             });
+            // Get the actual secondary color value from CSS variable
+            const secondaryColor = getComputedStyle(document.documentElement)
+              .getPropertyValue('--secondary-color').trim() || '#df0b6f';
+              
             setTimeslotData({
                 labels,
-                datasets: [{ label: 'Nº de Consultas', data: dataPoints, backgroundColor: '#df0b6f' }]
+                datasets: [{ label: 'Nº de Consultas', data: dataPoints, backgroundColor: secondaryColor }]
             });
 
         }).catch(error => {

@@ -1,4 +1,4 @@
-// src/components/personalization/LogoUploader.jsx
+// src/components/personalization/BackgroundUploader.jsx
 import React, { useState, useRef } from 'react';
 import { FaUpload, FaImage, FaUndo, FaCheck, FaSpinner } from 'react-icons/fa';
 import { 
@@ -13,9 +13,9 @@ import {
   DEFAULT_IMAGES
 } from '../../utils/imageUtils';
 
-const LogoUploader = () => {
-  const [currentLogo, setCurrentLogo] = useState(() => {
-    return loadImageFromStorage(IMAGE_STORAGE_KEYS.CUSTOM_LOGO) || DEFAULT_IMAGES.LOGO;
+const BackgroundUploader = () => {
+  const [currentBackground, setCurrentBackground] = useState(() => {
+    return loadImageFromStorage(IMAGE_STORAGE_KEYS.LOGIN_BACKGROUND) || DEFAULT_IMAGES.LOGIN_BACKGROUND;
   });
   const [preview, setPreview] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -23,11 +23,11 @@ const LogoUploader = () => {
   const [success, setSuccess] = useState(false);
   const fileInputRef = useRef(null);
 
-  // Cargar logo actual al montar
+  // Cargar imagen actual al montar
   React.useEffect(() => {
-    const savedLogo = loadImageFromStorage(IMAGE_STORAGE_KEYS.CUSTOM_LOGO);
-    if (savedLogo) {
-      setCurrentLogo(savedLogo);
+    const savedBackground = loadImageFromStorage(IMAGE_STORAGE_KEYS.LOGIN_BACKGROUND);
+    if (savedBackground) {
+      setCurrentBackground(savedBackground);
     }
   }, []);
 
@@ -41,21 +41,21 @@ const LogoUploader = () => {
 
     try {
       // Validar archivo
-      const validation = validateImage(file, 2); // 2MB máximo
+      const validation = validateImage(file, 5); // 5MB máximo para backgrounds
       if (!validation.isValid) {
         setError(validation.error);
         return;
       }
 
-      // Redimensionar imagen (logo pequeño)
-      const resizedBlob = await resizeImage(file, 200, 200, 0.8);
+      // Redimensionar imagen (background más grande)
+      const resizedBlob = await resizeImage(file, 1920, 1080, 0.8);
       const resizedFile = new File([resizedBlob], file.name, { type: 'image/jpeg' });
       
       // Convertir a base64
       const base64 = await fileToBase64(resizedFile);
       
-      // Crear vista previa
-      const previewUrl = await createPreview(base64, 150, 150);
+      // Crear vista previa más pequeña
+      const previewUrl = await createPreview(base64, 300, 200);
       setPreview({ original: base64, preview: previewUrl });
 
     } catch (err) {
@@ -66,18 +66,18 @@ const LogoUploader = () => {
     }
   };
 
-  const handleApplyLogo = async () => {
+  const handleApplyBackground = async () => {
     if (!preview) return;
 
     setIsUploading(true);
     setError(null);
 
     try {
-      // Guardar en localStorage
-      const saved = await saveImageToStorage(IMAGE_STORAGE_KEYS.CUSTOM_LOGO, preview.original);
+      // Guardar en localStorage (puede ser grande, usar compresión mayor)
+      const saved = await saveImageToStorage(IMAGE_STORAGE_KEYS.LOGIN_BACKGROUND, preview.original, 1000); // 1MB max
       
       if (saved) {
-        setCurrentLogo(preview.original);
+        setCurrentBackground(preview.original);
         setPreview(null);
         setSuccess(true);
         
@@ -89,19 +89,19 @@ const LogoUploader = () => {
           fileInputRef.current.value = '';
         }
       } else {
-        setError('Error al guardar el logo. La imagen puede ser demasiado grande.');
+        setError('Error al guardar la imagen. Intenta con una imagen más pequeña o de menor calidad.');
       }
     } catch (err) {
-      console.error('Error saving logo:', err);
-      setError('Error al guardar el logo.');
+      console.error('Error saving background:', err);
+      setError('Error al guardar la imagen de fondo.');
     } finally {
       setIsUploading(false);
     }
   };
 
-  const handleResetLogo = () => {
-    removeImageFromStorage(IMAGE_STORAGE_KEYS.CUSTOM_LOGO);
-    setCurrentLogo(DEFAULT_IMAGES.LOGO);
+  const handleResetBackground = () => {
+    removeImageFromStorage(IMAGE_STORAGE_KEYS.LOGIN_BACKGROUND);
+    setCurrentBackground(DEFAULT_IMAGES.LOGIN_BACKGROUND);
     setPreview(null);
     setError(null);
     setSuccess(true);
@@ -122,34 +122,34 @@ const LogoUploader = () => {
     }
   };
 
-  const isCustomLogo = currentLogo !== DEFAULT_IMAGES.LOGO;
+  const isCustomBackground = currentBackground !== DEFAULT_IMAGES.LOGIN_BACKGROUND;
 
   return (
-    <div className="logo-uploader" style={styles.container}>
-      <div className="logo-uploader-header">
+    <div className="background-uploader" style={styles.container}>
+      <div className="background-uploader-header">
         <h3 style={styles.title}>
           <FaImage style={styles.headerIcon} />
-          Logo del Sistema
+          Imagen de Fondo del Login
         </h3>
         <p style={styles.description}>
-          Personaliza el logo que aparece en la aplicación. Recomendado: 200x200px, máximo 2MB.
+          Personaliza la imagen de fondo de la página de inicio de sesión. Recomendado: 1920x1080px, máximo 5MB.
         </p>
       </div>
 
-      <div className="logo-uploader-content">
+      <div className="background-uploader-content">
         {/* Vista previa actual */}
         <div style={styles.section}>
-          <h4 style={styles.sectionTitle}>Logo Actual</h4>
+          <h4 style={styles.sectionTitle}>Fondo Actual</h4>
           <div style={styles.previewContainer}>
             <img 
-              src={currentLogo.startsWith('data:') ? currentLogo : currentLogo} 
-              alt="Logo actual" 
-              style={styles.logoPreview}
+              src={currentBackground.startsWith('data:') ? currentBackground : currentBackground} 
+              alt="Fondo actual" 
+              style={styles.backgroundPreview}
               onError={(e) => {
-                e.target.src = DEFAULT_IMAGES.LOGO;
+                e.target.src = DEFAULT_IMAGES.LOGIN_BACKGROUND;
               }}
             />
-            {isCustomLogo && (
+            {isCustomBackground && (
               <div style={styles.badge}>Personalizado</div>
             )}
           </div>
@@ -162,8 +162,8 @@ const LogoUploader = () => {
             <div style={styles.previewContainer}>
               <img 
                 src={preview.preview} 
-                alt="Vista previa del nuevo logo" 
-                style={styles.logoPreview}
+                alt="Vista previa del nuevo fondo" 
+                style={styles.backgroundPreview}
               />
               <div style={{...styles.badge, backgroundColor: 'var(--secondary-color)'}}>Nuevo</div>
             </div>
@@ -178,12 +178,12 @@ const LogoUploader = () => {
             accept="image/*"
             onChange={handleFileSelect}
             style={styles.fileInput}
-            id="logo-file-input"
+            id="background-file-input"
             disabled={isUploading}
           />
           
           <label 
-            htmlFor="logo-file-input" 
+            htmlFor="background-file-input" 
             style={{
               ...styles.uploadButton,
               ...(isUploading ? styles.uploadButtonDisabled : {})
@@ -197,7 +197,7 @@ const LogoUploader = () => {
             ) : (
               <>
                 <FaUpload style={styles.buttonIcon} />
-                Seleccionar Logo
+                Seleccionar Imagen
               </>
             )}
           </label>
@@ -205,12 +205,12 @@ const LogoUploader = () => {
           {preview && (
             <div style={styles.previewActions}>
               <button 
-                onClick={handleApplyLogo}
+                onClick={handleApplyBackground}
                 style={styles.applyButton}
                 disabled={isUploading}
               >
                 <FaCheck style={styles.buttonIcon} />
-                Aplicar Logo
+                Aplicar Fondo
               </button>
               <button 
                 onClick={handleCancelPreview}
@@ -222,9 +222,9 @@ const LogoUploader = () => {
             </div>
           )}
 
-          {isCustomLogo && !preview && (
+          {isCustomBackground && !preview && (
             <button 
-              onClick={handleResetLogo}
+              onClick={handleResetBackground}
               style={styles.resetButton}
               disabled={isUploading}
             >
@@ -244,7 +244,7 @@ const LogoUploader = () => {
         {success && (
           <div style={styles.successMessage}>
             <FaCheck style={styles.buttonIcon} />
-            Logo actualizado correctamente
+            Imagen de fondo actualizada correctamente
           </div>
         )}
 
@@ -253,9 +253,10 @@ const LogoUploader = () => {
           <h5 style={styles.infoTitle}>Recomendaciones:</h5>
           <ul style={styles.infoList}>
             <li>Formato: PNG, JPG o WebP</li>
-            <li>Tamaño recomendado: 200x200 píxeles</li>
-            <li>Tamaño máximo: 2MB</li>
-            <li>Fondo transparente preferible</li>
+            <li>Tamaño recomendado: 1920x1080 píxeles (Full HD)</li>
+            <li>Tamaño máximo: 5MB</li>
+            <li>Imágenes con buena iluminación y contraste</li>
+            <li>Evitar imágenes muy ocupadas o con mucho detalle</li>
           </ul>
         </div>
       </div>
@@ -304,10 +305,10 @@ const styles = {
     position: 'relative',
     display: 'inline-block'
   },
-  logoPreview: {
-    width: '120px',
-    height: '120px',
-    objectFit: 'contain',
+  backgroundPreview: {
+    width: '300px',
+    height: '200px',
+    objectFit: 'cover',
     border: '2px solid var(--border-secondary)',
     borderRadius: '8px',
     backgroundColor: 'var(--background-secondary)'
@@ -436,4 +437,4 @@ const styles = {
   }
 };
 
-export default LogoUploader;
+export default BackgroundUploader;

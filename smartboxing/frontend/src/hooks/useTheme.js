@@ -1,6 +1,16 @@
 // src/hooks/useTheme.js
 import { useState, useEffect, useCallback } from 'react';
 
+// Función para oscurecer un color hexadecimal
+const darkenColor = (color, amount = 0.2) => {
+  const hex = color.replace('#', '');
+  const num = parseInt(hex, 16);
+  const r = Math.max(0, (num >> 16) - Math.round(255 * amount));
+  const g = Math.max(0, ((num >> 8) & 0x00FF) - Math.round(255 * amount));
+  const b = Math.max(0, (num & 0x0000FF) - Math.round(255 * amount));
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+};
+
 const DEFAULT_THEME = {
   // Colores principales
   primaryColor: '#00796b',
@@ -47,6 +57,12 @@ export const useTheme = () => {
     root.style.setProperty('--secondary-dark', newTheme.secondaryDark);
     root.style.setProperty('--secondary-light', newTheme.secondaryLight);
     
+    // Calcular y aplicar colores hover
+    const primaryHover = darkenColor(newTheme.primaryColor, 0.15);
+    const secondaryHover = darkenColor(newTheme.secondaryColor, 0.15);
+    root.style.setProperty('--hover-primary', primaryHover);
+    root.style.setProperty('--hover-secondary', secondaryHover);
+    
     // Aplicar modo oscuro/claro
     if (newTheme.darkMode) {
       root.setAttribute('data-theme', 'dark');
@@ -67,21 +83,17 @@ export const useTheme = () => {
 
   // Inicialización automática al montar el hook
   useEffect(() => {
-    console.log('🎨 [useTheme] Initializing theme...');
     const loadTheme = async () => {
       try {
         const savedTheme = localStorage.getItem(STORAGE_KEY);
-        console.log('🎨 [useTheme] Saved theme from localStorage:', savedTheme);
         
         if (savedTheme) {
           const parsedTheme = JSON.parse(savedTheme);
           const newTheme = { ...DEFAULT_THEME, ...parsedTheme };
-          console.log('🎨 [useTheme] Applying saved theme:', newTheme);
           setTheme(newTheme);
           applyTheme(newTheme);
         } else {
           // Si no hay tema guardado, usar el tema por defecto y aplicarlo
-          console.log('🎨 [useTheme] No saved theme, using default:', DEFAULT_THEME);
           setTheme(DEFAULT_THEME);
           applyTheme(DEFAULT_THEME);
         }
@@ -90,7 +102,6 @@ export const useTheme = () => {
         setTheme(DEFAULT_THEME);
         applyTheme(DEFAULT_THEME);
       } finally {
-        console.log('🎨 [useTheme] Theme loading completed, setting isLoading to false');
         setIsLoading(false);
       }
     };

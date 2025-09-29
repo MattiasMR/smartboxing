@@ -2,14 +2,15 @@
 import React, { useState } from 'react';
 import { FaPalette, FaMoon, FaSun, FaSave, FaUndo, FaEye, FaCompressArrowsAlt, FaExpandArrowsAlt } from 'react-icons/fa';
 import PageHeader from '../components/layout/PageHeader';
+import LogoUploader from '../components/personalization/LogoUploader';
+import BackgroundUploader from '../components/personalization/BackgroundUploader';
 import { useTheme } from '../hooks/useTheme';
+import './PersonalizationPage.css';
 import './PersonalizationPage.css';
 
 const PersonalizationPage = () => {
   const { theme, updateTheme, resetTheme, toggleDarkMode, toggleCompactMode, isDefaultTheme, isLoading } = useTheme();
   const [saving, setSaving] = useState(false);
-
-  console.log('🎨 [PersonalizationPage] Rendering with:', { theme, isLoading });
 
   // Función para generar colores automáticamente basados en el color principal
   const generateColorVariations = (baseColor) => {
@@ -270,6 +271,21 @@ const PersonalizationPage = () => {
               </div>
 
             </div>
+          </div>
+
+        </div>
+
+        {/* Sección de Logo y Imágenes */}
+        <div className="personalization-grid">
+          
+          {/* Logo del Sistema */}
+          <div className="personalization-card">
+            <LogoUploader />
+          </div>
+
+          {/* Imagen de Fondo del Login */}
+          <div className="personalization-card">
+            <BackgroundUploader />
           </div>
 
         </div>

@@ -68,7 +68,7 @@ function Sidebar({ isOpen, onClose }) {
         <li key={item.id} className={location.pathname === item.path ? 'active' : ''}>
           <Link to={item.path} onClick={handleLinkClick}>
             {item.icon}
-            <span className="nav-label" style={item.id === 'analyst' ? { color: '#df0b6f' } : {}}>{item.label}</span>
+            <span className="nav-label" style={item.id === 'analyst' ? { color: 'var(--secondary-color)' } : {}}>{item.label}</span>
           </Link>
         </li>
       ))}

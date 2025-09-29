@@ -1,7 +1,7 @@
 /* src/components/boxes/BoxCard.css */
 .box-card {
-  background-color: #ffffff;
-  border: 1px solid #e9ecef;
+  background-color: var(--background-primary);
+  border: 1px solid var(--border-secondary);
   border-radius: 16px; /* More rounded corners */
   padding: 20px;
   margin: 12px;
@@ -24,7 +24,7 @@
 .box-card-header h3 {
   margin: 0 0 8px 0;
   font-size: 1.5em; /* Larger title */
-  color: #1c1c1c;
+  color: var(--text-primary);
 }
 
 .status-indicator {
@@ -43,9 +43,9 @@
   margin-right: 8px;
 }
 
-.status-dot.free { background-color: #28a745; }
-.status-dot.occupied { background-color: #dc3545; }
-.status-dot.disabled { background-color: #6c757d; }
+.status-dot.free { background-color: var(--success-color); }
+.status-dot.occupied { background-color: var(--error-color); }
+.status-dot.disabled { background-color: var(--text-muted); }
 
 .occupation-footer {
   width: 100%;
@@ -54,7 +54,7 @@
 .occupation-label {
   margin: 0 0 5px 0;
   font-size: 0.8em;
-  color: #6c757d;
+  color: var(--text-secondary);
 }
 
 /* New styles for the two-part bar */
@@ -64,7 +64,7 @@
   height: 8px;
   border-radius: 4px;
   overflow: hidden; /* This is important to keep the rounded corners */
-  background-color: #28a745; /* Default background is green (100% free) */
+  background-color: var(--success-color); /* Default background is green (100% free) */
 }
 
 .occupation-bar-part { /* Renamed from occupation-bar-red and occupation-bar-green */

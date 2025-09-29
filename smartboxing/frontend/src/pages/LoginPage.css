@@ -4,7 +4,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-image: linear-gradient(rgba(0, 121, 107, 0.4), rgba(0, 121, 107, 0.4)), url('../assets/hospital-bg-optimized.jpg');
+  background-image: url('../assets/hospital-bg-optimized.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -380,16 +380,16 @@
 /* High contrast mode support */
 @media (prefers-contrast: high) {
   .login-container {
-    background: white;
-    border: 2px solid #000;
+    background: var(--background-primary);
+    border: 2px solid var(--text-primary);
   }
   
   .form-input {
-    border-color: #000;
+    border-color: var(--text-primary);
   }
   
   .login-button {
-    background: #000;
+    background: var(--text-primary);
   }
 }
 
@@ -499,11 +499,11 @@
 /* Print styles */
 @media print {
   .login-page {
-    background: white;
+    background: var(--background-primary);
   }
   
   .login-container {
     box-shadow: none;
-    border: 1px solid #000;
+    border: 1px solid var(--text-primary);
   }
 }
