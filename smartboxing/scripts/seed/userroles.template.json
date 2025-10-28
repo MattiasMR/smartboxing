@@ -1,7 +1,0 @@
-[
-  {
-    "tenantId": "__TENANT__",
-    "userSub": "__USER_SUB__",
-    "roles": ["admin"]
-  }
-]

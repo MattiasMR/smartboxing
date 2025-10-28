@@ -1,0 +1,297 @@
+service: smartboxing-backend
+frameworkVersion: '4'
+useDotenv: true 
+
+provider:
+  name: aws
+  runtime: nodejs22.x
+  iam:
+    role: ${env:AWS_IAM_ROLE_ARN}  # Usar LabRole existente
+  region: ${env:AWS_REGION}
+  stage: ${opt:stage, 'dev'}
+  httpApi:
+    cors: true
+    authorizers:
+      cognitoJwt:
+        type: jwt
+        identitySource: $request.header.Authorization
+        issuerUrl: https://cognito-idp.${self:provider.region}.amazonaws.com/${env:USER_POOL_ID}
+        audience:
+          - ${env:USER_POOL_CLIENT_ID}
+  environment:
+    T_BOXES: ${self:service}-Boxes-${sls:stage}
+    T_DOCTORS: ${self:service}-Doctors-${sls:stage}
+    T_APPOINTMENTS: ${self:service}-Appointments-${sls:stage}
+    T_PATIENTS: ${self:service}-Patients-${sls:stage}
+    T_CLIENT_SETTINGS: ${self:service}-ClientSettings-${sls:stage}
+    T_USER_SETTINGS: ${self:service}-UserSettings-${sls:stage}
+
+build:
+  esbuild:
+    bundle: true
+    minify: true
+    sourcemap: true
+    target: node22
+    platform: node
+
+functions:
+  health:
+    handler: src/handlers/health.main
+    events:
+      - httpApi:
+          path: /health
+          method: get
+    
+  listBoxes:
+    handler: src/handlers/boxes/list.main
+    events:
+      - httpApi:
+          path: /boxes
+          method: get
+          authorizer: cognitoJwt
+
+  getBox:
+    handler: src/handlers/boxes/get.main
+    events:
+      - httpApi:
+          path: /boxes/{id}
+          method: get
+          authorizer: cognitoJwt
+
+  createBox:
+    handler: src/handlers/boxes/create.main
+    events:
+      - httpApi:
+          path: /boxes
+          method: post
+          authorizer: cognitoJwt
+
+  updateBox:
+    handler: src/handlers/boxes/update.main
+    events:
+      - httpApi:
+          path: /boxes/{id}
+          method: put
+          authorizer: cognitoJwt
+
+  deleteBox:
+    handler: src/handlers/boxes/delete.main
+    events:
+      - httpApi:
+          path: /boxes/{id}
+          method: delete
+          authorizer: cognitoJwt
+
+  # ========== DOCTORS ==========
+  listDoctors:
+    handler: src/handlers/doctors/list.main
+    events:
+      - httpApi:
+          path: /doctors
+          method: get
+          authorizer: cognitoJwt
+
+  getDoctor:
+    handler: src/handlers/doctors/get.main
+    events:
+      - httpApi:
+          path: /doctors/{id}
+          method: get
+          authorizer: cognitoJwt
+
+  createDoctor:
+    handler: src/handlers/doctors/create.main
+    events:
+      - httpApi:
+          path: /doctors
+          method: post
+          authorizer: cognitoJwt
+
+  updateDoctor:
+    handler: src/handlers/doctors/update.main
+    events:
+      - httpApi:
+          path: /doctors/{id}
+          method: put
+          authorizer: cognitoJwt
+
+  deleteDoctor:
+    handler: src/handlers/doctors/delete.main
+    events:
+      - httpApi:
+          path: /doctors/{id}
+          method: delete
+          authorizer: cognitoJwt
+
+  # ========== APPOINTMENTS ==========
+  listAppointments:
+    handler: src/handlers/appointments/list.main
+    events:
+      - httpApi:
+          path: /appointments
+          method: get
+          authorizer: cognitoJwt
+
+  getAppointment:
+    handler: src/handlers/appointments/get.main
+    events:
+      - httpApi:
+          path: /appointments/{id}
+          method: get
+          authorizer: cognitoJwt
+
+  createAppointment:
+    handler: src/handlers/appointments/create.main
+    events:
+      - httpApi:
+          path: /appointments
+          method: post
+          authorizer: cognitoJwt
+
+  updateAppointment:
+    handler: src/handlers/appointments/update.main
+    events:
+      - httpApi:
+          path: /appointments/{id}
+          method: put
+          authorizer: cognitoJwt
+
+  deleteAppointment:
+    handler: src/handlers/appointments/delete.main
+    events:
+      - httpApi:
+          path: /appointments/{id}
+          method: delete
+          authorizer: cognitoJwt
+
+  # ========== SEED / BULK OPERATIONS ==========
+  seedBulk:
+    handler: src/handlers/seed/bulk.main
+    timeout: 30
+    events:
+      - httpApi:
+          path: /seed/bulk
+          method: post
+          authorizer: cognitoJwt
+
+  seedClear:
+    handler: src/handlers/seed/clear.main
+    timeout: 30
+    events:
+      - httpApi:
+          path: /seed/clear
+          method: delete
+          authorizer: cognitoJwt
+
+  # ========== SETTINGS / PERSONALIZATION ==========
+  getClientSettings:
+    handler: src/handlers/settings/client-get.main
+    events:
+      - httpApi:
+          path: /settings/client
+          method: get
+          authorizer: cognitoJwt
+
+  updateClientSettings:
+    handler: src/handlers/settings/client-put.main
+    events:
+      - httpApi:
+          path: /settings/client
+          method: put
+          authorizer: cognitoJwt
+
+  getUserSettings:
+    handler: src/handlers/settings/user-get.main
+    events:
+      - httpApi:
+          path: /settings/user
+          method: get
+          authorizer: cognitoJwt
+
+  updateUserSettings:
+    handler: src/handlers/settings/user-put.main
+    events:
+      - httpApi:
+          path: /settings/user
+          method: put
+          authorizer: cognitoJwt
+
+resources:
+  Resources:
+    BoxesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.T_BOXES}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - { AttributeName: tenantId, AttributeType: S }
+          - { AttributeName: id,       AttributeType: S }
+        KeySchema:
+          - { AttributeName: tenantId, KeyType: HASH }
+          - { AttributeName: id,       KeyType: RANGE }
+      
+    DoctorsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.T_DOCTORS}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - { AttributeName: tenantId, AttributeType: S }
+          - { AttributeName: id,       AttributeType: S }
+        KeySchema:
+          - { AttributeName: tenantId, KeyType: HASH }
+          - { AttributeName: id,       KeyType: RANGE }
+
+    AppointmentsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.T_APPOINTMENTS}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - { AttributeName: tenantId, AttributeType: S }
+          - { AttributeName: id,       AttributeType: S }
+          - { AttributeName: startAt,  AttributeType: S }
+        KeySchema:
+          - { AttributeName: tenantId, KeyType: HASH }
+          - { AttributeName: id,       KeyType: RANGE }
+        GlobalSecondaryIndexes:
+          - IndexName: ByStartAt
+            KeySchema:
+              - { AttributeName: tenantId, KeyType: HASH }
+              - { AttributeName: startAt,  KeyType: RANGE }
+            Projection:
+              ProjectionType: ALL
+
+    PatientsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-Patients-${sls:stage}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - { AttributeName: tenantId, AttributeType: S }
+          - { AttributeName: id,       AttributeType: S }
+        KeySchema:
+          - { AttributeName: tenantId, KeyType: HASH }
+          - { AttributeName: id,       KeyType: RANGE }
+
+    ClientSettingsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.T_CLIENT_SETTINGS}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - { AttributeName: tenantId, AttributeType: S }
+        KeySchema:
+          - { AttributeName: tenantId, KeyType: HASH }
+
+    UserSettingsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.T_USER_SETTINGS}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - { AttributeName: tenantId, AttributeType: S }
+          - { AttributeName: userSub,  AttributeType: S }
+        KeySchema:
+          - { AttributeName: tenantId, KeyType: HASH }
+          - { AttributeName: userSub,  KeyType: RANGE }
