@@ -45,7 +45,7 @@ custom:
       after:deploy:finalize:
         - echo "✅ Deploy completed!"
         - echo "📊 Generating environment variables..."
-        - STAGE=${sls:stage} npm run generate:env
+        - node scripts/generate-frontend-env.js
 
 provider:
   name: aws

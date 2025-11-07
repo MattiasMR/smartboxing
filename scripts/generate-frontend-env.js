@@ -3,22 +3,59 @@
  * Lee los outputs de CloudFormation y crea .env.production
  */
 
-const { CloudFormationClient, DescribeStacksCommand } = require('@aws-sdk/client-cloudformation');
+const { CloudFormationClient, DescribeStacksCommand, ListStacksCommand } = require('@aws-sdk/client-cloudformation');
 const fs = require('fs');
 const path = require('path');
 
 // Configuración
 const REGION = process.env.AWS_REGION || 'us-east-1';
-const STAGE = process.env.STAGE || 'dev';
-const STACK_NAME = `smartboxing-${STAGE}`;
+let STAGE = process.env.STAGE;
+
+// Si no se especifica STAGE, intentar detectar qué stack existe
+async function detectStage(client) {
+  try {
+    const command = new ListStacksCommand({
+      StackStatusFilter: ['CREATE_COMPLETE', 'UPDATE_COMPLETE']
+    });
+    const response = await client.send(command);
+    
+    // Buscar stacks que empiecen con 'smartboxing-'
+    const stacks = response.StackSummaries || [];
+    const smartboxingStacks = stacks.filter(s => s.StackName.startsWith('smartboxing-'));
+    
+    if (smartboxingStacks.length === 0) {
+      throw new Error('No se encontró ningún stack de smartboxing');
+    }
+    
+    // Preferir 'prod', luego 'dev'
+    const prodStack = smartboxingStacks.find(s => s.StackName === 'smartboxing-prod');
+    if (prodStack) return 'prod';
+    
+    const devStack = smartboxingStacks.find(s => s.StackName === 'smartboxing-dev');
+    if (devStack) return 'dev';
+    
+    // Si hay otro, usar el primero
+    return smartboxingStacks[0].StackName.replace('smartboxing-', '');
+  } catch (error) {
+    console.warn('⚠️  Error detectando stage:', error.message);
+    return 'prod'; // Default a prod
+  }
+}
 
 async function generateEnv() {
+  const client = new CloudFormationClient({ region: REGION });
+  
+  // Detectar stage si no está especificado
+  if (!STAGE) {
+    console.log('🔍 Detectando stage automáticamente...');
+    STAGE = await detectStage(client);
+    console.log(`✅ Stage detectado: ${STAGE}`);
+  }
+  
+  const STACK_NAME = `smartboxing-${STAGE}`;
   try {
     console.log(`📊 Generando variables de entorno para stage: ${STAGE}`);
     console.log(`🔍 Consultando stack: ${STACK_NAME}`);
-    
-    // Cliente de CloudFormation
-    const client = new CloudFormationClient({ region: REGION });
     
     // Obtener outputs del stack
     const command = new DescribeStacksCommand({ StackName: STACK_NAME });
