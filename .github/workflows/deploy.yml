@@ -139,7 +139,12 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ env.AWS_REGION }}
       
-      - name: 🚀 Deploy to AWS with Serverless
+      - name: � Authenticate Serverless Framework
+        run: echo "Serverless authentication configured"
+        env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+      
+      - name:  Deploy to AWS with Serverless
         id: deploy
         run: |
           # Deploy con serverless
@@ -152,6 +157,7 @@ jobs:
           echo "frontend_url=$FRONTEND_URL" >> $GITHUB_OUTPUT
           echo "api_url=$API_URL" >> $GITHUB_OUTPUT
         env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
           AWS_LAMBDA_ROLE: ${{ secrets.AWS_LAMBDA_ROLE }}
           AWS_REGION: ${{ env.AWS_REGION }}
           STAGE: ${{ github.event.inputs.stage || 'dev' }}
