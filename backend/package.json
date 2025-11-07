@@ -5,7 +5,6 @@
   "main": "index.js",
   "scripts": {
     "dev": "serverless dev",
-    "deploy": "serverless deploy",
     "remove": "serverless remove",
     "test": "vitest run",
     "db:clear": "node scripts/clear-db.mjs",

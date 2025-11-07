@@ -1,7 +1,6 @@
-import { createContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { loadAndApplySettings } from '../api/settings.js';
-
-export const AuthCtx = createContext(null);
+import { AuthCtx } from './AuthContext.js';
 
 // Función para decodificar JWT y obtener payload (sin verificar firma)
 function parseJwt(token) {
