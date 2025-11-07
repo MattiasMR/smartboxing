@@ -56,7 +56,7 @@ async function generateEnv() {
 # Generated: ${new Date().toISOString()}
 
 # API Configuration
-VITE_API_URL=${apiUrl}
+VITE_API_BASE_URL=${apiUrl}
 
 # Cognito Configuration
 VITE_USER_POOL_ID=${userPoolId}
@@ -65,7 +65,7 @@ VITE_COGNITO_DOMAIN=${cognitoDomain}
 
 # Redirect URIs
 VITE_REDIRECT_URI=${frontendUrl ? `${frontendUrl}/callback` : 'http://localhost:5173/callback'}
-VITE_LOGOUT_URI=${frontendUrl || 'http://localhost:5173'}
+VITE_LOGOUT_URI=${frontendUrl ? `${frontendUrl}/login` : 'http://localhost:5173/login'}
 
 # Environment
 VITE_STAGE=${STAGE}
