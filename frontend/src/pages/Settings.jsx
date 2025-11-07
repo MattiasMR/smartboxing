@@ -33,10 +33,8 @@ export default function Settings() {
   // User settings
   const [userSettings, setUserSettings] = useState(null);
   const [userForm, setUserForm] = useState({
-    theme: 'auto',
+    theme: 'light',
     language: 'es',
-    notifications: true,
-    emailNotifications: true,
   });
 
   const [message, setMessage] = useState({ type: '', text: '' });
@@ -245,43 +243,9 @@ export default function Settings() {
               value={userForm.theme}
               onChange={(e) => setUserForm({ ...userForm, theme: e.target.value })}
             >
-              <option value="auto">Automático (según sistema)</option>
               <option value="light">Claro</option>
               <option value="dark">Oscuro</option>
             </select>
-          </div>
-
-          <div className="form-group">
-            <label>Idioma</label>
-            <select 
-              value={userForm.language}
-              onChange={(e) => setUserForm({ ...userForm, language: e.target.value })}
-            >
-              <option value="es">Español</option>
-              <option value="en">English</option>
-            </select>
-          </div>
-
-          <div className="form-group checkbox">
-            <label>
-              <input 
-                type="checkbox"
-                checked={userForm.notifications}
-                onChange={(e) => setUserForm({ ...userForm, notifications: e.target.checked })}
-              />
-              Activar notificaciones en la aplicación
-            </label>
-          </div>
-
-          <div className="form-group checkbox">
-            <label>
-              <input 
-                type="checkbox"
-                checked={userForm.emailNotifications}
-                onChange={(e) => setUserForm({ ...userForm, emailNotifications: e.target.checked })}
-              />
-              Recibir notificaciones por email
-            </label>
           </div>
 
           <button type="submit" disabled={saving} className="btn-primary">
@@ -294,6 +258,21 @@ export default function Settings() {
         <form onSubmit={handleSaveClientSettings} className="settings-form">
           <h2>Personalización del Cliente</h2>
           <p className="subtitle">Estos cambios afectan a todos los usuarios de tu organización</p>
+
+          <div className="section">
+            <h3>🏢 Nombre de la Aplicación</h3>
+            
+            <div className="form-group">
+              <label>Nombre</label>
+              <input 
+                type="text"
+                value={clientForm.appName}
+                onChange={(e) => setClientForm({ ...clientForm, appName: e.target.value })}
+                placeholder="SmartBoxing"
+              />
+              <small className="color-hint">Aparece en el header superior izquierdo</small>
+            </div>
+          </div>
 
           <div className="section">
             <h3>Temas Predefinidos</h3>
@@ -316,10 +295,21 @@ export default function Settings() {
               ))}
             </div>
             <p className="hint">💡 Al seleccionar un tema, los colores se actualizan automáticamente. Si modificas un color, cambiarás a Tema Personalizado.</p>
+            
+            <div className="form-group checkbox" style={{marginTop: '1rem'}}>
+              <label>
+                <input 
+                  type="checkbox"
+                  checked={clientForm.darkMode}
+                  onChange={(e) => setClientForm({ ...clientForm, darkMode: e.target.checked })}
+                />
+                Modo oscuro por defecto
+              </label>
+            </div>
           </div>
 
           <div className="section">
-            <h3> 🎨 Colores Personalizados</h3>
+            <h3>🎨 Colores Personalizados</h3>
             {selectedThemeId !== 'custom' && (
               <p className="section-description" style={{color: 'var(--warning-color)', fontWeight: 500}}>
                 ⚠️ Modificar colores cambiará automáticamente a Tema Personalizado
@@ -378,32 +368,6 @@ export default function Settings() {
                 />
               </div>
               <small className="color-hint">Se usa para éxito, estados positivos y confirmaciones</small>
-            </div>
-
-            <div className="form-group checkbox">
-              <label>
-                <input 
-                  type="checkbox"
-                  checked={clientForm.darkMode}
-                  onChange={(e) => setClientForm({ ...clientForm, darkMode: e.target.checked })}
-                />
-                Modo oscuro por defecto
-              </label>
-            </div>
-          </div>
-
-          <div className="section">
-            <h3>🏢 Nombre de la Aplicación</h3>
-            
-            <div className="form-group">
-              <label>Nombre</label>
-              <input 
-                type="text"
-                value={clientForm.appName}
-                onChange={(e) => setClientForm({ ...clientForm, appName: e.target.value })}
-                placeholder="SmartBoxing"
-              />
-              <small className="color-hint">Aparece en el header superior izquierdo</small>
             </div>
           </div>
 
