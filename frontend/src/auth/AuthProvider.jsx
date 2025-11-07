@@ -101,7 +101,8 @@ export function AuthProvider({ children }) {
         console.error('[AuthProvider] Error loading initial settings:', error);
       });
     }
-  }, []); // Solo al montar
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Solo al montar, auth.isAuth se evalúa en el momento del mount
 
   return (
     <AuthCtx.Provider value={{ auth, setAuth, logout, login, user: auth.user, appName: auth.appName, updateAppName }}>
@@ -110,6 +111,7 @@ export function AuthProvider({ children }) {
   );
 }
 
+// Export useAuth hook separately to avoid fast-refresh issues
 export function useAuth() { 
   return useContext(AuthCtx); 
 }

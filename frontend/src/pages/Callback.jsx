@@ -39,7 +39,8 @@ export default function Callback() {
       console.log('[Callback] No access token, redirecting to login');
       nav('/login', { replace: true });
     }
-  }, []); // Sin dependencias para ejecutar solo una vez
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Solo ejecutar una vez al montar, login y nav son estables
 
   return <div style={{ padding: '2rem', textAlign: 'center' }}>
     <p>{status}</p>

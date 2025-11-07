@@ -20,8 +20,7 @@ export default function Settings() {
   const [activeTab, setActiveTab] = useState('user'); // 'user' or 'client'
   const [selectedThemeId, setSelectedThemeId] = useState('custom'); // Track selected theme
   
-  // Client settings
-  const [clientSettings, setClientSettings] = useState(null);
+  // Client settings (loaded from API)
   const [clientForm, setClientForm] = useState({
     primaryColor: '#3B82F6',
     secondaryColor: '#10B981',
@@ -30,8 +29,7 @@ export default function Settings() {
     appName: 'SmartBoxing',
   });
 
-  // User settings
-  const [userSettings, setUserSettings] = useState(null);
+  // User settings (loaded from API)
   const [userForm, setUserForm] = useState({
     theme: 'light',
     language: 'es',
@@ -51,10 +49,7 @@ export default function Settings() {
         getUserSettings(),
       ]);
       
-      setClientSettings(client);
-      setUserSettings(user);
-      
-      // Populate forms
+      // Populate forms with loaded data
       if (client.theme) {
         setClientForm(prev => ({
           ...prev,

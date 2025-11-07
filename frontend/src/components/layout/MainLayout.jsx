@@ -1,13 +1,12 @@
 // src/components/layout/MainLayout.jsx
 import { useState, useCallback } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import TopHeader from './TopHeader';
 import Sidebar from './Sidebar';
 import './MainLayout.css';
 
 function MainLayout() {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
-  const location = useLocation();
 
   const handleMenuClick = useCallback(() => {
     setIsMobileNavOpen(prev => !prev);

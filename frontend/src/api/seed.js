@@ -198,6 +198,8 @@ export async function clearDatabaseBulk() {
  * @returns {Promise<Object>} - Resultado con estadísticas
  */
 export async function clearDatabase(options = {}) {
+  const { onProgress = () => {} } = options;
+  
   const results = {
     boxes: { deleted: 0, failed: 0 },
     doctors: { deleted: 0, failed: 0 },

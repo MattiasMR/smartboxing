@@ -312,6 +312,15 @@ functions:
           method: put
           authorizer: cognitoJwt
 
+  # ========== ANALYTICS ==========
+  getDashboard:
+    handler: backend/src/handlers/analytics/dashboard.main
+    events:
+      - httpApi:
+          path: /analytics/dashboard
+          method: get
+          authorizer: cognitoJwt
+
 resources:
   Resources:
     # ==================== COGNITO ====================

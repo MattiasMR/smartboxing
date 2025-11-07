@@ -1,5 +1,4 @@
-const region = import.meta.env.VITE_AWS_REGION;
-const userPoolId = import.meta.env.VITE_USER_POOL_ID;
+// Cognito configuration from environment variables
 const clientId = import.meta.env.VITE_USER_POOL_CLIENT_ID;
 const domain = import.meta.env.VITE_COGNITO_DOMAIN; 
 const redirectUri = import.meta.env.VITE_REDIRECT_URI; 
