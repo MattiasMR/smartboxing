@@ -1,7 +1,7 @@
 // src/components/layout/TopHeader.jsx
 import React, { useState, useEffect } from 'react';
 import { FaBars } from 'react-icons/fa';
-import { useAuth } from '../../auth/AuthProvider';
+import { useAuth } from '../../auth/useAuth';
 import { logoutUrl } from '../../auth/cognito.js';
 import './TopHeader.css';
 

@@ -147,7 +147,6 @@ export default function Settings() {
       };
 
       const result = await updateClientSettings(updates);
-      setClientSettings(result.settings);
       
       // Aplicar tema inmediatamente
       applyTheme(result.settings.theme);
@@ -173,8 +172,7 @@ export default function Settings() {
     setMessage({ type: '', text: '' });
 
     try {
-      const result = await updateUserSettings(userForm);
-      setUserSettings(result.settings);
+      await updateUserSettings(userForm);
       
       // Aplicar tema del usuario inmediatamente
       if (userForm.theme === 'dark') {

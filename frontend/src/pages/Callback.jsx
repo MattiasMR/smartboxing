@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { parseHashToTokens } from '../auth/cognito.js';
-import { useAuth } from '../auth/AuthProvider.jsx';
+import { useAuth } from '../auth/useAuth';
 
 export default function Callback() {
   const nav = useNavigate();

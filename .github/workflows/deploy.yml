@@ -58,7 +58,6 @@ jobs:
       
       - name: 🔍 Lint frontend
         run: cd frontend && npm run lint --if-present
-        continue-on-error: true
       
       - name: 🧪 Test backend
         run: cd backend && npm test --if-present
