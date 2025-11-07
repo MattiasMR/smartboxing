@@ -1,14 +1,41 @@
+org: twinmtt
+app: smartboxing
 service: smartboxing-backend
-frameworkVersion: '4'
 useDotenv: true 
 
 provider:
   name: aws
   runtime: nodejs22.x
-  iam:
-    role: ${env:AWS_IAM_ROLE_ARN}  # Usar LabRole existente
   region: ${env:AWS_REGION}
   stage: ${opt:stage, 'dev'}
+  iam:
+    role:
+      statements:
+        # Permisos para DynamoDB
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:BatchWriteItem
+          Resource:
+            - !GetAtt BoxesTable.Arn
+            - !GetAtt DoctorsTable.Arn
+            - !GetAtt AppointmentsTable.Arn
+            - !GetAtt PatientsTable.Arn
+            - !GetAtt ClientSettingsTable.Arn
+            - !GetAtt UserSettingsTable.Arn
+            - !Sub "${AppointmentsTable.Arn}/index/*"
+        # Permisos para CloudWatch Logs (Lambda Powertools)
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: "*"
   httpApi:
     cors: true
     authorizers:
@@ -167,7 +194,6 @@ functions:
   # ========== SEED / BULK OPERATIONS ==========
   seedBulk:
     handler: src/handlers/seed/bulk.main
-    timeout: 30
     events:
       - httpApi:
           path: /seed/bulk
@@ -176,10 +202,50 @@ functions:
 
   seedClear:
     handler: src/handlers/seed/clear.main
-    timeout: 30
     events:
       - httpApi:
           path: /seed/clear
+          method: delete
+          authorizer: cognitoJwt
+
+  # ========== PATIENTS ==========
+  listPatients:
+    handler: src/handlers/patients/list.main
+    events:
+      - httpApi:
+          path: /patients
+          method: get
+          authorizer: cognitoJwt
+
+  getPatient:
+    handler: src/handlers/patients/get.main
+    events:
+      - httpApi:
+          path: /patients/{id}
+          method: get
+          authorizer: cognitoJwt
+
+  createPatient:
+    handler: src/handlers/patients/create.main
+    events:
+      - httpApi:
+          path: /patients
+          method: post
+          authorizer: cognitoJwt
+
+  updatePatient:
+    handler: src/handlers/patients/update.main
+    events:
+      - httpApi:
+          path: /patients/{id}
+          method: put
+          authorizer: cognitoJwt
+
+  deletePatient:
+    handler: src/handlers/patients/delete.main
+    events:
+      - httpApi:
+          path: /patients/{id}
           method: delete
           authorizer: cognitoJwt
 
@@ -215,6 +281,20 @@ functions:
           path: /settings/user
           method: put
           authorizer: cognitoJwt
+
+  # ========== ANALYTICS / KPIs ==========
+  getDashboard:
+    handler: src/handlers/analytics/dashboard.main
+    events:
+      - httpApi:
+          path: /analytics/dashboard
+          method: get
+          authorizer: cognitoJwt
+    environment:
+      APPOINTMENTS_TABLE: ${self:provider.environment.T_APPOINTMENTS}
+      BOXES_TABLE: ${self:provider.environment.T_BOXES}
+      DOCTORS_TABLE: ${self:provider.environment.T_DOCTORS}
+      PATIENTS_TABLE: ${self:provider.environment.T_PATIENTS}
 
 resources:
   Resources:

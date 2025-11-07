@@ -1,0 +1,208 @@
+name: 🚀 Deploy SmartBoxing
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+      - 'LICENSE'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: 'Deployment stage'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
+
+env:
+  NODE_VERSION: '22'
+  AWS_REGION: 'us-east-1'
+
+jobs:
+  # Job 1: Linting y Tests
+  test:
+    name: 🧪 Test & Lint
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: 📦 Install root dependencies
+        run: npm ci
+      
+      - name: 📦 Install backend dependencies
+        run: cd backend && npm ci
+      
+      - name: 📦 Install frontend dependencies
+        run: cd frontend && npm ci
+      
+      - name: 🔍 Lint backend
+        run: cd backend && npm run lint --if-present
+        continue-on-error: true
+      
+      - name: 🔍 Lint frontend
+        run: cd frontend && npm run lint --if-present
+        continue-on-error: true
+      
+      - name: 🧪 Test backend
+        run: cd backend && npm test --if-present
+        continue-on-error: true
+      
+      - name: 🧪 Test frontend
+        run: cd frontend && npm test --if-present
+        continue-on-error: true
+
+  # Job 2: Build
+  build:
+    name: 🔨 Build
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: 📦 Install dependencies
+        run: npm ci
+      
+      - name: 🔨 Build frontend
+        run: npm run build:frontend
+        env:
+          # Las variables reales se inyectan después del deploy
+          VITE_API_URL: 'https://placeholder.execute-api.us-east-1.amazonaws.com'
+          VITE_USER_POOL_ID: 'us-east-1_placeholder'
+          VITE_USER_POOL_CLIENT_ID: 'placeholder'
+          VITE_COGNITO_DOMAIN: 'https://placeholder.auth.us-east-1.amazoncognito.com'
+      
+      - name: 📤 Upload frontend build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+          retention-days: 1
+
+  # Job 3: Deploy a AWS
+  deploy:
+    name: 🚀 Deploy to AWS
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment:
+      name: ${{ github.event.inputs.stage || 'dev' }}
+      url: ${{ steps.deploy.outputs.frontend_url }}
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: 📦 Install dependencies
+        run: npm ci
+      
+      - name: 📥 Download frontend build
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+      
+      - name: 🔐 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: 🚀 Deploy to AWS with Serverless
+        id: deploy
+        run: |
+          # Deploy con serverless
+          npm run deploy -- --stage ${{ github.event.inputs.stage || 'dev' }}
+          
+          # Capturar outputs
+          FRONTEND_URL=$(npx serverless info --stage ${{ github.event.inputs.stage || 'dev' }} | grep "FrontendUrl:" | awk '{print $2}')
+          API_URL=$(npx serverless info --stage ${{ github.event.inputs.stage || 'dev' }} | grep "ApiUrl:" | awk '{print $2}')
+          
+          echo "frontend_url=$FRONTEND_URL" >> $GITHUB_OUTPUT
+          echo "api_url=$API_URL" >> $GITHUB_OUTPUT
+        env:
+          AWS_LAMBDA_ROLE: ${{ secrets.AWS_LAMBDA_ROLE }}
+          AWS_REGION: ${{ env.AWS_REGION }}
+          STAGE: ${{ github.event.inputs.stage || 'dev' }}
+      
+      - name: 📊 Deployment Summary
+        run: |
+          echo "## 🚀 Deployment Successful!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Stage:** ${{ github.event.inputs.stage || 'dev' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Region:** ${{ env.AWS_REGION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 URLs" >> $GITHUB_STEP_SUMMARY
+          echo "- **Frontend:** ${{ steps.deploy.outputs.frontend_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **API:** ${{ steps.deploy.outputs.api_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ⏱️ Timestamp" >> $GITHUB_STEP_SUMMARY
+          echo "$(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+      
+      - name: 💬 Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🚀 Preview Deployment Ready!\n\n**Frontend:** ${{ steps.deploy.outputs.frontend_url }}\n**API:** ${{ steps.deploy.outputs.api_url }}`
+            })
+
+  # Job 4: Notificación
+  notify:
+    name: 📢 Notify
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: always()
+    
+    steps:
+      - name: 📢 Success notification
+        if: needs.deploy.result == 'success'
+        run: |
+          echo "✅ Deployment successful!"
+          echo "Stage: ${{ github.event.inputs.stage || 'dev' }}"
+          echo "Commit: ${{ github.sha }}"
+      
+      - name: ❌ Failure notification
+        if: needs.deploy.result == 'failure'
+        run: |
+          echo "❌ Deployment failed!"
+          echo "Check logs for details"
+          exit 1

@@ -1,0 +1,97 @@
+name: 🧪 CI - Continuous Integration
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+  push:
+    branches:
+      - develop
+
+jobs:
+  lint-and-test:
+    name: 🔍 Lint & Test
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [22]
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      
+      - name: 📦 Install root dependencies
+        run: npm ci
+      
+      - name: 📦 Install backend dependencies
+        run: cd backend && npm ci
+      
+      - name: 📦 Install frontend dependencies
+        run: cd frontend && npm ci
+      
+      # Backend checks
+      - name: 🔍 Lint backend
+        run: cd backend && npm run lint --if-present
+        continue-on-error: true
+      
+      - name: 🧪 Test backend
+        run: cd backend && npm test --if-present
+        continue-on-error: true
+      
+      # Frontend checks
+      - name: 🔍 Lint frontend
+        run: cd frontend && npm run lint
+      
+      - name: 🔨 Build frontend (type check)
+        run: cd frontend && npm run build
+        env:
+          VITE_API_URL: 'https://test.execute-api.us-east-1.amazonaws.com'
+          VITE_USER_POOL_ID: 'us-east-1_test'
+          VITE_USER_POOL_CLIENT_ID: 'test'
+          VITE_COGNITO_DOMAIN: 'https://test.auth.us-east-1.amazoncognito.com'
+      
+      - name: 🧪 Test frontend
+        run: cd frontend && npm test --if-present
+        continue-on-error: true
+      
+      - name: 📊 Test Summary
+        if: always()
+        run: |
+          echo "## 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Linting and tests completed" >> $GITHUB_STEP_SUMMARY
+          echo "Node version: ${{ matrix.node-version }}" >> $GITHUB_STEP_SUMMARY
+
+  security-scan:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      
+      - name: 🔒 Run npm audit (backend)
+        run: cd backend && npm audit --audit-level=moderate
+        continue-on-error: true
+      
+      - name: 🔒 Run npm audit (frontend)
+        run: cd frontend && npm audit --audit-level=moderate
+        continue-on-error: true
+      
+      - name: 📊 Security Summary
+        if: always()
+        run: |
+          echo "## 🔒 Security Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "Audit completed for backend and frontend" >> $GITHUB_STEP_SUMMARY

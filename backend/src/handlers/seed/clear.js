@@ -1,5 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, ScanCommand, BatchWriteCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, QueryCommand, BatchWriteCommand } from '@aws-sdk/lib-dynamodb';
 import { handler } from '../../lib/http.js';
 
 const client = new DynamoDBClient({});
@@ -65,10 +65,10 @@ export const main = handler(async (event) => {
   };
 
   try {
-    // 1. Borrar Appointments (usar Query en lugar de Scan con FilterExpression)
-    const appointmentsResponse = await db.send(new ScanCommand({
+    // 1. Borrar Appointments (usando Query - optimizado)
+    const appointmentsResponse = await db.send(new QueryCommand({
       TableName: T_APPOINTMENTS,
-      FilterExpression: 'tenantId = :tenantId',
+      KeyConditionExpression: 'tenantId = :tenantId',
       ExpressionAttributeValues: { ':tenantId': tenantId },
       ProjectionExpression: 'tenantId, id'
     }));
@@ -80,10 +80,10 @@ export const main = handler(async (event) => {
       results.appointments = result;
     }
 
-    // 2. Borrar Doctors
-    const doctorsResponse = await db.send(new ScanCommand({
+    // 2. Borrar Doctors (usando Query - optimizado)
+    const doctorsResponse = await db.send(new QueryCommand({
       TableName: T_DOCTORS,
-      FilterExpression: 'tenantId = :tenantId',
+      KeyConditionExpression: 'tenantId = :tenantId',
       ExpressionAttributeValues: { ':tenantId': tenantId },
       ProjectionExpression: 'tenantId, id'
     }));
@@ -95,10 +95,10 @@ export const main = handler(async (event) => {
       results.doctors = result;
     }
 
-    // 3. Borrar Boxes
-    const boxesResponse = await db.send(new ScanCommand({
+    // 3. Borrar Boxes (usando Query - optimizado)
+    const boxesResponse = await db.send(new QueryCommand({
       TableName: T_BOXES,
-      FilterExpression: 'tenantId = :tenantId',
+      KeyConditionExpression: 'tenantId = :tenantId',
       ExpressionAttributeValues: { ':tenantId': tenantId },
       ProjectionExpression: 'tenantId, id'
     }));

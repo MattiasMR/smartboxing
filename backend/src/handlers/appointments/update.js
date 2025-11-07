@@ -1,5 +1,5 @@
 import { UpdateCommand } from '@aws-sdk/lib-dynamodb';
-import { handler } from '../../lib/http.js';
+import { handler, parseBody } from '../../lib/http.js';
 import { doc } from '../../lib/db.js';
 
 export const main = handler(async (event) => {
@@ -7,7 +7,7 @@ export const main = handler(async (event) => {
   const tenantId = claims['custom:tenantId'] ?? 'TENANT#demo';
   const id = decodeURIComponent(event.pathParameters?.id || '');
 
-  const body = JSON.parse(event.body || '{}');
+  const body = parseBody(event);
   const patch = body.patch || {};
   if (!Object.keys(patch).length) throw new Error('No hay cambios');
 

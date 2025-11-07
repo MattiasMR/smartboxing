@@ -2,9 +2,10 @@
 import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './Sidebar.css';
-import { FaTh, FaCalendarAlt, FaUserMd, FaTimes, FaCog } from 'react-icons/fa';
+import { FaTh, FaCalendarAlt, FaUserMd, FaTimes, FaCog, FaChartBar } from 'react-icons/fa';
 
 const mainNavItems = [
+  { id: 'dashboard', label: 'Dashboard', icon: <FaChartBar />, path: '/dashboard' },
   { id: 'boxes', label: 'Boxes', icon: <FaTh />, path: '/boxes' },
   { id: 'doctors', label: 'Doctores', icon: <FaUserMd />, path: '/doctors' },
   { id: 'appointments', label: 'Citas', icon: <FaCalendarAlt />, path: '/appointments' },

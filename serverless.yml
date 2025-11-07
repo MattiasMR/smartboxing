@@ -1,0 +1,599 @@
+org: twinmtt
+app: smartboxing
+service: smartboxing
+
+useDotenv: true
+
+# Plugins para deploy unificado
+plugins:
+  - serverless-s3-sync
+  - serverless-scriptable-plugin
+
+# Configuración de plugins
+custom:
+  # Sync de archivos frontend a S3 (sin ACL, usar bucket policy)
+  s3Sync:
+    - bucketName: ${self:service}-frontend-${sls:stage}
+      localDir: frontend/dist
+      deleteRemoved: true
+      # NO usar acl (el bucket tiene ACLs bloqueadas)
+      params:
+        - index.html:
+            CacheControl: 'no-cache, no-store, must-revalidate'
+            ContentType: 'text/html'
+        - "*.js":
+            CacheControl: 'public, max-age=31536000, immutable'
+        - "*.css":
+            CacheControl: 'public, max-age=31536000, immutable'
+        - "*.png":
+            CacheControl: 'public, max-age=31536000, immutable'
+        - "*.jpg":
+            CacheControl: 'public, max-age=31536000, immutable'
+        - "*.svg":
+            CacheControl: 'public, max-age=31536000, immutable'
+        - "*.ico":
+            CacheControl: 'public, max-age=31536000, immutable'
+  
+  # Scripts personalizados
+  scriptable:
+    hooks:
+      # Antes del deploy: build del frontend
+      before:deploy:deploy: 
+        - echo "🔨 Building frontend..."
+        - npm run build:frontend
+      # Después del deploy: generar variables de entorno
+      after:deploy:finalize:
+        - echo "✅ Deploy completed!"
+        - echo "📊 Generating environment variables..."
+        - npm run generate:env
+
+provider:
+  name: aws
+  runtime: nodejs22.x
+  region: ${env:AWS_REGION, 'us-east-1'}
+  stage: ${opt:stage, 'dev'}
+  
+  # Usar LabRole de AWS Academy (variable de entorno para no hardcodear)
+  # Configurar en .env: AWS_LAMBDA_ROLE=arn:aws:iam::370549053903:role/LabRole
+  iam:
+    role: ${env:AWS_LAMBDA_ROLE}
+  
+  # API Gateway con CORS
+  httpApi:
+    cors: true
+    authorizers:
+      cognitoJwt:
+        type: jwt
+        identitySource: $request.header.Authorization
+        issuerUrl: !Sub "https://cognito-idp.${AWS::Region}.amazonaws.com/${CognitoUserPool}"
+        audience:
+          - !Ref CognitoUserPoolClient
+
+  # Variables de entorno para todas las funciones
+  environment:
+    T_BOXES: ${self:service}-Boxes-${sls:stage}
+    T_DOCTORS: ${self:service}-Doctors-${sls:stage}
+    T_APPOINTMENTS: ${self:service}-Appointments-${sls:stage}
+    T_PATIENTS: ${self:service}-Patients-${sls:stage}
+    T_CLIENT_SETTINGS: ${self:service}-ClientSettings-${sls:stage}
+    T_USER_SETTINGS: ${self:service}-UserSettings-${sls:stage}
+    USER_POOL_ID: !Ref CognitoUserPool
+    USER_POOL_CLIENT_ID: !Ref CognitoUserPoolClient
+
+build:
+  esbuild:
+    bundle: true
+    minify: true
+    sourcemap: true
+    target: node22
+    platform: node
+
+# Incluir funciones desde backend
+functions:
+  # Health check
+  health:
+    handler: backend/src/handlers/health.main
+    events:
+      - httpApi:
+          path: /health
+          method: get
+
+  # ========== BOXES ==========
+  listBoxes:
+    handler: backend/src/handlers/boxes/list.main
+    events:
+      - httpApi:
+          path: /boxes
+          method: get
+          authorizer: cognitoJwt
+  
+  getBox:
+    handler: backend/src/handlers/boxes/get.main
+    events:
+      - httpApi:
+          path: /boxes/{id}
+          method: get
+          authorizer: cognitoJwt
+  
+  createBox:
+    handler: backend/src/handlers/boxes/create.main
+    events:
+      - httpApi:
+          path: /boxes
+          method: post
+          authorizer: cognitoJwt
+  
+  updateBox:
+    handler: backend/src/handlers/boxes/update.main
+    events:
+      - httpApi:
+          path: /boxes/{id}
+          method: put
+          authorizer: cognitoJwt
+  
+  deleteBox:
+    handler: backend/src/handlers/boxes/delete.main
+    events:
+      - httpApi:
+          path: /boxes/{id}
+          method: delete
+          authorizer: cognitoJwt
+
+  # ========== DOCTORS ==========
+  listDoctors:
+    handler: backend/src/handlers/doctors/list.main
+    events:
+      - httpApi:
+          path: /doctors
+          method: get
+          authorizer: cognitoJwt
+  
+  getDoctor:
+    handler: backend/src/handlers/doctors/get.main
+    events:
+      - httpApi:
+          path: /doctors/{id}
+          method: get
+          authorizer: cognitoJwt
+  
+  createDoctor:
+    handler: backend/src/handlers/doctors/create.main
+    events:
+      - httpApi:
+          path: /doctors
+          method: post
+          authorizer: cognitoJwt
+  
+  updateDoctor:
+    handler: backend/src/handlers/doctors/update.main
+    events:
+      - httpApi:
+          path: /doctors/{id}
+          method: put
+          authorizer: cognitoJwt
+  
+  deleteDoctor:
+    handler: backend/src/handlers/doctors/delete.main
+    events:
+      - httpApi:
+          path: /doctors/{id}
+          method: delete
+          authorizer: cognitoJwt
+
+  # ========== APPOINTMENTS ==========
+  listAppointments:
+    handler: backend/src/handlers/appointments/list.main
+    events:
+      - httpApi:
+          path: /appointments
+          method: get
+          authorizer: cognitoJwt
+  
+  getAppointment:
+    handler: backend/src/handlers/appointments/get.main
+    events:
+      - httpApi:
+          path: /appointments/{id}
+          method: get
+          authorizer: cognitoJwt
+  
+  createAppointment:
+    handler: backend/src/handlers/appointments/create.main
+    events:
+      - httpApi:
+          path: /appointments
+          method: post
+          authorizer: cognitoJwt
+  
+  updateAppointment:
+    handler: backend/src/handlers/appointments/update.main
+    events:
+      - httpApi:
+          path: /appointments/{id}
+          method: put
+          authorizer: cognitoJwt
+  
+  deleteAppointment:
+    handler: backend/src/handlers/appointments/delete.main
+    events:
+      - httpApi:
+          path: /appointments/{id}
+          method: delete
+          authorizer: cognitoJwt
+
+  # ========== PATIENTS ==========
+  listPatients:
+    handler: backend/src/handlers/patients/list.main
+    events:
+      - httpApi:
+          path: /patients
+          method: get
+          authorizer: cognitoJwt
+  
+  getPatient:
+    handler: backend/src/handlers/patients/get.main
+    events:
+      - httpApi:
+          path: /patients/{id}
+          method: get
+          authorizer: cognitoJwt
+  
+  createPatient:
+    handler: backend/src/handlers/patients/create.main
+    events:
+      - httpApi:
+          path: /patients
+          method: post
+          authorizer: cognitoJwt
+  
+  updatePatient:
+    handler: backend/src/handlers/patients/update.main
+    events:
+      - httpApi:
+          path: /patients/{id}
+          method: put
+          authorizer: cognitoJwt
+  
+  deletePatient:
+    handler: backend/src/handlers/patients/delete.main
+    events:
+      - httpApi:
+          path: /patients/{id}
+          method: delete
+          authorizer: cognitoJwt
+
+  # ========== SEED ==========
+  seedBulk:
+    handler: backend/src/handlers/seed/bulk.main
+    events:
+      - httpApi:
+          path: /seed/bulk
+          method: post
+          authorizer: cognitoJwt
+  
+  seedClear:
+    handler: backend/src/handlers/seed/clear.main
+    events:
+      - httpApi:
+          path: /seed/clear
+          method: delete
+          authorizer: cognitoJwt
+
+  # ========== SETTINGS ==========
+  getClientSettings:
+    handler: backend/src/handlers/settings/client-get.main
+    events:
+      - httpApi:
+          path: /settings/client
+          method: get
+          authorizer: cognitoJwt
+  
+  updateClientSettings:
+    handler: backend/src/handlers/settings/client-put.main
+    events:
+      - httpApi:
+          path: /settings/client
+          method: put
+          authorizer: cognitoJwt
+  
+  getUserSettings:
+    handler: backend/src/handlers/settings/user-get.main
+    events:
+      - httpApi:
+          path: /settings/user
+          method: get
+          authorizer: cognitoJwt
+  
+  updateUserSettings:
+    handler: backend/src/handlers/settings/user-put.main
+    events:
+      - httpApi:
+          path: /settings/user
+          method: put
+          authorizer: cognitoJwt
+
+resources:
+  Resources:
+    # ==================== COGNITO ====================
+    CognitoUserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: ${self:service}-${sls:stage}
+        AutoVerifiedAttributes:
+          - email
+        UsernameAttributes:
+          - email
+        Schema:
+          - Name: email
+            Required: true
+            Mutable: false
+          - Name: name
+            Required: false
+            Mutable: true
+          - Name: tenantId
+            AttributeDataType: String
+            Mutable: true
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 8
+            RequireUppercase: true
+            RequireLowercase: true
+            RequireNumbers: true
+            RequireSymbols: false
+        MfaConfiguration: OPTIONAL
+        EnabledMfas:
+          - SOFTWARE_TOKEN_MFA
+
+    CognitoUserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: ${self:service}-client-${sls:stage}
+        UserPoolId: !Ref CognitoUserPool
+        GenerateSecret: false
+        ExplicitAuthFlows:
+          - ALLOW_USER_PASSWORD_AUTH
+          - ALLOW_REFRESH_TOKEN_AUTH
+          - ALLOW_USER_SRP_AUTH
+        AllowedOAuthFlows:
+          - implicit
+        AllowedOAuthScopes:
+          - openid
+          - email
+          - profile
+        CallbackURLs:
+          - http://localhost:5173/callback
+        LogoutURLs:
+          - http://localhost:5173/login
+        SupportedIdentityProviders:
+          - COGNITO
+        AllowedOAuthFlowsUserPoolClient: true
+
+    CognitoUserPoolDomain:
+      Type: AWS::Cognito::UserPoolDomain
+      Properties:
+        Domain: ${self:service}-${sls:stage}
+        UserPoolId: !Ref CognitoUserPool
+
+    # ==================== DYNAMODB TABLES ====================
+    BoxesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.T_BOXES}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: tenantId
+            AttributeType: S
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tenantId
+            KeyType: HASH
+          - AttributeName: id
+            KeyType: RANGE
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
+        Tags:
+          - Key: Environment
+            Value: ${sls:stage}
+
+    DoctorsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.T_DOCTORS}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: tenantId
+            AttributeType: S
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tenantId
+            KeyType: HASH
+          - AttributeName: id
+            KeyType: RANGE
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
+        Tags:
+          - Key: Environment
+            Value: ${sls:stage}
+
+    AppointmentsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.T_APPOINTMENTS}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: tenantId
+            AttributeType: S
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: startAt
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tenantId
+            KeyType: HASH
+          - AttributeName: id
+            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: ByStartAt
+            KeySchema:
+              - AttributeName: tenantId
+                KeyType: HASH
+              - AttributeName: startAt
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
+        Tags:
+          - Key: Environment
+            Value: ${sls:stage}
+
+    PatientsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.T_PATIENTS}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: tenantId
+            AttributeType: S
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tenantId
+            KeyType: HASH
+          - AttributeName: id
+            KeyType: RANGE
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
+        Tags:
+          - Key: Environment
+            Value: ${sls:stage}
+
+    ClientSettingsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.T_CLIENT_SETTINGS}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: tenantId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tenantId
+            KeyType: HASH
+        Tags:
+          - Key: Environment
+            Value: ${sls:stage}
+
+    UserSettingsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.T_USER_SETTINGS}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: tenantId
+            AttributeType: S
+          - AttributeName: userSub
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tenantId
+            KeyType: HASH
+          - AttributeName: userSub
+            KeyType: RANGE
+        Tags:
+          - Key: Environment
+            Value: ${sls:stage}
+
+    # ==================== S3 PARA FRONTEND (SIN CLOUDFRONT) ====================
+    # Nota: CloudFront deshabilitado debido a restricciones de permisos en AWS Academy
+    # El frontend se servirá directamente desde S3 Static Website Hosting
+    
+    FrontendBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:service}-frontend-${sls:stage}
+        WebsiteConfiguration:
+          IndexDocument: index.html
+          ErrorDocument: index.html
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: false
+          BlockPublicPolicy: false
+          IgnorePublicAcls: false
+          RestrictPublicBuckets: false
+        CorsConfiguration:
+          CorsRules:
+            - AllowedOrigins:
+                - '*'
+              AllowedMethods:
+                - GET
+                - HEAD
+              AllowedHeaders:
+                - '*'
+
+    FrontendBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref FrontendBucket
+        PolicyDocument:
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action: s3:GetObject
+              Resource: !Sub "${FrontendBucket.Arn}/*"
+
+  Outputs:
+    # API
+    ApiUrl:
+      Description: URL del API Gateway
+      Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+      Export:
+        Name: ${self:service}-${sls:stage}-ApiUrl
+
+    # Cognito
+    UserPoolId:
+      Description: ID del Cognito User Pool
+      Value: !Ref CognitoUserPool
+      Export:
+        Name: ${self:service}-${sls:stage}-UserPoolId
+
+    UserPoolClientId:
+      Description: ID del Cognito User Pool Client
+      Value: !Ref CognitoUserPoolClient
+      Export:
+        Name: ${self:service}-${sls:stage}-UserPoolClientId
+
+    CognitoDomain:
+      Description: Dominio de Cognito para login
+      Value: !Sub "https://${CognitoUserPoolDomain}.auth.${AWS::Region}.amazoncognito.com"
+      Export:
+        Name: ${self:service}-${sls:stage}-CognitoDomain
+
+    # Frontend
+    FrontendBucketName:
+      Description: Nombre del bucket S3 para frontend
+      Value: !Ref FrontendBucket
+      Export:
+        Name: ${self:service}-${sls:stage}-FrontendBucket
+
+    FrontendUrl:
+      Description: URL del frontend (S3 Static Website)
+      Value: !GetAtt FrontendBucket.WebsiteURL
+      Export:
+        Name: ${self:service}-${sls:stage}-FrontendUrl
+
+    # DynamoDB Tables
+    BoxesTableName:
+      Description: Nombre de la tabla Boxes
+      Value: !Ref BoxesTable
+
+    DoctorsTableName:
+      Description: Nombre de la tabla Doctors
+      Value: !Ref DoctorsTable
+
+    AppointmentsTableName:
+      Description: Nombre de la tabla Appointments
+      Value: !Ref AppointmentsTable
+
+    PatientsTableName:
+      Description: Nombre de la tabla Patients
+      Value: !Ref PatientsTable

@@ -1,5 +1,5 @@
 import { PutCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
-import { handler } from '../../lib/http.js';
+import { handler, parseBody } from '../../lib/http.js';
 import { doc } from '../../lib/db.js';
 import { UpdateUserSettingsSchema } from './schemas.js';
 
@@ -12,7 +12,7 @@ export const main = handler(async (event) => {
     throw { statusCode: 401, message: 'User not authenticated' };
   }
 
-  const body = JSON.parse(event.body || '{}');
+  const body = parseBody(event);
   const updates = UpdateUserSettingsSchema.parse(body);
 
   // Obtener configuración actual

@@ -1,10 +1,10 @@
 import { PutCommand } from '@aws-sdk/lib-dynamodb';
-import { handler } from '../../lib/http.js';
+import { handler, parseBody } from '../../lib/http.js';
 import { doc } from '../../lib/db.js';
 import { CreateBoxSchema } from './schemas.js';
 
 export const main = handler(async (event) => {
-  const body = JSON.parse(event.body || '{}');
+  const body = parseBody(event);
   const claims = event.requestContext?.authorizer?.jwt?.claims ?? {};
   const fallbackTenant = claims['custom:tenantId'] ?? 'TENANT#demo';
 

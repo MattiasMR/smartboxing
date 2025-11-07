@@ -17,6 +17,7 @@ import DoctorForm from './pages/DoctorForm.jsx';
 import AppointmentsList from './pages/AppointmentsList.jsx';
 import AppointmentForm from './pages/AppointmentForm.jsx';
 
+import Dashboard from './pages/Dashboard.jsx';
 import Settings from './pages/Settings.jsx';
 import SeedPage from './pages/SeedPage.jsx';
 
@@ -37,6 +38,9 @@ function AppContent() {
 
         {/* Rutas protegidas con Layout */}
         <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          
           <Route path="/boxes" element={<BoxesList />} />
           <Route path="/boxes/new" element={<BoxForm />} />
           <Route path="/boxes/:id/edit" element={<BoxForm />} />

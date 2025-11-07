@@ -1,0 +1,42 @@
+{
+  "name": "smartboxing",
+  "version": "1.0.0",
+  "description": "SmartBoxing - Sistema de gestión de boxes médicos",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm install && npm run build",
+    "generate:env": "node scripts/generate-frontend-env.js",
+    "predeploy": "npm run build:frontend",
+    "deploy": "serverless deploy --verbose",
+    "deploy:dev": "serverless deploy --stage dev --verbose",
+    "deploy:prod": "serverless deploy --stage prod --verbose",
+    "remove": "serverless remove",
+    "remove:dev": "serverless remove --stage dev",
+    "remove:prod": "serverless remove --stage prod",
+    "logs": "serverless logs -f",
+    "info": "serverless info",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend && npm test"
+  },
+  "keywords": [
+    "serverless",
+    "aws",
+    "lambda",
+    "dynamodb",
+    "cognito",
+    "react",
+    "medical"
+  ],
+  "author": "MattiasMR",
+  "license": "MIT",
+  "devDependencies": {
+    "@aws-sdk/client-cloudformation": "^3.682.0",
+    "serverless": "^4.4.7",
+    "serverless-s3-sync": "^3.2.0",
+    "serverless-scriptable-plugin": "^1.2.0"
+  }
+}

@@ -1,7 +1,7 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, BatchWriteCommand } from '@aws-sdk/lib-dynamodb';
 import { faker } from '@faker-js/faker/locale/es';
-import { handler } from '../../lib/http.js';
+import { handler, parseBody } from '../../lib/http.js';
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
@@ -120,7 +120,7 @@ export const main = handler(async (event) => {
   const claims = event.requestContext?.authorizer?.jwt?.claims ?? {};
   const tenantId = claims['custom:tenantId'] ?? 'TENANT#demo';
   
-  const body = JSON.parse(event.body || '{}');
+  const body = parseBody(event);
   const numBoxes = parseInt(body.numBoxes) || 10;
   const numDoctors = parseInt(body.numDoctors) || 8;
   const numAppointments = parseInt(body.numAppointments) || 15;
