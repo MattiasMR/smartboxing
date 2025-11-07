@@ -154,9 +154,10 @@ jobs:
           # Deploy con serverless
           npm run deploy -- --stage ${{ github.event.inputs.stage || env.STAGE }}
           
-          # Capturar outputs
-          FRONTEND_URL=$(npx serverless info --stage ${{ github.event.inputs.stage || env.STAGE }} | grep "CloudFrontUrl:" | awk '{print $2}')
-          API_URL=$(npx serverless info --stage ${{ github.event.inputs.stage || env.STAGE }} | grep "ApiUrl:" | awk '{print $2}')
+          # Capturar outputs desde CloudFormation
+          STACK_NAME="smartboxing-${{ github.event.inputs.stage || env.STAGE }}"
+          FRONTEND_URL=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='CloudFrontUrl'].OutputValue" --output text)
+          API_URL=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" --output text)
           
           echo "frontend_url=$FRONTEND_URL" >> $GITHUB_OUTPUT
           echo "api_url=$API_URL" >> $GITHUB_OUTPUT
