@@ -16,7 +16,7 @@ on:
       stage:
         description: 'Deployment stage'
         required: true
-        default: 'dev'
+        default: 'prod'
         type: choice
         options:
           - dev
@@ -25,6 +25,7 @@ on:
 env:
   NODE_VERSION: '22'
   AWS_REGION: 'us-east-1'
+  STAGE: 'prod'  # Default stage para deploys automáticos
 
 jobs:
   # Job 1: Linting y Tests
@@ -145,15 +146,15 @@ jobs:
         env:
           SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
       
-      - name:  Deploy to AWS with Serverless
+      - name: 🚀 Deploy to AWS with Serverless
         id: deploy
         run: |
           # Deploy con serverless
-          npm run deploy -- --stage ${{ github.event.inputs.stage || 'dev' }}
+          npm run deploy -- --stage ${{ github.event.inputs.stage || env.STAGE }}
           
           # Capturar outputs
-          FRONTEND_URL=$(npx serverless info --stage ${{ github.event.inputs.stage || 'dev' }} | grep "FrontendUrl:" | awk '{print $2}')
-          API_URL=$(npx serverless info --stage ${{ github.event.inputs.stage || 'dev' }} | grep "ApiUrl:" | awk '{print $2}')
+          FRONTEND_URL=$(npx serverless info --stage ${{ github.event.inputs.stage || env.STAGE }} | grep "CloudFrontUrl:" | awk '{print $2}')
+          API_URL=$(npx serverless info --stage ${{ github.event.inputs.stage || env.STAGE }} | grep "ApiUrl:" | awk '{print $2}')
           
           echo "frontend_url=$FRONTEND_URL" >> $GITHUB_OUTPUT
           echo "api_url=$API_URL" >> $GITHUB_OUTPUT
@@ -161,14 +162,14 @@ jobs:
           SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
           AWS_LAMBDA_ROLE: ${{ secrets.AWS_LAMBDA_ROLE }}
           AWS_REGION: ${{ env.AWS_REGION }}
-          STAGE: ${{ github.event.inputs.stage || 'dev' }}
+          STAGE: ${{ github.event.inputs.stage || env.STAGE }}
       
       - name: 📊 Deployment Summary
         run: |
           echo "## 🚀 Deployment Successful!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📋 Details" >> $GITHUB_STEP_SUMMARY
-          echo "- **Stage:** ${{ github.event.inputs.stage || 'dev' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Stage:** ${{ github.event.inputs.stage || env.STAGE }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Region:** ${{ env.AWS_REGION }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
