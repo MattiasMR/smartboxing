@@ -63,8 +63,8 @@ VITE_USER_POOL_CLIENT_ID=${userPoolClientId}
 VITE_COGNITO_DOMAIN=${cognitoDomain}
 
 # Redirect URIs
-VITE_REDIRECT_URI=${frontendUrl ? `http://${frontendUrl}/callback` : 'http://localhost:5173/callback'}
-VITE_LOGOUT_URI=${frontendUrl ? `http://${frontendUrl}` : 'http://localhost:5173'}
+VITE_REDIRECT_URI=${frontendUrl ? `${frontendUrl}/callback` : 'http://localhost:5173/callback'}
+VITE_LOGOUT_URI=${frontendUrl || 'http://localhost:5173'}
 
 # Environment
 VITE_STAGE=${STAGE}

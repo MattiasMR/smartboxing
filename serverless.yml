@@ -362,6 +362,9 @@ resources:
           - profile
         CallbackURLs:
           - http://localhost:5173/callback
+          # NOTA: Para agregar la URL de producción (S3), debes hacerlo manualmente en Cognito
+          # porque S3 static website usa HTTP y Cognito requiere HTTPS
+          # O implementar CloudFront con certificado SSL
         LogoutURLs:
           - http://localhost:5173/login
         SupportedIdentityProviders:
