@@ -2,6 +2,4 @@
 .serverless
 node_modules
 
-
-*.md
-*.pdf
+/docs

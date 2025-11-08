@@ -1,8 +1,4 @@
 # SmartBoxing 🏥
-
-[![Deploy](https://github.com/MattiasMR/smartboxing/actions/workflows/deploy.yml/badge.svg)](https://github.com/MattiasMR/smartboxing/actions/workflows/deploy.yml)
-[![CI](https://github.com/MattiasMR/smartboxing/actions/workflows/ci.yml/badge.svg)](https://github.com/MattiasMR/smartboxing/actions/workflows/ci.yml)
-
 Sistema de gestión de boxes y citas médicas con arquitectura serverless en AWS.
 
 ---
@@ -53,14 +49,14 @@ serverless logs -f nombreFuncion --tail
 - **Runtime:** Node.js 22
 - **Framework:** Serverless Framework 4.23
 - **API:** AWS API Gateway HTTP + Lambda (28 funciones)
-- **Database:** DynamoDB (6 tablas, PAY_PER_REQUEST)
+- **Database:** DynamoDB (PAY_PER_REQUEST)
 - **Auth:** AWS Cognito (OAuth2 + JWT)
 - **Validation:** Zod
 - **Testing:** Vitest
 
 ### Frontend
 - **Framework:** React 19
-- **Build:** Vite 7 (778 KB → 261 KB gzipped)
+- **Build:** Vite 7 
 - **Routing:** React Router 7
 - **State:** TanStack Query 5
 - **Forms:** React Hook Form + Zod
@@ -142,4 +138,4 @@ MIT License
 
 ---
 
-**Versión:** 1.0 | **Estado:** Producción | **Última actualización:** Noviembre 2025
+**Versión:** 1.0 | **Estado:** Producción 

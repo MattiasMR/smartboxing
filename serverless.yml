@@ -58,6 +58,14 @@ provider:
   iam:
     role: ${env:AWS_LAMBDA_ROLE}
   
+  # 🔒 VPC Configuration - Lambdas en red privada
+  vpc:
+    securityGroupIds:
+      - !Ref LambdaSecurityGroup
+    subnetIds:
+      - !Ref PrivateSubnetA
+      - !Ref PrivateSubnetB
+  
   # API Gateway con CORS
   httpApi:
     cors: true
@@ -612,6 +620,260 @@ resources:
             CloudFrontDefaultCertificate: true
             MinimumProtocolVersion: TLSv1.2_2021
 
+    # ════════════════════════════════════════════════════════════════
+    # 🔒 VPC RESOURCES - Seguridad de Red para Lambdas
+    # ════════════════════════════════════════════════════════════════
+    
+    # ────────────────────────────────────────────────────────────────
+    # 1. VPC
+    # ────────────────────────────────────────────────────────────────
+    VPC:
+      Type: AWS::EC2::VPC
+      Properties:
+        CidrBlock: 10.0.0.0/16
+        EnableDnsHostnames: true
+        EnableDnsSupport: true
+        Tags:
+          - Key: Name
+            Value: ${self:service}-vpc-${sls:stage}
+          - Key: Project
+            Value: SmartBoxing
+          - Key: Environment
+            Value: ${sls:stage}
+
+    # ────────────────────────────────────────────────────────────────
+    # 2. INTERNET GATEWAY (para subnet pública)
+    # ────────────────────────────────────────────────────────────────
+    InternetGateway:
+      Type: AWS::EC2::InternetGateway
+      Properties:
+        Tags:
+          - Key: Name
+            Value: ${self:service}-igw-${sls:stage}
+
+    InternetGatewayAttachment:
+      Type: AWS::EC2::VPCGatewayAttachment
+      Properties:
+        InternetGatewayId: !Ref InternetGateway
+        VpcId: !Ref VPC
+
+    # ────────────────────────────────────────────────────────────────
+    # 3. SUBNETS
+    # ────────────────────────────────────────────────────────────────
+    # Subnet PÚBLICA (para futuro NAT Gateway o Bastion)
+    PublicSubnet:
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId: !Ref VPC
+        AvailabilityZone: ${self:provider.region}a
+        CidrBlock: 10.0.1.0/24
+        MapPublicIpOnLaunch: true
+        Tags:
+          - Key: Name
+            Value: ${self:service}-public-subnet-${sls:stage}
+          - Key: Type
+            Value: Public
+
+    # Subnets PRIVADAS (para Lambdas)
+    PrivateSubnetA:
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId: !Ref VPC
+        AvailabilityZone: ${self:provider.region}a
+        CidrBlock: 10.0.10.0/24
+        MapPublicIpOnLaunch: false
+        Tags:
+          - Key: Name
+            Value: ${self:service}-private-a-${sls:stage}
+          - Key: Type
+            Value: Private
+
+    PrivateSubnetB:
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId: !Ref VPC
+        AvailabilityZone: ${self:provider.region}b
+        CidrBlock: 10.0.11.0/24
+        MapPublicIpOnLaunch: false
+        Tags:
+          - Key: Name
+            Value: ${self:service}-private-b-${sls:stage}
+          - Key: Type
+            Value: Private
+
+    # ────────────────────────────────────────────────────────────────
+    # 4. ROUTE TABLES
+    # ────────────────────────────────────────────────────────────────
+    # Route Table PÚBLICA
+    PublicRouteTable:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId: !Ref VPC
+        Tags:
+          - Key: Name
+            Value: ${self:service}-public-rt-${sls:stage}
+
+    PublicRoute:
+      Type: AWS::EC2::Route
+      DependsOn: InternetGatewayAttachment
+      Properties:
+        RouteTableId: !Ref PublicRouteTable
+        DestinationCidrBlock: 0.0.0.0/0
+        GatewayId: !Ref InternetGateway
+
+    PublicSubnetRouteTableAssociation:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        RouteTableId: !Ref PublicRouteTable
+        SubnetId: !Ref PublicSubnet
+
+    # Route Table PRIVADA (sin NAT Gateway - solo VPC Endpoints)
+    PrivateRouteTable:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId: !Ref VPC
+        Tags:
+          - Key: Name
+            Value: ${self:service}-private-rt-${sls:stage}
+          - Key: Note
+            Value: Sin NAT Gateway - Solo VPC Endpoints (DynamoDB + S3)
+
+    PrivateSubnetARouteTableAssociation:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        RouteTableId: !Ref PrivateRouteTable
+        SubnetId: !Ref PrivateSubnetA
+
+    PrivateSubnetBRouteTableAssociation:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        RouteTableId: !Ref PrivateRouteTable
+        SubnetId: !Ref PrivateSubnetB
+
+    # ────────────────────────────────────────────────────────────────
+    # 5. SECURITY GROUPS
+    # ────────────────────────────────────────────────────────────────
+    LambdaSecurityGroup:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupName: ${self:service}-lambda-sg-${sls:stage}
+        GroupDescription: Security Group for Lambda functions in VPC
+        VpcId: !Ref VPC
+        # Egress (salida) - permitir HTTPS solo dentro de VPC
+        SecurityGroupEgress:
+          - IpProtocol: tcp
+            FromPort: 443
+            ToPort: 443
+            CidrIp: 10.0.0.0/16
+            Description: HTTPS to VPC Endpoints (DynamoDB, S3)
+        Tags:
+          - Key: Name
+            Value: ${self:service}-lambda-sg-${sls:stage}
+          - Key: Purpose
+            Value: Lambda VPC Security
+
+    # ────────────────────────────────────────────────────────────────
+    # 6. VPC ENDPOINTS (Gateway - GRATIS)
+    # ────────────────────────────────────────────────────────────────
+    # DynamoDB Endpoint (Gateway - Sin costo)
+    DynamoDBEndpoint:
+      Type: AWS::EC2::VPCEndpoint
+      Properties:
+        VpcId: !Ref VPC
+        ServiceName: com.amazonaws.${self:provider.region}.dynamodb
+        VpcEndpointType: Gateway
+        RouteTableIds:
+          - !Ref PrivateRouteTable
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action:
+                - dynamodb:PutItem
+                - dynamodb:GetItem
+                - dynamodb:UpdateItem
+                - dynamodb:DeleteItem
+                - dynamodb:Query
+                - dynamodb:Scan
+                - dynamodb:BatchGetItem
+                - dynamodb:BatchWriteItem
+              Resource:
+                - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${self:service}-*"
+
+    # S3 Endpoint (Gateway - Sin costo)
+    S3Endpoint:
+      Type: AWS::EC2::VPCEndpoint
+      Properties:
+        VpcId: !Ref VPC
+        ServiceName: com.amazonaws.${self:provider.region}.s3
+        VpcEndpointType: Gateway
+        RouteTableIds:
+          - !Ref PrivateRouteTable
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action:
+                - s3:GetObject
+                - s3:PutObject
+                - s3:DeleteObject
+                - s3:ListBucket
+              Resource:
+                - !Sub "arn:aws:s3:::${self:service}-*"
+                - !Sub "arn:aws:s3:::${self:service}-*/*"
+
+    # ────────────────────────────────────────────────────────────────
+    # 7. VPC FLOW LOGS (Auditoría de tráfico)
+    # ────────────────────────────────────────────────────────────────
+    VPCFlowLogsRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: vpc-flow-logs.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: CloudWatchLogPolicy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                    - logs:DescribeLogGroups
+                    - logs:DescribeLogStreams
+                  Resource: '*'
+
+    VPCFlowLogsGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: /aws/vpc/${self:service}-${sls:stage}
+        RetentionInDays: 7
+
+    VPCFlowLog:
+      Type: AWS::EC2::FlowLog
+      Properties:
+        ResourceType: VPC
+        ResourceIds:
+          - !Ref VPC
+        TrafficType: ALL
+        LogDestinationType: cloud-watch-logs
+        LogGroupName: !Ref VPCFlowLogsGroup
+        DeliverLogsPermissionArn: !GetAtt VPCFlowLogsRole.Arn
+        Tags:
+          - Key: Name
+            Value: ${self:service}-flow-logs-${sls:stage}
+
+  # ════════════════════════════════════════════════════════════════
+  # OUTPUTS
+  # ════════════════════════════════════════════════════════════════
   Outputs:
     # API
     ApiUrl:
@@ -680,3 +942,60 @@ resources:
     PatientsTableName:
       Description: Nombre de la tabla Patients
       Value: !Ref PatientsTable
+
+    # ════════════════════════════════════════════════════════════════
+    # 🔒 VPC Outputs
+    # ════════════════════════════════════════════════════════════════
+    VPCId:
+      Description: VPC ID
+      Value: !Ref VPC
+      Export:
+        Name: ${self:service}-VPCId-${sls:stage}
+
+    VPCCidr:
+      Description: VPC CIDR Block
+      Value: 10.0.0.0/16
+      Export:
+        Name: ${self:service}-VPCCidr-${sls:stage}
+
+    PublicSubnetId:
+      Description: Public Subnet ID
+      Value: !Ref PublicSubnet
+      Export:
+        Name: ${self:service}-PublicSubnet-${sls:stage}
+
+    PrivateSubnetAId:
+      Description: Private Subnet A ID (AZ-a)
+      Value: !Ref PrivateSubnetA
+      Export:
+        Name: ${self:service}-PrivateSubnetA-${sls:stage}
+
+    PrivateSubnetBId:
+      Description: Private Subnet B ID (AZ-b)
+      Value: !Ref PrivateSubnetB
+      Export:
+        Name: ${self:service}-PrivateSubnetB-${sls:stage}
+
+    LambdaSecurityGroupId:
+      Description: Lambda Security Group ID
+      Value: !Ref LambdaSecurityGroup
+      Export:
+        Name: ${self:service}-LambdaSG-${sls:stage}
+
+    DynamoDBEndpointId:
+      Description: DynamoDB VPC Endpoint ID
+      Value: !Ref DynamoDBEndpoint
+      Export:
+        Name: ${self:service}-DynamoDBEndpoint-${sls:stage}
+
+    S3EndpointId:
+      Description: S3 VPC Endpoint ID
+      Value: !Ref S3Endpoint
+      Export:
+        Name: ${self:service}-S3Endpoint-${sls:stage}
+
+    VPCFlowLogsGroupName:
+      Description: VPC Flow Logs CloudWatch Log Group
+      Value: !Ref VPCFlowLogsGroup
+      Export:
+        Name: ${self:service}-FlowLogs-${sls:stage}
