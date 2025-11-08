@@ -67,8 +67,8 @@ serverless logs -f nombreFuncion --tail
 - **IaC:** CloudFormation (via Serverless)
 - **Hosting:** S3 + CloudFront
 - **Logs:** CloudWatch
-- **Networking:** VPC privada (10.0.0.0/16) 🔒
-- **Security:** Security Groups + VPC Endpoints (DynamoDB/S3)
+- **Chaos Engineering:** Automated fault injection 🌪️
+- **Monitoring:** Health checks + Warmup functions
 
 ---
 
@@ -93,7 +93,7 @@ serverless logs -f nombreFuncion --tail
 
 ---
 
-## � Scripts
+## 📝 Scripts
 
 ```bash
 # Instalación
@@ -110,6 +110,14 @@ npm run build:frontend   # Build solo frontend
 # Utilidades
 npm run info             # Ver información del deployment
 npm run generate:env     # Generar .env frontend
+
+# Chaos Engineering 🌪️
+npm run chaos:enable     # Habilitar fault injection
+npm run chaos:disable    # Deshabilitar chaos
+npm run chaos:status     # Ver estado actual
+
+node scripts/chaos-toggle.mjs enable --error-rate=0.2 --latency-rate=0.3 --latency-ms=3000
+
 ```
 
 ---
@@ -136,16 +144,6 @@ npm run generate:env     # Generar .env frontend
 - **Security Group:** Egress solo a HTTPS (443) dentro de VPC
 - **VPC Endpoints:** DynamoDB + S3 (Gateway)
 - **Flow Logs:** CloudWatch `/aws/vpc/smartboxing-dev`
-
----
-
-## 🌍 URLs de Producción
-
-| Servicio | URL |
-|----------|-----|
-| **Frontend** | https://dge2h61tdyb0m.cloudfront.net |
-| **API** | https://kpg3oyur0d.execute-api.us-east-1.amazonaws.com |
-| **CI/CD** | https://github.com/MattiasMR/smartboxing/actions |
 
 ---
 

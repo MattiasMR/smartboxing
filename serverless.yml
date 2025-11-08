@@ -53,17 +53,54 @@ provider:
   region: ${env:AWS_REGION, 'us-east-1'}
   stage: ${opt:stage, 'dev'}
   
-  # IAM Role con permisos VPC
-  iam:
-    role: arn:aws:iam::624991056069:role/SmartBoxingLambdaVPCRole
+  # Performance: Timeout para requests complejos
+  timeout: 29  # 29 segundos (API Gateway max es 30s)
+  memorySize: 1024  # 1GB RAM para mejor performance
   
-  # 🔒 VPC Configuration - Lambdas en red privada
-  vpc:
-    securityGroupIds:
-      - !Ref LambdaSecurityGroup
-    subnetIds:
-      - !Ref PrivateSubnetA
-      - !Ref PrivateSubnetB
+  # IAM Role - Sin VPC para mejor performance
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:BatchGetItem
+            - dynamodb:BatchWriteItem
+          Resource:
+            - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${self:service}-*"
+        - Effect: Allow
+          Action:
+            - s3:GetObject
+            - s3:PutObject
+            - s3:DeleteObject
+          Resource:
+            - !Sub "arn:aws:s3:::${self:service}-*/*"
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource:
+            - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+        - Effect: Allow
+          Action:
+            - lambda:InvokeFunction
+          Resource:
+            - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-*"
+  
+  # 🔒 VPC Configuration - DESHABILITADO GLOBALMENTE
+  # Se habilita por función individual solo para las críticas
+  # vpc:
+  #   securityGroupIds:
+  #     - !Ref LambdaSecurityGroup
+  #   subnetIds:
+  #     - !Ref PrivateSubnetA
+  #     - !Ref PrivateSubnetB
   
   # API Gateway con CORS
   httpApi:
@@ -97,6 +134,18 @@ build:
 
 # Incluir funciones desde backend
 functions:
+  # ⚡ Warm-up function - Mantiene Lambdas calientes
+  warmup:
+    handler: backend/src/handlers/warmup.main
+    timeout: 60  # 1 minuto para invocar todas las funciones
+    events:
+      - schedule:
+          rate: rate(5 minutes)  # Ejecutar cada 5 minutos
+          enabled: true
+          description: 'Keep critical Lambda functions warm'
+    environment:
+      WARMUP_ENABLED: 'true'
+  
   # Health check
   health:
     handler: backend/src/handlers/health.main

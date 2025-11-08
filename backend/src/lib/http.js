@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { injectChaos } from './chaos.js';
 
 const corsHeaders = {
   'Content-Type': 'application/json',
@@ -33,6 +34,17 @@ export const parseBody = (event) => {
 };
 
 export const handler = (logic) => async (event) => {
-  try { return ok(await logic(event)); }
+  try {
+    // 🔥 Ignorar invocaciones de warmup
+    if (event.source === 'warmup') {
+      console.log('⚡ Warmup invocation - keeping function warm');
+      return ok({ message: 'warmed up', timestamp: new Date().toISOString() });
+    }
+    
+    // 🌪️ Chaos Engineering - Inyectar fallas aleatorias
+    await injectChaos();
+    
+    return ok(await logic(event));
+  }
   catch (e) { return fail(e, e instanceof z.ZodError ? 400 : e.statusCode || 500); }
 };
