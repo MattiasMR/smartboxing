@@ -93,8 +93,8 @@ provider:
           Resource:
             - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-*"
   
-  # 🔒 VPC Configuration - DESHABILITADO GLOBALMENTE
-  # Se habilita por función individual solo para las críticas
+  # 🔒 VPC Configuration - DESHABILITADO (performance issues)
+  # TODO: Investigar Hyperplane ENI setup time en producción
   # vpc:
   #   securityGroupIds:
   #     - !Ref LambdaSecurityGroup
@@ -427,10 +427,10 @@ resources:
           - profile
         CallbackURLs:
           - http://localhost:5173/callback
-          # La URL de CloudFront se agregará después del primer deploy
-          # Ver CloudFrontUrl en outputs y agregar manualmente en Cognito Console
+          - !Sub 'https://${CloudFrontDistribution.DomainName}/callback'
         LogoutURLs:
           - http://localhost:5173/login
+          - !Sub 'https://${CloudFrontDistribution.DomainName}/login'
         SupportedIdentityProviders:
           - COGNITO
         AllowedOAuthFlowsUserPoolClient: true

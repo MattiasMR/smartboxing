@@ -167,6 +167,15 @@ jobs:
           AWS_REGION: ${{ env.AWS_REGION }}
           STAGE: ${{ github.event.inputs.stage || env.STAGE }}
       
+      # VPC Warmup deshabilitado - performance issues
+      # - name: 🔥 Warmup VPC Hyperplane ENI
+      #   run: |
+      #     echo "🔥 Warming up VPC Hyperplane ENI setup..."
+      #     node scripts/warmup-vpc-setup.mjs
+      #     echo "✅ Warmup completed - Hyperplane ENI setup initiated"
+      #     echo "ℹ️ Cold starts will normalize in ~2 minutes"
+      #   continue-on-error: true
+      
       - name: 📊 Deployment Summary
         run: |
           echo "## 🚀 Deployment Successful!" >> $GITHUB_STEP_SUMMARY

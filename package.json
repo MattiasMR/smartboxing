@@ -23,7 +23,8 @@
     "test:frontend": "cd frontend && npm test",
     "chaos:enable": "node scripts/chaos-toggle.mjs enable",
     "chaos:disable": "node scripts/chaos-toggle.mjs disable",
-    "chaos:status": "node scripts/chaos-toggle.mjs status"
+    "chaos:status": "node scripts/chaos-toggle.mjs status",
+    "vpc:warmup": "node scripts/warmup-vpc-setup.mjs"
   },
   "keywords": [
     "serverless",

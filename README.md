@@ -11,7 +11,7 @@ Sistema de gestión de boxes y citas médicas con arquitectura serverless en AWS
 - AWS CLI configurado
 - Cuenta AWS
 
-### Instalación
+### Instalación y Deploy
 
 ```bash
 # Clonar repositorio
@@ -27,7 +27,7 @@ export AWS_SECRET_ACCESS_KEY=xxx
 export AWS_SESSION_TOKEN=xxx  # Solo AWS Academy
 
 # Deploy completo (backend + frontend)
-npm run deploy
+sls deploy
 ```
 
 ### Desarrollo Local
@@ -38,7 +38,7 @@ cd frontend
 npm run dev
 
 # Ver logs de backend
-serverless logs -f nombreFuncion --tail
+sls logs -f listBoxes --tail
 ```
 
 ---
@@ -47,12 +47,12 @@ serverless logs -f nombreFuncion --tail
 
 ### Backend
 - **Runtime:** Node.js 22
-- **Framework:** Serverless Framework 4.23
-- **API:** AWS API Gateway HTTP + Lambda (28 funciones)
+- **Framework:** Serverless Framework 4
+- **API:** AWS API Gateway HTTP + Lambda
 - **Database:** DynamoDB (PAY_PER_REQUEST)
 - **Auth:** AWS Cognito (OAuth2 + JWT)
 - **Validation:** Zod
-- **Testing:** Vitest
+- **Storage:** S3 + CloudFront
 
 ### Frontend
 - **Framework:** React 19
@@ -60,21 +60,20 @@ serverless logs -f nombreFuncion --tail
 - **Routing:** React Router 7
 - **State:** TanStack Query 5
 - **Forms:** React Hook Form + Zod
-- **HTTP:** Axios
+- **UI:** CSS personalizado + variables theming
 
 ### DevOps
 - **CI/CD:** GitHub Actions
 - **IaC:** CloudFormation (via Serverless)
 - **Hosting:** S3 + CloudFront
 - **Logs:** CloudWatch
-- **Chaos Engineering:** Automated fault injection 🌪️
-- **Monitoring:** Health checks + Warmup functions
+- **Chaos Engineering:** Fault injection automático 🌪️
 
 ---
 
 ## 📡 API Endpoints
 
-**Base URL:** `https://kpg3oyur0d.execute-api.us-east-1.amazonaws.com`
+**Base URL:** `https://ocpzcn4cu6.execute-api.us-east-1.amazonaws.com`
 
 ### Recursos Principales
 
@@ -87,37 +86,31 @@ serverless logs -f nombreFuncion --tail
 | **Patients** | `GET POST PUT DELETE /patients` |
 | **Analytics** | `GET /analytics/dashboard` |
 | **Settings** | `GET PUT /settings/client` `GET PUT /settings/user` |
-| **Seed** | `POST /seed/bulk` `POST /seed/clear` |
+| **Seed** | `POST /seed/bulk` `DELETE /seed/clear` |
 
-**Total:** 28 endpoints REST con autenticación JWT (excepto `/health`)
+**Total:** 28 funciones Lambda | **Auth:** JWT (excepto `/health`)
 
 ---
 
-## 📝 Scripts
+## 📝 Scripts Útiles
 
 ```bash
-# Instalación
-npm install              # Instalar dependencias root + backend + frontend
-
 # Deploy
-npm run deploy           # Deploy completo a AWS (dev)
-npm run deploy:prod      # Deploy a producción
-npm run remove           # Eliminar stack de AWS
+sls deploy              # Deploy a AWS
+sls remove              # Eliminar stack
+sls info                # Ver info del deployment
 
-# Build
-npm run build:frontend   # Build solo frontend
-
-# Utilidades
-npm run info             # Ver información del deployment
-npm run generate:env     # Generar .env frontend
+# Desarrollo
+cd frontend && npm run dev      # Frontend local
+cd backend && npm run dev       # Serverless offline
 
 # Chaos Engineering 🌪️
-npm run chaos:enable     # Habilitar fault injection
+npm run chaos:enable     # Habilitar fault injection (10% error, 10% latency)
 npm run chaos:disable    # Deshabilitar chaos
 npm run chaos:status     # Ver estado actual
 
-node scripts/chaos-toggle.mjs enable --error-rate=0.2 --latency-rate=0.3 --latency-ms=3000
-
+# Personalizar chaos
+node scripts/chaos-toggle.mjs enable --error-rate=0.2 --latency-rate=0.3
 ```
 
 ---
@@ -126,24 +119,8 @@ node scripts/chaos-toggle.mjs enable --error-rate=0.2 --latency-rate=0.3 --laten
 
 - **Tipo:** OAuth2 Implicit Flow
 - **Provider:** AWS Cognito
-- **User Pool:** `us-east-1_AINTiD5yB`
 - **Token:** JWT Bearer en header `Authorization`
 - **Multi-tenancy:** Claim `custom:tenantId`
-
----
-
-## 🔒 Seguridad y Networking
-
-### VPC Privada
-
-**Arquitectura:**
-- **VPC:** `10.0.0.0/16` 
-- **Subnets Privadas:** 
-  - us-east-1a: `10.0.10.0/24`
-  - us-east-1b: `10.0.11.0/24`
-- **Security Group:** Egress solo a HTTPS (443) dentro de VPC
-- **VPC Endpoints:** DynamoDB + S3 (Gateway)
-- **Flow Logs:** CloudWatch `/aws/vpc/smartboxing-dev`
 
 ---
 
