@@ -13,7 +13,7 @@ plugins:
 custom:
   # Sync de archivos frontend a S3 (sin ACL, usar bucket policy)
   s3Sync:
-    - bucketName: ${self:service}-frontend-${sls:stage}
+    - bucketName: ${self:service}-frontend-${sls:stage}-v2
       localDir: frontend/dist
       deleteRemoved: true
       # NO usar acl (el bucket tiene ACLs bloqueadas)
@@ -53,10 +53,9 @@ provider:
   region: ${env:AWS_REGION, 'us-east-1'}
   stage: ${opt:stage, 'dev'}
   
-  # Usar LabRole de AWS Academy (variable de entorno para no hardcodear)
-  # Configurar en .env: AWS_LAMBDA_ROLE=arn:aws:iam::370549053903:role/LabRole
+  # IAM Role con permisos VPC
   iam:
-    role: ${env:AWS_LAMBDA_ROLE}
+    role: arn:aws:iam::624991056069:role/SmartBoxingLambdaVPCRole
   
   # 🔒 VPC Configuration - Lambdas en red privada
   vpc:
@@ -530,7 +529,7 @@ resources:
     FrontendBucket:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:service}-frontend-${sls:stage}
+        BucketName: ${self:service}-frontend-${sls:stage}-v2
         PublicAccessBlockConfiguration:
           BlockPublicAcls: true
           BlockPublicPolicy: true
@@ -861,8 +860,7 @@ resources:
       Type: AWS::EC2::FlowLog
       Properties:
         ResourceType: VPC
-        ResourceIds:
-          - !Ref VPC
+        ResourceId: !Ref VPC
         TrafficType: ALL
         LogDestinationType: cloud-watch-logs
         LogGroupName: !Ref VPCFlowLogsGroup

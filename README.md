@@ -67,6 +67,8 @@ serverless logs -f nombreFuncion --tail
 - **IaC:** CloudFormation (via Serverless)
 - **Hosting:** S3 + CloudFront
 - **Logs:** CloudWatch
+- **Networking:** VPC privada (10.0.0.0/16) 🔒
+- **Security:** Security Groups + VPC Endpoints (DynamoDB/S3)
 
 ---
 
@@ -119,6 +121,21 @@ npm run generate:env     # Generar .env frontend
 - **User Pool:** `us-east-1_AINTiD5yB`
 - **Token:** JWT Bearer en header `Authorization`
 - **Multi-tenancy:** Claim `custom:tenantId`
+
+---
+
+## 🔒 Seguridad y Networking
+
+### VPC Privada
+
+**Arquitectura:**
+- **VPC:** `10.0.0.0/16` 
+- **Subnets Privadas:** 
+  - us-east-1a: `10.0.10.0/24`
+  - us-east-1b: `10.0.11.0/24`
+- **Security Group:** Egress solo a HTTPS (443) dentro de VPC
+- **VPC Endpoints:** DynamoDB + S3 (Gateway)
+- **Flow Logs:** CloudWatch `/aws/vpc/smartboxing-dev`
 
 ---
 
