@@ -654,6 +654,35 @@ resources:
               DomainName: !GetAtt FrontendBucket.RegionalDomainName
               OriginAccessControlId: !Ref CloudFrontOriginAccessControl
               S3OriginConfig: {}
+          
+          DefaultCacheBehavior:
+            TargetOriginId: S3Origin
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+            CachedMethods:
+              - GET
+              - HEAD
+            Compress: true
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6  # CachingOptimized
+            OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf  # CORS-S3Origin
+            ResponseHeadersPolicyId: 67f7725c-6f97-4210-82d7-5512b31e9d03  # SecurityHeadersPolicy
+          
+          CustomErrorResponses:
+            - ErrorCode: 403
+              ResponseCode: 200
+              ResponsePagePath: /index.html
+              ErrorCachingMinTTL: 300
+            - ErrorCode: 404
+              ResponseCode: 200
+              ResponsePagePath: /index.html
+              ErrorCachingMinTTL: 300
+          
+          ViewerCertificate:
+            CloudFrontDefaultCertificate: true
+            MinimumProtocolVersion: TLSv1.2_2021
     
     # ==================== S3 BUCKET PARA ASSETS (LOGOS, IMÁGENES) ====================
     AssetsBucket:
@@ -690,35 +719,6 @@ resources:
               Principal: '*'
               Action: s3:GetObject
               Resource: !Sub "${AssetsBucket.Arn}/*"
-          
-          DefaultCacheBehavior:
-            TargetOriginId: S3Origin
-            ViewerProtocolPolicy: redirect-to-https
-            AllowedMethods:
-              - GET
-              - HEAD
-              - OPTIONS
-            CachedMethods:
-              - GET
-              - HEAD
-            Compress: true
-            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6  # CachingOptimized
-            OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf  # CORS-S3Origin
-            ResponseHeadersPolicyId: 67f7725c-6f97-4210-82d7-5512b31e9d03  # SecurityHeadersPolicy
-          
-          CustomErrorResponses:
-            - ErrorCode: 403
-              ResponseCode: 200
-              ResponsePagePath: /index.html
-              ErrorCachingMinTTL: 300
-            - ErrorCode: 404
-              ResponseCode: 200
-              ResponsePagePath: /index.html
-              ErrorCachingMinTTL: 300
-          
-          ViewerCertificate:
-            CloudFrontDefaultCertificate: true
-            MinimumProtocolVersion: TLSv1.2_2021
 
     # ════════════════════════════════════════════════════════════════
     # 🔒 VPC RESOURCES - Seguridad de Red para Lambdas
