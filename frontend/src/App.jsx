@@ -1,10 +1,12 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './auth/AuthProvider.jsx';
+import { useAuth } from './auth/useAuth.js';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import MainLayout from './components/layout/MainLayout.jsx';
 import { useTheme } from './hooks/useTheme.js';
 import { useEffect } from 'react';
+import Landing from './pages/Landing.jsx';
 import Login from './pages/Login.jsx';
 import Callback from './pages/Callback.jsx';
 
@@ -23,6 +25,19 @@ import SeedPage from './pages/SeedPage.jsx';
 
 const qc = new QueryClient();
 
+// Componente para redirigir root según autenticación
+function RootRedirect() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+      <div style={{ width: '50px', height: '50px', border: '4px solid #f3f4f6', borderTopColor: '#3B82F6', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+    </div>;
+  }
+
+  return user ? <Navigate to="/dashboard" replace /> : <Landing />;
+}
+
 function AppContent() {
   const { initializeTheme } = useTheme();
 
@@ -33,12 +48,14 @@ function AppContent() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Ruta pública: Landing o Dashboard según auth */}
+        <Route path="/" element={<RootRedirect />} />
+        
         <Route path="/login" element={<Login />} />
         <Route path="/callback" element={<Callback />} />
 
         {/* Rutas protegidas con Layout */}
         <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
-          <Route path="/" element={<Dashboard />} />
           <Route path="/dashboard" element={<Dashboard />} />
           
           <Route path="/boxes" element={<BoxesList />} />
@@ -57,7 +74,8 @@ function AppContent() {
           <Route path="/seed" element={<SeedPage />} />
         </Route>
 
-        <Route path="*" element={<Login />} />
+        {/* Ruta no encontrada: redirige a root (que mostrará Landing o Dashboard) */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
