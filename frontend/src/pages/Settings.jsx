@@ -1,41 +1,134 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   getClientSettings, 
   updateClientSettings,
   getUserSettings,
   updateUserSettings,
-  applyTheme 
+  applyTheme,
+  uploadLogo 
 } from '../api/settings';
-import { 
-  getAvailableThemes, 
-  applyThemeById, 
-  getTheme,
-  updateCustomTheme
-} from '../styles/themes';
 import './Settings.css';
+
+// Temas predefinidos profesionales
+const PROFESSIONAL_THEMES = {
+  ocean: {
+    id: 'ocean',
+    name: 'Ocean Blue',
+    description: 'Profesional y confiable',
+    colors: {
+      primary: '#0EA5E9',
+      secondary: '#06B6D4',
+      accent: '#3B82F6',
+    }
+  },
+  forest: {
+    id: 'forest',
+    name: 'Forest Green',
+    description: 'Natural y calmante',
+    colors: {
+      primary: '#10B981',
+      secondary: '#059669',
+      accent: '#14B8A6',
+    }
+  },
+  sunset: {
+    id: 'sunset',
+    name: 'Sunset Orange',
+    description: 'Energético y moderno',
+    colors: {
+      primary: '#F59E0B',
+      secondary: '#EF4444',
+      accent: '#F97316',
+    }
+  },
+  royal: {
+    id: 'royal',
+    name: 'Royal Purple',
+    description: 'Elegante y premium',
+    colors: {
+      primary: '#8B5CF6',
+      secondary: '#A855F7',
+      accent: '#EC4899',
+    }
+  },
+  corporate: {
+    id: 'corporate',
+    name: 'Corporate Blue',
+    description: 'Clásico corporativo',
+    colors: {
+      primary: '#3B82F6',
+      secondary: '#1D4ED8',
+      accent: '#2563EB',
+    }
+  },
+  medical: {
+    id: 'medical',
+    name: 'Medical Teal',
+    description: 'Profesional médico',
+    colors: {
+      primary: '#14B8A6',
+      secondary: '#0D9488',
+      accent: '#06B6D4',
+    }
+  },
+};
 
 export default function Settings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState('user'); // 'user' or 'client'
-  const [selectedThemeId, setSelectedThemeId] = useState('custom'); // Track selected theme
-  
-  // Client settings (loaded from API)
-  const [clientForm, setClientForm] = useState({
-    primaryColor: '#3B82F6',
-    secondaryColor: '#10B981',
-    accentColor: '#F59E0B',
-    darkMode: false,
-    appName: 'SmartBoxing',
+  const [uploading, setUploading] = useState(false);
+  const [activeSection, setActiveSection] = useState('general');
+  const [message, setMessage] = useState({ type: '', text: '' });
+  const fileInputRef = useRef(null);
+
+  // Client settings state
+  const [clientSettings, setClientSettings] = useState({
+    theme: {
+      primaryColor: '#3B82F6',
+      secondaryColor: '#10B981',
+      accentColor: '#F59E0B',
+      darkMode: false,
+      logoUrl: '',
+    },
+    texts: {
+      appName: 'SmartBoxing',
+      institutionName: 'Mi Institución de Salud',
+      welcomeMessage: 'Bienvenido al sistema de gestión',
+      tagline: 'Gestiona tus recursos médicos eficientemente',
+    },
+    schedule: {
+      startTime: '08:00',
+      endTime: '20:00',
+      slotDuration: 30,
+      workDays: [1, 2, 3, 4, 5],
+    },
+    operational: {
+      allowOverlapping: false,
+      requirePatientConfirmation: true,
+      sendReminders: true,
+      reminderHoursBefore: 24,
+      maxAppointmentsPerDay: 50,
+      enableWaitingList: false,
+    },
+    branding: {
+      companyName: '',
+      contactEmail: '',
+      contactPhone: '',
+      website: '',
+      address: '',
+    },
   });
 
-  // User settings (loaded from API)
-  const [userForm, setUserForm] = useState({
+  // User preferences state
+  const [userPreferences, setUserPreferences] = useState({
     theme: 'light',
     language: 'es',
+    notifications: true,
+    emailNotifications: true,
   });
 
-  const [message, setMessage] = useState({ type: '', text: '' });
+  const [previewLogo, setPreviewLogo] = useState('');
+  const [selectedThemeId, setSelectedThemeId] = useState('corporate');
 
   useEffect(() => {
     loadSettings();
@@ -49,326 +142,797 @@ export default function Settings() {
         getUserSettings(),
       ]);
       
-      // Populate forms with loaded data
-      if (client.theme) {
-        setClientForm(prev => ({
-          ...prev,
-          primaryColor: client.theme.primaryColor || prev.primaryColor,
-          secondaryColor: client.theme.secondaryColor || prev.secondaryColor,
-          accentColor: client.theme.accentColor || prev.accentColor,
-          darkMode: client.theme.darkMode || false,
-        }));
+      // Merge client settings
+      setClientSettings(prev => ({
+        theme: { ...prev.theme, ...(client.theme || {}) },
+        texts: { ...prev.texts, ...(client.texts || {}) },
+        schedule: { ...prev.schedule, ...(client.schedule || {}) },
+        operational: { ...prev.operational, ...(client.operational || {}) },
+        branding: { ...prev.branding, ...(client.branding || {}) },
+      }));
+
+      // Set preview logo
+      if (client.theme?.logoUrl) {
+        setPreviewLogo(client.theme.logoUrl);
       }
-      if (client.texts) {
-        setClientForm(prev => ({
-          ...prev,
-          appName: client.texts.appName || prev.appName,
-        }));
-      }
-      
+
+      // Merge user preferences
       if (user.preferences) {
-        setUserForm(prev => ({
-          ...prev,
-          ...user.preferences,
-        }));
+        setUserPreferences(prev => ({ ...prev, ...user.preferences }));
       }
     } catch (error) {
       console.error('Error loading settings:', error);
-      setMessage({ type: 'error', text: 'Error al cargar configuración' });
+      showMessage('error', 'Error al cargar configuración');
     } finally {
       setLoading(false);
     }
   };
 
-  // Manejar selección de tema predefinido
-  const handleThemeSelect = (themeId) => {
-    setSelectedThemeId(themeId);
-    const theme = getTheme(themeId);
-    
-    if (theme) {
-      // Aplicar tema visualmente
-      applyThemeById(themeId, clientForm.darkMode);
+  const showMessage = (type, text) => {
+    setMessage({ type, text });
+    setTimeout(() => setMessage({ type: '', text: '' }), 5000);
+  };
+
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      showMessage('error', 'Solo se permiten archivos de imagen');
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      showMessage('error', 'El archivo debe pesar menos de 2MB');
+      return;
+    }
+
+    try {
+      setUploading(true);
       
-      // Actualizar los colores del formulario
-      setClientForm(prev => ({
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => setPreviewLogo(e.target.result);
+      reader.readAsDataURL(file);
+
+      // Upload to S3
+      const logoUrl = await uploadLogo(file);
+      
+      // Update settings
+      setClientSettings(prev => ({
         ...prev,
+        theme: { ...prev.theme, logoUrl },
+      }));
+
+      // Apply immediately
+      localStorage.setItem('app-logo', logoUrl);
+      window.dispatchEvent(new CustomEvent('logoChanged', { detail: logoUrl }));
+
+      showMessage('success', 'Logo subido exitosamente');
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      showMessage('error', 'Error al subir logo');
+      setPreviewLogo(''); // Revert preview
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSaveClientSettings = async () => {
+    try {
+      setSaving(true);
+      
+      await updateClientSettings(clientSettings);
+      
+      // Apply theme immediately
+      applyTheme(clientSettings.theme);
+      
+      // Update app name
+      if (clientSettings.texts.appName) {
+        localStorage.setItem('app-name', clientSettings.texts.appName);
+        window.dispatchEvent(new CustomEvent('appNameChanged', { 
+          detail: clientSettings.texts.appName 
+        }));
+      }
+
+      // Update institution name
+      if (clientSettings.texts.institutionName) {
+        localStorage.setItem('institution-name', clientSettings.texts.institutionName);
+        window.dispatchEvent(new CustomEvent('institutionNameChanged', { 
+          detail: clientSettings.texts.institutionName 
+        }));
+      }
+
+      showMessage('success', '✅ Configuración guardada exitosamente');
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      showMessage('error', 'Error al guardar configuración');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveUserPreferences = async () => {
+    try {
+      setSaving(true);
+      await updateUserSettings(userPreferences);
+      
+      // Apply theme preference
+      if (userPreferences.theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else if (userPreferences.theme === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+
+      showMessage('success', '✅ Preferencias guardadas exitosamente');
+    } catch (error) {
+      console.error('Error saving preferences:', error);
+      showMessage('error', 'Error al guardar preferencias');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updateClientField = (section, field, value) => {
+    setClientSettings(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [field]: value,
+      },
+    }));
+  };
+
+  const updateUserField = (field, value) => {
+    setUserPreferences(prev => ({ ...prev, [field]: value }));
+  };
+
+  const applyPredefinedTheme = (themeId) => {
+    const theme = PROFESSIONAL_THEMES[themeId];
+    if (!theme) return;
+
+    setSelectedThemeId(themeId);
+    
+    // Update client settings with theme colors
+    setClientSettings(prev => ({
+      ...prev,
+      theme: {
+        ...prev.theme,
         primaryColor: theme.colors.primary,
         secondaryColor: theme.colors.secondary,
-        accentColor: theme.colors.success || prev.accentColor,
-      }));
-    }
+        accentColor: theme.colors.accent,
+      },
+    }));
+
+    showMessage('success', `Tema "${theme.name}" seleccionado. Haz clic en "Guardar Cambios" para aplicar.`);
   };
 
-  // Manejar cambio de color manual
-  const handleColorChange = (colorKey, value) => {
-    // Si no estamos en tema custom, cambiar automáticamente
-    if (selectedThemeId !== 'custom') {
-      setSelectedThemeId('custom');
-      setMessage({ 
-        type: 'info', 
-        text: '🎨 Cambiaste a Tema Personalizado al modificar un color' 
-      });
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-    }
-
-    // Actualizar el formulario
-    setClientForm(prev => ({ ...prev, [colorKey]: value }));
-
-    // Actualizar el tema custom
-    const colorMap = {
-      primaryColor: 'primary',
-      secondaryColor: 'secondary',
-      accentColor: 'success'
-    };
-    
-    if (colorMap[colorKey]) {
-      updateCustomTheme({ [colorMap[colorKey]]: value });
-      // Aplicar tema custom inmediatamente
-      applyThemeById('custom', clientForm.darkMode);
-    }
-  };
-
-  const handleSaveClientSettings = async (e) => {
-    e.preventDefault();
-    setSaving(true);
-    setMessage({ type: '', text: '' });
-
-    try {
-      const updates = {
-        theme: {
-          primaryColor: clientForm.primaryColor,
-          secondaryColor: clientForm.secondaryColor,
-          accentColor: clientForm.accentColor,
-          darkMode: clientForm.darkMode,
-        },
-        texts: {
-          appName: clientForm.appName,
-        },
+  const toggleWorkDay = (day) => {
+    setClientSettings(prev => {
+      const workDays = prev.schedule.workDays.includes(day)
+        ? prev.schedule.workDays.filter(d => d !== day)
+        : [...prev.schedule.workDays, day].sort();
+      
+      return {
+        ...prev,
+        schedule: { ...prev.schedule, workDays },
       };
-
-      const result = await updateClientSettings(updates);
-      
-      // Aplicar tema inmediatamente
-      applyTheme(result.settings.theme);
-      
-      // Actualizar appName en localStorage y disparar evento
-      if (clientForm.appName) {
-        localStorage.setItem('app-name', clientForm.appName);
-        window.dispatchEvent(new CustomEvent('appNameChanged', { detail: clientForm.appName }));
-      }
-      
-      setMessage({ type: 'success', text: 'Configuración guardada correctamente' });
-    } catch (error) {
-      console.error('Error saving client settings:', error);
-      setMessage({ type: 'error', text: 'Error al guardar configuración' });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleSaveUserSettings = async (e) => {
-    e.preventDefault();
-    setSaving(true);
-    setMessage({ type: '', text: '' });
-
-    try {
-      await updateUserSettings(userForm);
-      
-      // Aplicar tema del usuario inmediatamente
-      if (userForm.theme === 'dark') {
-        document.documentElement.setAttribute('data-theme', 'dark');
-      } else if (userForm.theme === 'light') {
-        document.documentElement.setAttribute('data-theme', 'light');
-      } else {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
-      }
-      
-      setMessage({ type: 'success', text: 'Preferencias guardadas correctamente' });
-    } catch (error) {
-      console.error('Error saving user settings:', error);
-      setMessage({ type: 'error', text: 'Error al guardar preferencias' });
-    } finally {
-      setSaving(false);
-    }
+    });
   };
 
   if (loading) {
     return (
-      <div className="settings-page">
-        <div className="loading">Cargando configuración...</div>
+      <div className="settings-professional-page">
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Cargando configuración...</p>
+        </div>
       </div>
     );
   }
 
+  const weekDays = [
+    { value: 0, label: 'Dom' },
+    { value: 1, label: 'Lun' },
+    { value: 2, label: 'Mar' },
+    { value: 3, label: 'Mié' },
+    { value: 4, label: 'Jue' },
+    { value: 5, label: 'Vie' },
+    { value: 6, label: 'Sáb' },
+  ];
+
   return (
-    <div className="settings-page">
-      <h1>⚙️ Configuración</h1>
-
-      <div className="tabs">
-        <button 
-          className={activeTab === 'user' ? 'active' : ''} 
-          onClick={() => setActiveTab('user')}
-        >
-          👤 Mis Preferencias
-        </button>
-        <button 
-          className={activeTab === 'client' ? 'active' : ''} 
-          onClick={() => setActiveTab('client')}
-        >
-          🏢 Configuración del Cliente
-        </button>
-      </div>
-
+    <div className="settings-professional-page">
       {message.text && (
-        <div className={`message ${message.type}`}>
-          {message.text}
+        <div className={`settings-toast settings-toast-${message.type}`}>
+          {message.type === 'success' ? '✅' : '❌'} {message.text}
         </div>
       )}
 
-      {activeTab === 'user' && (
-        <form onSubmit={handleSaveUserSettings} className="settings-form">
-          <h2>Preferencias Personales</h2>
-
-          <div className="form-group">
-            <label>Tema</label>
-            <select 
-              value={userForm.theme}
-              onChange={(e) => setUserForm({ ...userForm, theme: e.target.value })}
-            >
-              <option value="light">Claro</option>
-              <option value="dark">Oscuro</option>
-            </select>
+      <div className="settings-container">
+        {/* Sidebar Navigation */}
+        <aside className="settings-sidebar">
+          <div className="settings-sidebar-header">
+            <h2>⚙️ Configuración</h2>
+            <p>Personaliza tu plataforma</p>
           </div>
-
-          <button type="submit" disabled={saving} className="btn-primary">
-            {saving ? 'Guardando...' : 'Guardar Preferencias'}
-          </button>
-        </form>
-      )}
-
-      {activeTab === 'client' && (
-        <form onSubmit={handleSaveClientSettings} className="settings-form">
-          <h2>Personalización del Cliente</h2>
-          <p className="subtitle">Estos cambios afectan a todos los usuarios de tu organización</p>
-
-          <div className="section">
-            <h3>🏢 Nombre de la Aplicación</h3>
-            
-            <div className="form-group">
-              <label>Nombre</label>
-              <input 
-                type="text"
-                value={clientForm.appName}
-                onChange={(e) => setClientForm({ ...clientForm, appName: e.target.value })}
-                placeholder="SmartBoxing"
-              />
-              <small className="color-hint">Aparece en el header superior izquierdo</small>
+          
+          <nav className="settings-nav">
+            <div className="settings-nav-section">
+              <h3 className="settings-nav-section-title">Organización</h3>
+              <ul className="settings-nav-list">
+                <li>
+                  <button
+                    className={`settings-nav-link ${activeSection === 'general' ? 'active' : ''}`}
+                    onClick={() => setActiveSection('general')}
+                  >
+                    <span className="settings-nav-icon">🏢</span>
+                    <span>General</span>
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className={`settings-nav-link ${activeSection === 'branding' ? 'active' : ''}`}
+                    onClick={() => setActiveSection('branding')}
+                  >
+                    <span className="settings-nav-icon">🎨</span>
+                    <span>Identidad Visual</span>
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className={`settings-nav-link ${activeSection === 'schedule' ? 'active' : ''}`}
+                    onClick={() => setActiveSection('schedule')}
+                  >
+                    <span className="settings-nav-icon">📅</span>
+                    <span>Horarios</span>
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className={`settings-nav-link ${activeSection === 'operational' ? 'active' : ''}`}
+                    onClick={() => setActiveSection('operational')}
+                  >
+                    <span className="settings-nav-icon">⚙️</span>
+                    <span>Operacional</span>
+                  </button>
+                </li>
+              </ul>
             </div>
-          </div>
+          </nav>
+        </aside>
 
-          <div className="section">
-            <h3>Temas Predefinidos</h3>
-            <p className="section-description">Selecciona un tema o personaliza los colores manualmente</p>
-            
-            <div className="themes-grid">
-              {getAvailableThemes().map(theme => (
+        {/* Main Content */}
+        <main className="settings-main">
+          {/* GENERAL */}
+          {activeSection === 'general' && (
+            <>
+              <div className="settings-main-header">
+                <h1>Información General</h1>
+                <p>Configura la información básica de tu institución</p>
+              </div>
+
+              <div className="settings-card">
+                <div className="settings-card-header">
+                  <h2>Información de la Institución</h2>
+                  <p>Esta información se mostrará en toda la aplicación</p>
+                </div>
+                <div className="settings-card-body">
+                  <div className="settings-form-group">
+                    <label className="settings-form-label" htmlFor="appName">
+                      Nombre de la Aplicación
+                      <span className="settings-form-label-optional">Obligatorio</span>
+                    </label>
+                    <input
+                      id="appName"
+                      type="text"
+                      className="settings-input"
+                      value={clientSettings.texts.appName}
+                      onChange={(e) => updateClientField('texts', 'appName', e.target.value)}
+                      placeholder="Ej: SmartBoxing"
+                    />
+                    <p className="settings-form-description">
+                      Este nombre aparecerá en la barra de navegación y el título del navegador
+                    </p>
+                  </div>
+
+                  <div className="settings-form-group">
+                    <label className="settings-form-label" htmlFor="institutionName">
+                      Nombre de la Institución
+                      <span className="settings-form-label-optional">Obligatorio</span>
+                    </label>
+                    <input
+                      id="institutionName"
+                      type="text"
+                      className="settings-input"
+                      value={clientSettings.texts.institutionName}
+                      onChange={(e) => updateClientField('texts', 'institutionName', e.target.value)}
+                      placeholder="Ej: Clínica San José"
+                    />
+                  </div>
+
+                  <div className="settings-form-group">
+                    <label className="settings-form-label" htmlFor="welcomeMessage">
+                      Mensaje de Bienvenida
+                    </label>
+                    <input
+                      id="welcomeMessage"
+                      type="text"
+                      className="settings-input"
+                      value={clientSettings.texts.welcomeMessage}
+                      onChange={(e) => updateClientField('texts', 'welcomeMessage', e.target.value)}
+                      placeholder="Bienvenido al sistema de gestión"
+                    />
+                  </div>
+
+                  <div className="settings-form-group">
+                    <label className="settings-form-label" htmlFor="tagline">
+                      Lema / Tagline
+                    </label>
+                    <input
+                      id="tagline"
+                      type="text"
+                      className="settings-input"
+                      value={clientSettings.texts.tagline}
+                      onChange={(e) => updateClientField('texts', 'tagline', e.target.value)}
+                      placeholder="Gestiona eficientemente tus recursos"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="settings-card">
+                <div className="settings-card-header">
+                  <h2>Información de Contacto</h2>
+                  <p>Datos de contacto de tu organización</p>
+                </div>
+                <div className="settings-card-body">
+                  <div className="settings-form-group">
+                    <label className="settings-form-label" htmlFor="companyName">
+                      Razón Social
+                    </label>
+                    <input
+                      id="companyName"
+                      type="text"
+                      className="settings-input"
+                      value={clientSettings.branding.companyName}
+                      onChange={(e) => updateClientField('branding', 'companyName', e.target.value)}
+                      placeholder="Nombre legal de la empresa"
+                    />
+                  </div>
+
+                  <div className="settings-form-group">
+                    <label className="settings-form-label" htmlFor="contactEmail">
+                      Email de Contacto
+                    </label>
+                    <input
+                      id="contactEmail"
+                      type="email"
+                      className="settings-input"
+                      value={clientSettings.branding.contactEmail}
+                      onChange={(e) => updateClientField('branding', 'contactEmail', e.target.value)}
+                      placeholder="contacto@ejemplo.com"
+                    />
+                  </div>
+
+                  <div className="settings-form-group">
+                    <label className="settings-form-label" htmlFor="contactPhone">
+                      Teléfono
+                    </label>
+                    <input
+                      id="contactPhone"
+                      type="tel"
+                      className="settings-input"
+                      value={clientSettings.branding.contactPhone}
+                      onChange={(e) => updateClientField('branding', 'contactPhone', e.target.value)}
+                      placeholder="+56 9 1234 5678"
+                    />
+                  </div>
+
+                  <div className="settings-form-group">
+                    <label className="settings-form-label" htmlFor="website">
+                      Sitio Web
+                    </label>
+                    <input
+                      id="website"
+                      type="url"
+                      className="settings-input"
+                      value={clientSettings.branding.website}
+                      onChange={(e) => updateClientField('branding', 'website', e.target.value)}
+                      placeholder="https://ejemplo.com"
+                    />
+                  </div>
+
+                  <div className="settings-form-group">
+                    <label className="settings-form-label" htmlFor="address">
+                      Dirección
+                    </label>
+                    <textarea
+                      id="address"
+                      className="settings-textarea"
+                      rows={3}
+                      value={clientSettings.branding.address}
+                      onChange={(e) => updateClientField('branding', 'address', e.target.value)}
+                      placeholder="Calle 123, Ciudad, País"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="settings-actions">
                 <button
-                  key={theme.id}
-                  type="button"
-                  className={`theme-card ${selectedThemeId === theme.id ? 'selected' : ''}`}
-                  onClick={() => handleThemeSelect(theme.id)}
+                  onClick={handleSaveClientSettings}
+                  disabled={saving}
+                  className="settings-btn-primary"
                 >
-                  <span className="theme-name">{theme.name}</span>
-                  <span className="theme-preview-icon">🎨</span>
-                  {selectedThemeId === theme.id && (
-                    <span className="theme-selected-badge">✓</span>
-                  )}
+                  {saving ? 'Guardando...' : 'Guardar Cambios'}
                 </button>
-              ))}
-            </div>
-            <p className="hint">💡 Al seleccionar un tema, los colores se actualizan automáticamente. Si modificas un color, cambiarás a Tema Personalizado.</p>
-            
-            <div className="form-group checkbox" style={{marginTop: '1rem'}}>
-              <label>
-                <input 
-                  type="checkbox"
-                  checked={clientForm.darkMode}
-                  onChange={(e) => setClientForm({ ...clientForm, darkMode: e.target.checked })}
-                />
-                Modo oscuro por defecto
-              </label>
-            </div>
-          </div>
-
-          <div className="section">
-            <h3>🎨 Colores Personalizados</h3>
-            {selectedThemeId !== 'custom' && (
-              <p className="section-description" style={{color: 'var(--warning-color)', fontWeight: 500}}>
-                ⚠️ Modificar colores cambiará automáticamente a Tema Personalizado
-              </p>
-            )}
-            
-            <div className="form-group">
-              <label>Color Primario</label>
-              <div className="color-input">
-                <input 
-                  type="color"
-                  value={clientForm.primaryColor}
-                  onChange={(e) => handleColorChange('primaryColor', e.target.value)}
-                />
-                <input 
-                  type="text"
-                  value={clientForm.primaryColor}
-                  onChange={(e) => handleColorChange('primaryColor', e.target.value)}
-                  placeholder="#3B82F6"
-                />
               </div>
-              <small className="color-hint">Se usa para botones principales, enlaces y elementos destacados</small>
-            </div>
+            </>
+          )}
 
-            <div className="form-group">
-              <label>Color Secundario</label>
-              <div className="color-input">
-                <input 
-                  type="color"
-                  value={clientForm.secondaryColor}
-                  onChange={(e) => handleColorChange('secondaryColor', e.target.value)}
-                />
-                <input 
-                  type="text"
-                  value={clientForm.secondaryColor}
-                  onChange={(e) => handleColorChange('secondaryColor', e.target.value)}
-                  placeholder="#10B981"
-                />
+          {/* IDENTIDAD VISUAL */}
+          {activeSection === 'branding' && (
+            <>
+              <div className="settings-main-header">
+                <h1>Identidad Visual</h1>
+                <p>Personaliza colores, logo y apariencia de tu plataforma</p>
               </div>
-              <small className="color-hint">Se usa para botones secundarios y acentos</small>
-            </div>
 
-            <div className="form-group">
-              <label>Color de Acento</label>
-              <div className="color-input">
-                <input 
-                  type="color"
-                  value={clientForm.accentColor}
-                  onChange={(e) => handleColorChange('accentColor', e.target.value)}
-                />
-                <input 
-                  type="text"
-                  value={clientForm.accentColor}
-                  onChange={(e) => handleColorChange('accentColor', e.target.value)}
-                  placeholder="#F59E0B"
-                />
+              <div className="settings-card">
+                <div className="settings-card-header">
+                  <h2>Logo de la Institución</h2>
+                  <p>El logo se mostrará en la barra de navegación</p>
+                </div>
+                <div className="settings-card-body">
+                  <div className="logo-upload-section">
+                    {previewLogo && (
+                      <div className="logo-preview-box">
+                        <img src={previewLogo} alt="Logo preview" />
+                      </div>
+                    )}
+                    <div className="logo-upload-controls">
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept="image/*"
+                        onChange={handleLogoUpload}
+                        style={{ display: 'none' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploading}
+                        className="settings-btn-secondary"
+                      >
+                        {uploading ? '⏳ Subiendo...' : previewLogo ? '🔄 Cambiar Logo' : '📤 Subir Logo'}
+                      </button>
+                      <p className="settings-form-description">
+                        Formatos aceptados: PNG, JPG, SVG. Tamaño máximo: 2MB.
+                        <br />
+                        Recomendado: 200x60px o proporciones similares.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <small className="color-hint">Se usa para éxito, estados positivos y confirmaciones</small>
-            </div>
-          </div>
 
-          <button type="submit" disabled={saving} className="btn-primary">
-            {saving ? 'Guardando...' : 'Guardar Configuración'}
-          </button>
-        </form>
-      )}
+              <div className="settings-card">
+                <div className="settings-card-header">
+                  <h2>Temas Prediseñados</h2>
+                  <p>Selecciona un tema profesional diseñado para tu institución</p>
+                </div>
+                <div className="settings-card-body">
+                  <div className="themes-grid">
+                    {Object.values(PROFESSIONAL_THEMES).map(theme => (
+                      <div
+                        key={theme.id}
+                        className={`theme-card ${selectedThemeId === theme.id ? 'selected' : ''}`}
+                        onClick={() => applyPredefinedTheme(theme.id)}
+                      >
+                        <div className="theme-card-colors">
+                          <div className="theme-color-dot" style={{ backgroundColor: theme.colors.primary }}></div>
+                          <div className="theme-color-dot" style={{ backgroundColor: theme.colors.secondary }}></div>
+                          <div className="theme-color-dot" style={{ backgroundColor: theme.colors.accent }}></div>
+                        </div>
+                        <h4>{theme.name}</h4>
+                        <p>{theme.description}</p>
+                        {selectedThemeId === theme.id && (
+                          <div className="theme-selected-badge">✓ Seleccionado</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="settings-card">
+                <div className="settings-card-header">
+                  <h2>Personalización Avanzada de Colores</h2>
+                  <p>Ajusta los colores manualmente (opcional)</p>
+                </div>
+                <div className="settings-card-body">
+                  <div className="colors-advanced-grid">
+                    <div className="settings-form-group">
+                      <label className="settings-form-label" htmlFor="primaryColor">
+                        Color Primario
+                      </label>
+                      <div className="color-input-wrapper">
+                        <input
+                          id="primaryColor"
+                          type="color"
+                          className="color-picker"
+                          value={clientSettings.theme.primaryColor}
+                          onChange={(e) => updateClientField('theme', 'primaryColor', e.target.value)}
+                        />
+                        <input
+                          type="text"
+                          className="settings-input"
+                          value={clientSettings.theme.primaryColor}
+                          onChange={(e) => updateClientField('theme', 'primaryColor', e.target.value)}
+                          placeholder="#3B82F6"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="settings-form-group">
+                      <label className="settings-form-label" htmlFor="secondaryColor">
+                        Color Secundario
+                      </label>
+                      <div className="color-input-wrapper">
+                        <input
+                          id="secondaryColor"
+                          type="color"
+                          className="color-picker"
+                          value={clientSettings.theme.secondaryColor}
+                          onChange={(e) => updateClientField('theme', 'secondaryColor', e.target.value)}
+                        />
+                        <input
+                          type="text"
+                          className="settings-input"
+                          value={clientSettings.theme.secondaryColor}
+                          onChange={(e) => updateClientField('theme', 'secondaryColor', e.target.value)}
+                          placeholder="#10B981"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="settings-form-group">
+                      <label className="settings-form-label" htmlFor="accentColor">
+                        Color de Acento
+                      </label>
+                      <div className="color-input-wrapper">
+                        <input
+                          id="accentColor"
+                          type="color"
+                          className="color-picker"
+                          value={clientSettings.theme.accentColor}
+                          onChange={(e) => updateClientField('theme', 'accentColor', e.target.value)}
+                        />
+                        <input
+                          type="text"
+                          className="settings-input"
+                          value={clientSettings.theme.accentColor}
+                          onChange={(e) => updateClientField('theme', 'accentColor', e.target.value)}
+                          placeholder="#F59E0B"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="settings-actions">
+                <button
+                  onClick={handleSaveClientSettings}
+                  disabled={saving}
+                  className="settings-btn-primary"
+                >
+                  {saving ? 'Guardando...' : 'Guardar Cambios'}
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* HORARIOS */}
+          {activeSection === 'schedule' && (
+            <>
+              <div className="settings-main-header">
+                <h1>Configuración de Horarios</h1>
+                <p>Define los horarios de atención y configuración de citas</p>
+              </div>
+
+              <div className="settings-card">
+                <div className="settings-card-header">
+                  <h2>Horario de Atención</h2>
+                </div>
+                <div className="settings-card-body">
+                  <div className="settings-grid-2">
+                    <div className="settings-form-group">
+                      <label className="settings-form-label" htmlFor="startTime">
+                        Hora de Inicio
+                      </label>
+                      <input
+                        id="startTime"
+                        type="time"
+                        className="settings-input"
+                        value={clientSettings.schedule.startTime}
+                        onChange={(e) => updateClientField('schedule', 'startTime', e.target.value)}
+                      />
+                    </div>
+
+                    <div className="settings-form-group">
+                      <label className="settings-form-label" htmlFor="endTime">
+                        Hora de Fin
+                      </label>
+                      <input
+                        id="endTime"
+                        type="time"
+                        className="settings-input"
+                        value={clientSettings.schedule.endTime}
+                        onChange={(e) => updateClientField('schedule', 'endTime', e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="settings-form-group">
+                    <label className="settings-form-label" htmlFor="slotDuration">
+                      Duración de Cita
+                    </label>
+                    <select
+                      id="slotDuration"
+                      className="settings-select"
+                      value={clientSettings.schedule.slotDuration}
+                      onChange={(e) => updateClientField('schedule', 'slotDuration', Number(e.target.value))}
+                    >
+                      <option value={15}>15 minutos</option>
+                      <option value={20}>20 minutos</option>
+                      <option value={30}>30 minutos</option>
+                      <option value={45}>45 minutos</option>
+                      <option value={60}>60 minutos</option>
+                      <option value={90}>90 minutos</option>
+                      <option value={120}>2 horas</option>
+                    </select>
+                    <p className="settings-form-description">
+                      Tiempo por defecto para cada cita
+                    </p>
+                  </div>
+
+                  <div className="settings-form-group">
+                    <label className="settings-form-label">
+                      Días de Trabajo
+                    </label>
+                    <div className="weekdays-selector">
+                      {weekDays.map(day => (
+                        <button
+                          key={day.value}
+                          type="button"
+                          className={`weekday-btn ${
+                            clientSettings.schedule.workDays.includes(day.value) ? 'active' : ''
+                          }`}
+                          onClick={() => toggleWorkDay(day.value)}
+                        >
+                          {day.label}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="settings-form-description">
+                      Selecciona los días en que tu institución atiende
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="settings-actions">
+                <button
+                  onClick={handleSaveClientSettings}
+                  disabled={saving}
+                  className="settings-btn-primary"
+                >
+                  {saving ? 'Guardando...' : 'Guardar Cambios'}
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* OPERACIONAL */}
+          {activeSection === 'operational' && (
+            <>
+              <div className="settings-main-header">
+                <h1>Configuración Operacional</h1>
+                <p>Reglas y políticas de negocio de tu institución</p>
+              </div>
+
+              <div className="settings-card">
+                <div className="settings-card-header">
+                  <h2>Políticas de Citas</h2>
+                </div>
+                <div className="settings-card-body">
+                  <div className="settings-form-group settings-checkbox-group">
+                    <label className="settings-checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={clientSettings.operational.allowOverlapping}
+                        onChange={(e) => updateClientField('operational', 'allowOverlapping', e.target.checked)}
+                      />
+                      <div>
+                        <span className="settings-checkbox-title">Permitir citas superpuestas</span>
+                        <p className="settings-checkbox-description">
+                          Permite agendar múltiples citas en el mismo horario para diferentes profesionales
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+
+                  <div className="settings-form-group settings-checkbox-group">
+                    <label className="settings-checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={clientSettings.operational.requirePatientConfirmation}
+                        onChange={(e) => updateClientField('operational', 'requirePatientConfirmation', e.target.checked)}
+                      />
+                      <div>
+                        <span className="settings-checkbox-title">Requerir confirmación del paciente</span>
+                        <p className="settings-checkbox-description">
+                          Los pacientes deben confirmar su cita antes de la fecha programada
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+
+                  <div className="settings-form-group">
+                    <label className="settings-form-label" htmlFor="maxAppointmentsPerDay">
+                      Máximo de citas por día
+                    </label>
+                    <input
+                      id="maxAppointmentsPerDay"
+                      type="number"
+                      className="settings-input"
+                      min="1"
+                      max="100"
+                      value={clientSettings.operational.maxAppointmentsPerDay}
+                      onChange={(e) => updateClientField('operational', 'maxAppointmentsPerDay', Number(e.target.value))}
+                    />
+                    <p className="settings-form-description">
+                      Límite diario de citas que se pueden agendar
+                    </p>
+                  </div>
+
+                  <div className="settings-form-group settings-checkbox-group">
+                    <label className="settings-checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={clientSettings.operational.enableWaitingList}
+                        onChange={(e) => updateClientField('operational', 'enableWaitingList', e.target.checked)}
+                      />
+                      <div>
+                        <span className="settings-checkbox-title">Habilitar lista de espera</span>
+                        <p className="settings-checkbox-description">
+                          Permite a los pacientes registrarse en lista de espera cuando no hay horarios disponibles
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="settings-actions">
+                <button
+                  onClick={handleSaveClientSettings}
+                  disabled={saving}
+                  className="settings-btn-primary"
+                >
+                  {saving ? 'Guardando...' : 'Guardar Cambios'}
+                </button>
+              </div>
+            </>
+          )}
+
+
+        </main>
+      </div>
     </div>
   );
 }

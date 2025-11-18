@@ -6,9 +6,11 @@ import ProtectedRoute from './components/ProtectedRoute.jsx';
 import MainLayout from './components/layout/MainLayout.jsx';
 import { useTheme } from './hooks/useTheme.js';
 import { useEffect } from 'react';
-import Landing from './pages/Landing.jsx';
-import Login from './pages/Login.jsx';
-import Callback from './pages/Callback.jsx';
+
+// Pages
+import LandingPage from './pages/Landing.jsx';
+import LoginPage from './pages/Login.jsx';
+import RegisterPage from './pages/Register.jsx';
 
 import BoxesList from './pages/BoxesList.jsx';
 import BoxForm from './pages/BoxForm.jsx';
@@ -20,7 +22,7 @@ import AppointmentsList from './pages/AppointmentsList.jsx';
 import AppointmentForm from './pages/AppointmentForm.jsx';
 
 import Dashboard from './pages/Dashboard.jsx';
-import Settings from './pages/SettingsNew.jsx';
+import Settings from './pages/Settings.jsx';
 import SeedPage from './pages/SeedPage.jsx';
 
 const qc = new QueryClient();
@@ -35,7 +37,7 @@ function RootRedirect() {
     </div>;
   }
 
-  return user ? <Navigate to="/dashboard" replace /> : <Landing />;
+  return user ? <Navigate to="/dashboard" replace /> : <LandingPage />;
 }
 
 function AppContent() {
@@ -51,8 +53,8 @@ function AppContent() {
         {/* Ruta pública: Landing o Dashboard según auth */}
         <Route path="/" element={<RootRedirect />} />
         
-        <Route path="/login" element={<Login />} />
-        <Route path="/callback" element={<Callback />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
         {/* Rutas protegidas con Layout */}
         <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>

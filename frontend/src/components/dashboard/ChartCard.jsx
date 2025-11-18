@@ -14,11 +14,11 @@ import {
 import './ChartCard.css';
 
 const COLORS = {
-  primary: '#6366f1',
-  success: '#10b981',
-  warning: '#f59e0b',
-  danger: '#ef4444',
-  info: '#3b82f6',
+  primary: '#4299e1',
+  success: '#48bb78',
+  warning: '#ed8936',
+  danger: '#f56565',
+  info: '#4299e1',
 };
 
 /**

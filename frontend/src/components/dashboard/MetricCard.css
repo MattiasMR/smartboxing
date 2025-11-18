@@ -17,7 +17,7 @@
 }
 
 .metric-card--success {
-  border-left-color: #10b981;
+  border-left-color: var(--success);
 }
 
 .metric-card--warning {
@@ -25,7 +25,7 @@
 }
 
 .metric-card--danger {
-  border-left-color: #ef4444;
+  border-left-color: var(--error);
 }
 
 .metric-card--info {
@@ -83,13 +83,13 @@
 }
 
 .metric-card__trend--up {
-  color: #10b981;
-  background: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+  background: rgba(72, 187, 120, 0.1);
 }
 
 .metric-card__trend--down {
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.1);
+  color: var(--error);
+  background-color: rgba(245, 101, 101, 0.1);
 }
 
 /* Responsive */

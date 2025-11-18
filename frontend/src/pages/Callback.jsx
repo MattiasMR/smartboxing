@@ -29,11 +29,11 @@ export default function Callback() {
       setStatus('Cargando configuración...');
       
       login({ access_token, id_token, expires_in }).then(() => {
-        console.log('[Callback] Login complete, navigating to /boxes');
-        nav('/boxes', { replace: true });
+        console.log('[Callback] Login complete, navigating to /dashboard');
+        nav('/dashboard', { replace: true });
       }).catch(error => {
         console.error('[Callback] Error during login:', error);
-        nav('/boxes', { replace: true }); // Navegar de todos modos
+        nav('/dashboard', { replace: true }); // Navegar de todos modos
       });
     } else {
       console.log('[Callback] No access token, redirecting to login');

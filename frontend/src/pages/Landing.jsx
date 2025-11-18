@@ -1,210 +1,178 @@
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
-import { useEffect } from 'react';
-import './Landing.css';
 
-export default function Landing() {
+export default function LandingPage() {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
 
-  // Si ya está autenticado, redirigir al dashboard
-  useEffect(() => {
-    if (user && !loading) {
+  const handleGetStarted = () => {
+    if (user) {
       navigate('/dashboard');
+    } else {
+      navigate('/register');
     }
-  }, [user, loading, navigate]);
-
-  const handleLogin = () => {
-    navigate('/login');
   };
-
-  const handleSignup = () => {
-    navigate('/login'); // Cognito hosted UI tiene signup
-  };
-
-  if (loading) {
-    return (
-      <div className="loading-screen">
-        <div className="loading-spinner"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="landing-page">
-      {/* Hero Section */}
-      <section className="hero">
-        <div className="hero-background">
-          <div className="gradient-overlay"></div>
+      {/* Navigation */}
+      <nav className="landing-nav">
+        <div className="nav-container">
+          <Link to="#inicio" className="nav-logo">
+            <div className="nav-logo-icon">📦</div>
+            <span>SmartBoxing</span>
+          </Link>
+          <div className="nav-links">
+            <a href="#features">Características</a>
+            <a href="#pricing">Precios</a>
+            {user ? (
+              <Link to="/dashboard" className="btn-nav-primary">
+                Ir al Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link to="/login" className="btn-nav-secondary">
+                  Iniciar Sesión
+                </Link>
+                <Link to="/register" className="btn-nav-primary">
+                  Comenzar Gratis
+                </Link>
+              </>
+            )}
+          </div>
         </div>
-        
-        <nav className="landing-nav">
-          <div className="nav-container">
-            <div className="logo-section">
-              <div className="logo-icon">
-                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                  <rect width="40" height="40" rx="8" fill="url(#gradient1)"/>
-                  <path d="M12 12h6v6h-6zM22 12h6v6h-6zM12 22h6v6h-6zM22 22h6v6h-6z" fill="white" opacity="0.9"/>
-                  <defs>
-                    <linearGradient id="gradient1" x1="0" y1="0" x2="40" y2="40">
-                      <stop offset="0%" stopColor="#3B82F6"/>
-                      <stop offset="100%" stopColor="#8B5CF6"/>
-                    </linearGradient>
-                  </defs>
-                </svg>
-              </div>
-              <span className="logo-text">SmartBoxing</span>
+      </nav>
+
+      {/* Hero Section */}
+      <section id="inicio" className="hero">
+        <div className="hero-container">
+          <div className="hero-content">
+            <div className="hero-badge">
+              <span className="badge-icon">✨</span>
+              Gestión de Espacios Inteligente
             </div>
-            
-            <div className="nav-actions">
-              <button className="btn-secondary" onClick={handleLogin}>
-                Iniciar Sesión
-              </button>
-              <button className="btn-primary" onClick={handleSignup}>
+            <h1 className="hero-title">
+              Gestiona tus <span className="hero-highlight">Espacios Físicos</span>
+              <br />
+              de forma simple y eficiente
+            </h1>
+            <p className="hero-description">
+              Plataforma SaaS todo-en-uno para reservas, gestión de personal y análisis.
+              Perfecta para coworkings, clínicas, estudios, gimnasios y más.
+            </p>
+            <div className="hero-cta">
+              <button onClick={handleGetStarted} className="btn-hero-primary">
                 Comenzar Gratis
+                <span className="btn-arrow">→</span>
               </button>
+              <a href="#pricing" className="btn-hero-secondary">
+                Ver Precios
+              </a>
             </div>
+            <p className="hero-footnote">
+              ✓ Sin tarjeta de crédito  ✓ Configuración en 5 minutos  ✓ Soporte 24/7
+            </p>
           </div>
-        </nav>
-
-        <div className="hero-content">
-          <div className="hero-badge">
-            <span className="badge-icon">⚡</span>
-            <span>Gestión de Espacios Inteligente</span>
-          </div>
-          
-          <h1 className="hero-title">
-            Gestiona tus <span className="gradient-text">Espacios Físicos</span>
-            <br />
-            de forma simple y eficiente
-          </h1>
-          
-          <p className="hero-description">
-            Plataforma SaaS todo-en-uno para reservas, gestión de personal y análisis. 
-            Perfecta para coworkings, clínicas, estudios, gimnasios y más.
-          </p>
-
-          <div className="hero-cta">
-            <button className="btn-primary btn-large" onClick={handleSignup}>
-              <span>Comenzar Gratis</span>
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M10 3l7 7-7 7M17 10H3"/>
-              </svg>
-            </button>
-            <button className="btn-secondary btn-large" onClick={handleLogin}>
-              Ver Demo
-            </button>
-          </div>
-
-          <div className="hero-stats">
-            <div className="stat">
-              <div className="stat-number">10K+</div>
-              <div className="stat-label">Espacios Gestionados</div>
+          <div className="hero-visual">
+            <div className="visual-card visual-card-1">
+              <div className="card-header">
+                <div className="card-icon">📊</div>
+                <div className="card-title">Dashboard</div>
+              </div>
+              <div className="card-content">
+                <div className="stat-row">
+                  <span className="stat-label">Reservas Hoy</span>
+                  <span className="stat-value">24</span>
+                </div>
+                <div className="stat-row">
+                  <span className="stat-label">Ocupación</span>
+                  <span className="stat-value">87%</span>
+                </div>
+                <div className="chart-bar" style={{width: '85%'}}></div>
+                <div className="chart-bar" style={{width: '65%'}}></div>
+                <div className="chart-bar" style={{width: '92%'}}></div>
+              </div>
             </div>
-            <div className="stat">
-              <div className="stat-number">500+</div>
-              <div className="stat-label">Empresas Confían</div>
-            </div>
-            <div className="stat">
-              <div className="stat-number">99.9%</div>
-              <div className="stat-label">Uptime</div>
+            <div className="visual-card visual-card-2">
+              <div className="card-header">
+                <div className="card-icon">📅</div>
+                <div className="card-title">Próximas Reservas</div>
+              </div>
+              <div className="card-content">
+                <div className="booking-item">
+                  <div className="booking-dot"></div>
+                  <div className="booking-info">
+                    <div className="booking-name">Sala A - 10:00</div>
+                    <div className="booking-time">Marketing Team</div>
+                  </div>
+                </div>
+                <div className="booking-item">
+                  <div className="booking-dot"></div>
+                  <div className="booking-info">
+                    <div className="booking-name">Sala B - 14:30</div>
+                    <div className="booking-time">Product Design</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="features">
-        <div className="container">
+      <section id="features" className="features">
+        <div className="features-container">
           <div className="section-header">
-            <h2 className="section-title">Todo lo que necesitas</h2>
-            <p className="section-description">
-              Herramientas profesionales para gestionar tus espacios de forma eficiente
-            </p>
+            <h2>Todo lo que necesitas para gestionar tus espacios</h2>
+            <p>Potentes herramientas diseñadas para simplificar tu día a día</p>
           </div>
-
           <div className="features-grid">
             <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="3" width="7" height="7" rx="1"/>
-                  <rect x="14" y="3" width="7" height="7" rx="1"/>
-                  <rect x="3" y="14" width="7" height="7" rx="1"/>
-                  <rect x="14" y="14" width="7" height="7" rx="1"/>
-                </svg>
-              </div>
-              <h3 className="feature-title">Gestión de Espacios</h3>
-              <p className="feature-description">
-                Administra múltiples espacios, define capacidad, equipamiento y disponibilidad en tiempo real.
+              <div className="feature-icon">📅</div>
+              <h3>Reservas Inteligentes</h3>
+              <p>
+                Sistema de calendario avanzado con disponibilidad en tiempo real,
+                confirmaciones automáticas y recordatorios.
               </p>
             </div>
-
             <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-              </div>
-              <h3 className="feature-title">Personal & Clientes</h3>
-              <p className="feature-description">
-                Gestiona tu equipo y base de clientes. Perfiles completos, historial y métricas de rendimiento.
+              <div className="feature-icon">👥</div>
+              <h3>Gestión de Personal</h3>
+              <p>
+                Administra tu equipo, horarios, permisos y roles desde un solo lugar.
+                Control total y visibilidad completa.
               </p>
             </div>
-
             <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                  <line x1="16" y1="2" x2="16" y2="6"/>
-                  <line x1="8" y1="2" x2="8" y2="6"/>
-                  <line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
-              </div>
-              <h3 className="feature-title">Reservas Inteligentes</h3>
-              <p className="feature-description">
-                Sistema de reservas con validación automática, recordatorios y prevención de conflictos.
+              <div className="feature-icon">📊</div>
+              <h3>Analytics en Tiempo Real</h3>
+              <p>
+                Dashboard con métricas clave: ocupación, ingresos, tendencias y KPIs.
+                Toma decisiones basadas en datos.
               </p>
             </div>
-
             <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="12" y1="20" x2="12" y2="10"/>
-                  <line x1="18" y1="20" x2="18" y2="4"/>
-                  <line x1="6" y1="20" x2="6" y2="16"/>
-                </svg>
-              </div>
-              <h3 className="feature-title">Analytics Avanzado</h3>
-              <p className="feature-description">
-                Reportes en tiempo real, ocupación, tendencias y KPIs para tomar decisiones informadas.
+              <div className="feature-icon">🔒</div>
+              <h3>Seguridad Enterprise</h3>
+              <p>
+                Autenticación multi-factor, encriptación end-to-end y cumplimiento
+                con estándares internacionales.
               </p>
             </div>
-
             <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                </svg>
-              </div>
-              <h3 className="feature-title">Multi-Tenant</h3>
-              <p className="feature-description">
-                Datos aislados por cliente. Personalización completa: logos, colores, horarios y políticas.
+              <div className="feature-icon">🎨</div>
+              <h3>Personalización Total</h3>
+              <p>
+                Adapta la plataforma a tu marca: logos, colores, textos y flujos.
+                100% white-label.
               </p>
             </div>
-
             <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                  <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-                  <line x1="12" y1="22.08" x2="12" y2="12"/>
-                </svg>
-              </div>
-              <h3 className="feature-title">API Completa</h3>
-              <p className="feature-description">
-                REST API documentada. Integra SmartBoxing con tus sistemas existentes fácilmente.
+              <div className="feature-icon">📱</div>
+              <h3>Multi-dispositivo</h3>
+              <p>
+                Acceso desde cualquier dispositivo: web, tablet, móvil.
+                Experiencia optimizada en todas las pantallas.
               </p>
             </div>
           </div>
@@ -212,79 +180,80 @@ export default function Landing() {
       </section>
 
       {/* Pricing Section */}
-      <section className="pricing">
-        <div className="container">
+      <section id="pricing" className="pricing">
+        <div className="pricing-container">
           <div className="section-header">
-            <h2 className="section-title">Planes para cada necesidad</h2>
-            <p className="section-description">
-              Comienza gratis, escala cuando lo necesites
-            </p>
+            <h2>Precios transparentes y simples</h2>
+            <p>Sin costos ocultos. Cancela cuando quieras.</p>
           </div>
-
           <div className="pricing-grid">
             <div className="pricing-card">
               <div className="pricing-header">
                 <h3>Starter</h3>
-                <div className="price">
-                  <span className="currency">$</span>
-                  <span className="amount">0</span>
-                  <span className="period">/mes</span>
-                </div>
+                <p>Perfecto para comenzar</p>
               </div>
-              <ul className="features-list">
+              <div className="pricing-price">
+                <span className="price-currency">$</span>
+                <span className="price-amount">0</span>
+                <span className="price-period">/mes</span>
+              </div>
+              <ul className="pricing-features">
                 <li>✓ Hasta 5 espacios</li>
-                <li>✓ 1 usuario administrador</li>
-                <li>✓ 100 reservas/mes</li>
-                <li>✓ Reportes básicos</li>
+                <li>✓ 50 reservas/mes</li>
+                <li>✓ 3 usuarios</li>
                 <li>✓ Soporte por email</li>
+                <li>✓ Analytics básicos</li>
               </ul>
-              <button className="btn-secondary btn-block" onClick={handleSignup}>
+              <button onClick={handleGetStarted} className="btn-pricing">
                 Comenzar Gratis
               </button>
             </div>
 
-            <div className="pricing-card featured">
+            <div className="pricing-card pricing-card-featured">
               <div className="pricing-badge">Más Popular</div>
               <div className="pricing-header">
                 <h3>Professional</h3>
-                <div className="price">
-                  <span className="currency">$</span>
-                  <span className="amount">29</span>
-                  <span className="period">/mes</span>
-                </div>
+                <p>Para equipos en crecimiento</p>
               </div>
-              <ul className="features-list">
+              <div className="pricing-price">
+                <span className="price-currency">$</span>
+                <span className="price-amount">49</span>
+                <span className="price-period">/mes</span>
+              </div>
+              <ul className="pricing-features">
                 <li>✓ Espacios ilimitados</li>
-                <li>✓ Hasta 10 usuarios</li>
                 <li>✓ Reservas ilimitadas</li>
-                <li>✓ Analytics avanzado</li>
-                <li>✓ Personalización completa</li>
+                <li>✓ 10 usuarios</li>
                 <li>✓ Soporte prioritario</li>
+                <li>✓ Analytics avanzados</li>
+                <li>✓ Personalización completa</li>
                 <li>✓ API access</li>
               </ul>
-              <button className="btn-primary btn-block" onClick={handleSignup}>
-                Probar 14 días gratis
+              <button onClick={handleGetStarted} className="btn-pricing btn-pricing-featured">
+                Comenzar Prueba
               </button>
             </div>
 
             <div className="pricing-card">
               <div className="pricing-header">
                 <h3>Enterprise</h3>
-                <div className="price">
-                  <span className="amount">Custom</span>
-                </div>
+                <p>Para grandes organizaciones</p>
               </div>
-              <ul className="features-list">
+              <div className="pricing-price">
+                <span className="price-label">Personalizado</span>
+              </div>
+              <ul className="pricing-features">
                 <li>✓ Todo en Professional</li>
                 <li>✓ Usuarios ilimitados</li>
                 <li>✓ SLA garantizado</li>
-                <li>✓ Soporte 24/7</li>
-                <li>✓ Implementación dedicada</li>
-                <li>✓ Ambiente aislado</li>
+                <li>✓ Soporte dedicado 24/7</li>
+                <li>✓ On-premise disponible</li>
+                <li>✓ Capacitación incluida</li>
+                <li>✓ Integraciones custom</li>
               </ul>
-              <button className="btn-secondary btn-block">
+              <a href="mailto:sales@smartboxing.com" className="btn-pricing">
                 Contactar Ventas
-              </button>
+              </a>
             </div>
           </div>
         </div>
@@ -292,78 +261,55 @@ export default function Landing() {
 
       {/* CTA Section */}
       <section className="cta">
-        <div className="container">
-          <div className="cta-content">
-            <h2>¿Listo para optimizar tu gestión?</h2>
-            <p>Únete a cientos de empresas que ya confían en SmartBoxing</p>
-            <button className="btn-primary btn-large" onClick={handleSignup}>
-              Comenzar Gratis - Sin Tarjeta
-            </button>
-          </div>
+        <div className="cta-container">
+          <h2>¿Listo para optimizar tu gestión?</h2>
+          <p>Únete a cientos de negocios que ya confían en SmartBoxing</p>
+          <button onClick={handleGetStarted} className="btn-cta">
+            Comenzar Gratis Ahora
+            <span className="btn-arrow">→</span>
+          </button>
+          <p className="cta-footnote">
+            No se requiere tarjeta de crédito • Configuración instantánea
+          </p>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="landing-footer">
-        <div className="container">
-          <div className="footer-content">
-            <div className="footer-brand">
-              <div className="logo-section">
-                <div className="logo-icon">
-                  <svg width="32" height="32" viewBox="0 0 40 40" fill="none">
-                    <rect width="40" height="40" rx="8" fill="url(#gradient2)"/>
-                    <path d="M12 12h6v6h-6zM22 12h6v6h-6zM12 22h6v6h-6zM22 22h6v6h-6z" fill="white" opacity="0.9"/>
-                    <defs>
-                      <linearGradient id="gradient2" x1="0" y1="0" x2="40" y2="40">
-                        <stop offset="0%" stopColor="#3B82F6"/>
-                        <stop offset="100%" stopColor="#8B5CF6"/>
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                </div>
-                <span>SmartBoxing</span>
-              </div>
-              <p className="footer-tagline">
-                Gestión inteligente de espacios físicos
-              </p>
+        <div className="footer-container">
+          <div className="footer-brand">
+            <div className="footer-logo">
+              <div className="footer-logo-icon">📦</div>
+              <span>SmartBoxing</span>
             </div>
-
-            <div className="footer-links">
-              <div className="footer-column">
-                <h4>Producto</h4>
-                <ul>
-                  <li><a href="#features">Características</a></li>
-                  <li><a href="#pricing">Precios</a></li>
-                  <li><a href="#demo">Demo</a></li>
-                </ul>
-              </div>
-              <div className="footer-column">
-                <h4>Empresa</h4>
-                <ul>
-                  <li><a href="#about">Nosotros</a></li>
-                  <li><a href="#blog">Blog</a></li>
-                  <li><a href="#contact">Contacto</a></li>
-                </ul>
-              </div>
-              <div className="footer-column">
-                <h4>Legal</h4>
-                <ul>
-                  <li><a href="#privacy">Privacidad</a></li>
-                  <li><a href="#terms">Términos</a></li>
-                  <li><a href="#security">Seguridad</a></li>
-                </ul>
-              </div>
+            <p>La plataforma de gestión de espacios más simple y poderosa.</p>
+          </div>
+          <div className="footer-links">
+            <div className="footer-column">
+              <h4>Producto</h4>
+              <a href="#features">Características</a>
+              <a href="#pricing">Precios</a>
+              <a href="#">Integraciones</a>
+              <a href="#">Roadmap</a>
+            </div>
+            <div className="footer-column">
+              <h4>Compañía</h4>
+              <a href="#">Sobre Nosotros</a>
+              <a href="#">Blog</a>
+              <a href="#">Contacto</a>
+              <a href="#">Carreras</a>
+            </div>
+            <div className="footer-column">
+              <h4>Legal</h4>
+              <a href="#">Privacidad</a>
+              <a href="#">Términos</a>
+              <a href="#">Seguridad</a>
+              <a href="#">GDPR</a>
             </div>
           </div>
-
-          <div className="footer-bottom">
-            <p>&copy; 2025 SmartBoxing. Todos los derechos reservados.</p>
-            <div className="footer-social">
-              <a href="#twitter" aria-label="Twitter">𝕏</a>
-              <a href="#linkedin" aria-label="LinkedIn">in</a>
-              <a href="#github" aria-label="GitHub">⚡</a>
-            </div>
-          </div>
+        </div>
+        <div className="footer-bottom">
+          <p>© 2025 SmartBoxing. Todos los derechos reservados.</p>
         </div>
       </footer>
     </div>

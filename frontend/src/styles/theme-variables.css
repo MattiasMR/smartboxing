@@ -1,23 +1,23 @@
 /* src/styles/theme-variables.css */
 :root {
   /* === COLORES PRINCIPALES === */
-  --primary-color: #00796b;
-  --primary-dark: #004d40;
-  --primary-light: #26a69a;
+  --primary-color: #4299e1;
+  --primary-dark: #3182ce;
+  --primary-light: #63b3ed;
   
   /* Variables RGB para usar con rgba() */
-  --primary-color-rgb: 0, 121, 107;
-  --primary-dark-rgb: 0, 77, 64;
-  --primary-light-rgb: 38, 166, 154;
+  --primary-color-rgb: 66, 153, 225;
+  --primary-dark-rgb: 49, 130, 206;
+  --primary-light-rgb: 99, 179, 237;
   
-  --secondary-color: #0277bd;
-  --secondary-dark: #01579b;
-  --secondary-light: #29b6f6;
+  --secondary-color: #48bb78;
+  --secondary-dark: #38a169;
+  --secondary-light: #68d391;
   
   /* Variables RGB secundarias */
-  --secondary-color-rgb: 2, 119, 189;
-  --secondary-dark-rgb: 1, 87, 155;
-  --secondary-light-rgb: 41, 182, 246;
+  --secondary-color-rgb: 72, 187, 120;
+  --secondary-dark-rgb: 56, 161, 105;
+  --secondary-light-rgb: 104, 211, 145;
   
   /* === COLORES DE FONDO === */
   --background-primary: #ffffff;
@@ -44,8 +44,8 @@
   
   /* === COLORES DE HOVER === */
   --hover-bg: #f5f5f5;
-  --hover-primary: #00695c;
-  --hover-secondary: #c2185b;
+  --hover-primary: #3182ce;
+  --hover-secondary: #38a169;
   
   /* === SOMBRAS === */
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -61,12 +61,12 @@
 
 /* === MODO OSCURO === */
 :root[data-theme="dark"] {
-  --primary-color: #4db6ac;
-  --primary-dark: #00695c;
-  --primary-light: #80cbc4;
-  --secondary-color: #f06292;
-  --secondary-dark: #c2185b;
-  --secondary-light: #f8bbd9;
+  --primary-color: #63b3ed;
+  --primary-dark: #4299e1;
+  --primary-light: #90cdf4;
+  --secondary-color: #68d391;
+  --secondary-dark: #48bb78;
+  --secondary-light: #9ae6b4;
   
   --background-primary: #1a1a1a;
   --background-secondary: #2d2d2d;
@@ -82,8 +82,8 @@
   --border-light: #333333;
   
   --hover-bg: #333333;
-  --hover-primary: #26a69a;
-  --hover-secondary: #ad1457;
+  --hover-primary: #4299e1;
+  --hover-secondary: #48bb78;
 }
 
 /* === MODO COMPACTO === */

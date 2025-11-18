@@ -6,8 +6,8 @@ export const ClientThemeSchema = z.object({
   secondaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
   accentColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
   darkMode: z.boolean().optional(),
-  logoUrl: z.string().url().optional(),
-  backgroundUrl: z.string().url().optional(),
+  logoUrl: z.string().optional(), // Permitir URL o vacío
+  backgroundUrl: z.string().optional(),
 });
 
 // Schema para textos personalizados del cliente
@@ -79,9 +79,9 @@ export const UpdateClientSettingsSchema = z.object({
   operational: OperationalSettingsSchema.optional(),
   branding: z.object({
     companyName: z.string().optional(),
-    contactEmail: z.string().email().optional(),
+    contactEmail: z.union([z.string().email(), z.literal('')]).optional(),
     contactPhone: z.string().optional(),
-    website: z.string().url().optional(),
+    website: z.union([z.string().url(), z.literal('')]).optional(),
     address: z.string().optional(),
   }).optional(),
 });
