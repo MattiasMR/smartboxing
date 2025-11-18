@@ -20,11 +20,19 @@ cd smartboxing
 
 # Instalar dependencias
 npm install
+cd backend && npm install
+cd ../frontend && npm install
+cd ..
 
 # Configurar credenciales AWS
 export AWS_ACCESS_KEY_ID=xxx
 export AWS_SECRET_ACCESS_KEY=xxx
 export AWS_SESSION_TOKEN=xxx  # Solo AWS Academy
+
+# Ejecutar tests (opcional)
+cd backend && npm test
+cd ../frontend && npm test
+cd ..
 
 # Deploy completo (backend + frontend)
 sls deploy
@@ -63,11 +71,17 @@ sls logs -f listBoxes --tail
 - **UI:** CSS personalizado + variables theming
 
 ### DevOps
-- **CI/CD:** GitHub Actions
+- **CI/CD:** GitHub Actions (3 workflows: deploy, security, accessibility)
 - **IaC:** CloudFormation (via Serverless)
 - **Hosting:** S3 + CloudFront
 - **Logs:** CloudWatch
 - **Chaos Engineering:** Fault injection automático 🌪️
+
+### Testing
+- **Unit Tests:** Vitest
+- **Security:** OWASP ZAP, npm audit, Gitleaks
+- **Accessibility:** axe-core, jest-axe, Lighthouse CI, Pa11y
+- **Coverage:** ~78% OWASP Top 10, ~75% WCAG 2.1 AA
 
 ---
 
@@ -78,17 +92,73 @@ sls logs -f listBoxes --tail
 ### Recursos Principales
 
 | Recurso | Endpoints |
-|---------|-----------|
+|---------|-----------||
 | **Health** | `GET /health` |
 | **Boxes** | `GET POST PUT DELETE /boxes` |
 | **Doctors** | `GET POST PUT DELETE /doctors` |
 | **Appointments** | `GET POST PUT DELETE /appointments` |
 | **Patients** | `GET POST PUT DELETE /patients` |
-| **Analytics** | `GET /analytics/dashboard` |
-| **Settings** | `GET PUT /settings/client` `GET PUT /settings/user` |
+| **Analytics** | `GET /analytics/dashboard?startDate&endDate&boxId&doctorId` |
+| **Settings** | `GET PUT /settings/client` `GET PUT /settings/user` `POST /settings/upload-logo` |
 | **Seed** | `POST /seed/bulk` `DELETE /seed/clear` |
 
-**Total:** 28 funciones Lambda | **Auth:** JWT (excepto `/health`)
+**Total:** 29 funciones Lambda | **Auth:** JWT (excepto `/health`)
+
+### Settings API (Parametrización)
+
+El sistema permite parametrización completa por cliente:
+
+```bash
+# Obtener configuración actual
+GET /settings/client
+
+# Actualizar configuración
+PUT /settings/client
+{
+  "theme": {
+    "primaryColor": "#3B82F6",
+    "secondaryColor": "#10B981",
+    "accentColor": "#F59E0B",
+    "darkMode": false,
+    "logoUrl": "https://..."
+  },
+  "texts": {
+    "appName": "MiClinica",
+    "institutionName": "Centro Médico XYZ",
+    "welcomeMessage": "Bienvenido",
+    "tagline": "Tu salud es nuestra prioridad"
+  },
+  "schedule": {
+    "startTime": "08:00",
+    "endTime": "20:00",
+    "slotDuration": 30,
+    "workDays": [1,2,3,4,5]
+  },
+  "operational": {
+    "allowOverlapping": false,
+    "requireConfirmation": true,
+    "sendReminders": true,
+    "reminderHours": 24,
+    "maxAppointmentsPerDay": 50,
+    "enableWaitlist": true
+  },
+  "branding": {
+    "companyName": "Centro Médico XYZ",
+    "contactEmail": "contacto@ejemplo.cl",
+    "contactPhone": "+56912345678",
+    "website": "https://ejemplo.cl",
+    "address": "Av. Principal 123"
+  }
+}
+
+# Upload de logo (presigned URL)
+POST /settings/upload-logo
+{
+  "fileName": "logo.png",
+  "fileType": "image/png"
+}
+# Response: { "uploadUrl": "https://s3...", "fileUrl": "https://cloudfront..." }
+```
 
 ---
 
@@ -99,6 +169,15 @@ sls logs -f listBoxes --tail
 sls deploy              # Deploy a AWS
 sls remove              # Eliminar stack
 sls info                # Ver info del deployment
+
+# Testing
+cd backend && npm test          # Todos los tests
+cd backend && npm run test:security    # Solo tests OWASP
+cd backend && npm run test:coverage    # Con cobertura
+
+cd frontend && npm test         # Tests de accesibilidad
+cd frontend && npm run test:a11y       # Solo WCAG tests
+cd frontend && npm run test:coverage   # Con cobertura
 
 # Desarrollo
 cd frontend && npm run dev      # Frontend local

@@ -6,10 +6,10 @@ const client = new DynamoDBClient({});
 const dynamo = DynamoDBDocumentClient.from(client);
 
 const TABLES = {
-  appointments: process.env.APPOINTMENTS_TABLE,
-  boxes: process.env.BOXES_TABLE,
-  doctors: process.env.DOCTORS_TABLE,
-  patients: process.env.PATIENTS_TABLE,
+  appointments: process.env.T_APPOINTMENTS,
+  boxes: process.env.T_BOXES,
+  doctors: process.env.T_DOCTORS,
+  patients: process.env.T_PATIENTS,
 };
 
 /**
@@ -25,14 +25,24 @@ const TABLES = {
  * Query params opcionales:
  * - startDate: ISO date (default: hace 30 días)
  * - endDate: ISO date (default: hoy)
+ * - boxId: ID de box específico (opcional)
+ * - doctorId: ID de doctor específico (opcional)
  */
 export const main = async (event) => {
   try {
     const params = event.queryStringParameters || {};
+    const claims = event.requestContext?.authorizer?.jwt?.claims ?? {};
+    const tenantId = claims['custom:tenantId'] ?? 'TENANT#demo';
     
     // Calcular rango de fechas (default: últimos 30 días)
     const endDate = params.endDate || new Date().toISOString();
     const startDate = params.startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+    // Filtros opcionales
+    const filters = {
+      boxId: params.boxId,
+      doctorId: params.doctorId,
+    };
 
     // Ejecutar todas las queries en paralelo
     const [
@@ -41,17 +51,19 @@ export const main = async (event) => {
       doctorsData,
       patientsData,
     ] = await Promise.all([
-      getAppointmentsMetrics(startDate, endDate),
-      getBoxesMetrics(),
-      getDoctorsMetrics(),
-      getPatientsMetrics(),
+      getAppointmentsMetrics(tenantId, startDate, endDate, filters),
+      getBoxesMetrics(tenantId),
+      getDoctorsMetrics(tenantId),
+      getPatientsMetrics(tenantId),
     ]);
 
     const dashboard = {
+      tenantId,
       period: {
         startDate,
         endDate,
       },
+      filters,
       summary: {
         totalAppointments: appointmentsData.total,
         activeBoxes: boxesData.active,
@@ -75,26 +87,33 @@ export const main = async (event) => {
 /**
  * Métricas de citas
  */
-async function getAppointmentsMetrics(startDate, endDate) {
+async function getAppointmentsMetrics(tenantId, startDate, endDate, filters = {}) {
   try {
-    // Query usando GSI ByStartAt
-    const command = new QueryCommand({
+    // Scan con filtro de tenantId
+    const command = new ScanCommand({
       TableName: TABLES.appointments,
-      IndexName: 'ByStartAt',
-      KeyConditionExpression: '#pk = :pk AND #startAt BETWEEN :start AND :end',
+      FilterExpression: '#tenantId = :tenantId AND #startAt BETWEEN :start AND :end',
       ExpressionAttributeNames: {
-        '#pk': 'PK',
+        '#tenantId': 'tenantId',
         '#startAt': 'startAt',
       },
       ExpressionAttributeValues: {
-        ':pk': 'APPOINTMENT',
+        ':tenantId': tenantId,
         ':start': startDate,
         ':end': endDate,
       },
     });
 
     const result = await dynamo.send(command);
-    const appointments = result.Items || [];
+    let appointments = result.Items || [];
+
+    // Aplicar filtros adicionales
+    if (filters.boxId) {
+      appointments = appointments.filter(apt => apt.boxId === filters.boxId);
+    }
+    if (filters.doctorId) {
+      appointments = appointments.filter(apt => apt.doctorId === filters.doctorId);
+    }
 
     // Agrupar por estado
     const byStatus = appointments.reduce((acc, apt) => {
@@ -107,6 +126,7 @@ async function getAppointmentsMetrics(startDate, endDate) {
     const completed = byStatus['completed'] || 0;
     const total = appointments.length;
     const noShowRate = total > 0 ? ((noShows / total) * 100).toFixed(2) : 0;
+    const completionRate = total > 0 ? ((completed / total) * 100).toFixed(2) : 0;
 
     // Agrupar por día
     const byDay = appointments.reduce((acc, apt) => {
@@ -120,14 +140,45 @@ async function getAppointmentsMetrics(startDate, endDate) {
       .map(([date, count]) => ({ date, count }))
       .sort((a, b) => a.date.localeCompare(b.date));
 
+    // Agrupar por box (top 5)
+    const byBox = appointments.reduce((acc, apt) => {
+      if (apt.boxId) {
+        acc[apt.boxId] = (acc[apt.boxId] || 0) + 1;
+      }
+      return acc;
+    }, {});
+    
+    const topBoxes = Object.entries(byBox)
+      .map(([boxId, count]) => ({ boxId, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    // Agrupar por doctor (top 5)
+    const byDoctor = appointments.reduce((acc, apt) => {
+      if (apt.doctorId) {
+        acc[apt.doctorId] = (acc[apt.doctorId] || 0) + 1;
+      }
+      return acc;
+    }, {});
+    
+    const topDoctors = Object.entries(byDoctor)
+      .map(([doctorId, count]) => ({ doctorId, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
     return {
       total,
       byStatus,
       noShowRate: parseFloat(noShowRate),
+      completionRate: parseFloat(completionRate),
       dailyData,
+      topBoxes,
+      topDoctors,
       completed,
       scheduled: byStatus['scheduled'] || 0,
       cancelled: byStatus['cancelled'] || 0,
+      confirmed: byStatus['confirmed'] || 0,
+      inProgress: byStatus['in-progress'] || 0,
     };
   } catch (error) {
     console.error('Error fetching appointments metrics:', error);
@@ -135,10 +186,15 @@ async function getAppointmentsMetrics(startDate, endDate) {
       total: 0,
       byStatus: {},
       noShowRate: 0,
+      completionRate: 0,
       dailyData: [],
+      topBoxes: [],
+      topDoctors: [],
       completed: 0,
       scheduled: 0,
       cancelled: 0,
+      confirmed: 0,
+      inProgress: 0,
     };
   }
 }
@@ -146,10 +202,17 @@ async function getAppointmentsMetrics(startDate, endDate) {
 /**
  * Métricas de boxes
  */
-async function getBoxesMetrics() {
+async function getBoxesMetrics(tenantId) {
   try {
     const command = new ScanCommand({
       TableName: TABLES.boxes,
+      FilterExpression: '#tenantId = :tenantId',
+      ExpressionAttributeNames: {
+        '#tenantId': 'tenantId',
+      },
+      ExpressionAttributeValues: {
+        ':tenantId': tenantId,
+      },
     });
 
     const result = await dynamo.send(command);
@@ -193,10 +256,17 @@ async function getBoxesMetrics() {
 /**
  * Métricas de médicos
  */
-async function getDoctorsMetrics() {
+async function getDoctorsMetrics(tenantId) {
   try {
     const command = new ScanCommand({
       TableName: TABLES.doctors,
+      FilterExpression: '#tenantId = :tenantId',
+      ExpressionAttributeNames: {
+        '#tenantId': 'tenantId',
+      },
+      ExpressionAttributeValues: {
+        ':tenantId': tenantId,
+      },
     });
 
     const result = await dynamo.send(command);
@@ -227,10 +297,17 @@ async function getDoctorsMetrics() {
 /**
  * Métricas de pacientes
  */
-async function getPatientsMetrics() {
+async function getPatientsMetrics(tenantId) {
   try {
     const command = new ScanCommand({
       TableName: TABLES.patients,
+      FilterExpression: '#tenantId = :tenantId',
+      ExpressionAttributeNames: {
+        '#tenantId': 'tenantId',
+      },
+      ExpressionAttributeValues: {
+        ':tenantId': tenantId,
+      },
     });
 
     const result = await dynamo.send(command);

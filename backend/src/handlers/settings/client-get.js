@@ -20,13 +20,34 @@ export const main = handler(async (event) => {
         secondaryColor: '#10B981',
         accentColor: '#F59E0B',
         darkMode: false,
+        logoUrl: '',
       },
       texts: {
         appName: 'SmartBoxing',
+        institutionName: 'Mi Institución de Salud',
         welcomeMessage: 'Bienvenido al sistema de gestión',
         tagline: 'Gestiona tus recursos médicos eficientemente',
       },
-      branding: {},
+      schedule: {
+        startTime: '08:00',
+        endTime: '20:00',
+        slotDuration: 30,
+        workDays: [1, 2, 3, 4, 5], // Lunes a Viernes
+      },
+      operational: {
+        allowOverlapping: false,
+        requirePatientConfirmation: true,
+        sendReminders: true,
+        reminderHoursBefore: 24,
+        maxAppointmentsPerDay: 50,
+        enableWaitingList: false,
+      },
+      branding: {
+        companyName: '',
+        contactEmail: '',
+        contactPhone: '',
+      },
+      createdAt: new Date().toISOString(),
     };
   }
 

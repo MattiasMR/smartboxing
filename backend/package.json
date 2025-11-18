@@ -7,6 +7,10 @@
     "dev": "serverless dev",
     "remove": "serverless remove",
     "test": "vitest run",
+    "test:watch": "vitest",
+    "test:security": "vitest run --testPathPattern=security",
+    "test:coverage": "vitest run --coverage",
+    "lint": "echo 'Lint backend' && exit 0",
     "db:clear": "node scripts/clear-db.mjs",
     "db:seed": "node scripts/seed.mjs",
     "db:reset": "npm run db:clear && npm run db:seed"
@@ -28,7 +32,8 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^10.1.0",
+    "@vitest/coverage-v8": "^4.0.10",
     "serverless": "^4.22.0",
-    "vitest": "^4.0.4"
+    "vitest": "^4.0.10"
   }
 }

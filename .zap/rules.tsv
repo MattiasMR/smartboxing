@@ -1,0 +1,55 @@
+# OWASP ZAP Rules Configuration
+# Format: RuleID   Threshold   Action
+# Actions: IGNORE, WARN, FAIL
+
+# ============================================================================
+# COOKIES
+# ============================================================================
+10010      WARN        # Cookie No HttpOnly Flag
+10011      WARN        # Cookie Without Secure Flag
+10054      FAIL        # Cookie Without SameSite Attribute
+
+# ============================================================================
+# HEADERS
+# ============================================================================
+10020      IGNORE      # X-Frame-Options (CloudFront adds this)
+10021      FAIL        # X-Content-Type-Options Header Missing
+10023      FAIL        # Information Disclosure - Debug Error Messages
+10055      FAIL        # CSP Header Not Set
+10063      WARN        # Feature Policy Header Not Set
+
+# ============================================================================
+# SSL/TLS
+# ============================================================================
+10047      FAIL        # HTTPS Content Available via HTTP
+90003      WARN        # Sub Resource Integrity Attribute Missing
+
+# ============================================================================
+# INFORMATION DISCLOSURE
+# ============================================================================
+10037      WARN        # Server Leaks Information via "X-Powered-By" Header
+10040      IGNORE      # Secure Pages Include Mixed Content
+10096      FAIL        # Timestamp Disclosure
+90022      FAIL        # Application Error Disclosure
+
+# ============================================================================
+# INJECTION
+# ============================================================================
+40012      FAIL        # Cross Site Scripting (Reflected)
+40014      FAIL        # Cross Site Scripting (Persistent)
+40016      FAIL        # Cross Site Scripting (Persistent) - Prime
+40017      FAIL        # Cross Site Scripting (Persistent) - Spider
+90019      FAIL        # Server Side Code Injection
+
+# ============================================================================
+# AUTHENTICATION
+# ============================================================================
+10105      FAIL        # Weak Authentication Method
+40013      FAIL        # Session Fixation
+
+# ============================================================================
+# ACCESS CONTROL
+# ============================================================================
+40018      FAIL        # SQL Injection
+90018      FAIL        # SQL Injection - MySQL
+90024      FAIL        # Generic Padding Oracle

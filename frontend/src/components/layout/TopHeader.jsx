@@ -12,6 +12,12 @@ function TopHeader({ onMenuClick, isOpen }) {
   const [appName, setAppName] = useState(() => {
     return localStorage.getItem('app-name') || 'SmartBoxing';
   });
+  const [institutionName, setInstitutionName] = useState(() => {
+    return localStorage.getItem('institution-name') || '';
+  });
+  const [logoUrl, setLogoUrl] = useState(() => {
+    return localStorage.getItem('app-logo') || '';
+  });
   const { logout, user } = useAuth();
 
   useEffect(() => {
@@ -24,8 +30,23 @@ function TopHeader({ onMenuClick, isOpen }) {
       setAppName(event.detail);
     };
     
+    const handleInstitutionNameChange = (event) => {
+      setInstitutionName(event.detail);
+    };
+
+    const handleLogoChange = (event) => {
+      setLogoUrl(event.detail);
+    };
+    
     window.addEventListener('appNameChanged', handleAppNameChange);
-    return () => window.removeEventListener('appNameChanged', handleAppNameChange);
+    window.addEventListener('institutionNameChanged', handleInstitutionNameChange);
+    window.addEventListener('logoChanged', handleLogoChange);
+    
+    return () => {
+      window.removeEventListener('appNameChanged', handleAppNameChange);
+      window.removeEventListener('institutionNameChanged', handleInstitutionNameChange);
+      window.removeEventListener('logoChanged', handleLogoChange);
+    };
   }, []);
 
   const formattedDate = now.toLocaleDateString('es-CL', {
@@ -65,7 +86,20 @@ function TopHeader({ onMenuClick, isOpen }) {
           >
             <FaBars />
           </button>
-          <h1 className="header-title">{appName}</h1>
+          {logoUrl && (
+            <img 
+              src={logoUrl} 
+              alt="Logo" 
+              className="header-logo"
+              style={{ height: '40px', marginRight: '1rem', objectFit: 'contain' }}
+            />
+          )}
+          <div className="header-titles">
+            <h1 className="header-title">{appName}</h1>
+            {institutionName && (
+              <span className="institution-name">{institutionName}</span>
+            )}
+          </div>
         </div>
         
         <div className="header-center" style={{ textAlign: 'center' }}>

@@ -18,7 +18,7 @@ import AppointmentsList from './pages/AppointmentsList.jsx';
 import AppointmentForm from './pages/AppointmentForm.jsx';
 
 import Dashboard from './pages/Dashboard.jsx';
-import Settings from './pages/Settings.jsx';
+import Settings from './pages/SettingsNew.jsx';
 import SeedPage from './pages/SeedPage.jsx';
 
 const qc = new QueryClient();

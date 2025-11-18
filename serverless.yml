@@ -82,6 +82,11 @@ provider:
             - !Sub "arn:aws:s3:::${self:service}-*/*"
         - Effect: Allow
           Action:
+            - s3:ListBucket
+          Resource:
+            - !Sub "arn:aws:s3:::${self:service}-*"
+        - Effect: Allow
+          Action:
             - logs:CreateLogGroup
             - logs:CreateLogStream
             - logs:PutLogEvents
@@ -351,6 +356,17 @@ functions:
           path: /settings/client
           method: put
           authorizer: cognitoJwt
+  
+  uploadLogo:
+    handler: backend/src/handlers/settings/upload-logo.main
+    events:
+      - httpApi:
+          path: /settings/upload-logo
+          method: post
+          authorizer: cognitoJwt
+    environment:
+      SERVICE_NAME: ${self:service}
+      STAGE: ${sls:stage}
   
   getUserSettings:
     handler: backend/src/handlers/settings/user-get.main
@@ -638,6 +654,42 @@ resources:
               DomainName: !GetAtt FrontendBucket.RegionalDomainName
               OriginAccessControlId: !Ref CloudFrontOriginAccessControl
               S3OriginConfig: {}
+    
+    # ==================== S3 BUCKET PARA ASSETS (LOGOS, IMÁGENES) ====================
+    AssetsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:service}-assets-${sls:stage}
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: false
+          BlockPublicPolicy: false
+          IgnorePublicAcls: false
+          RestrictPublicBuckets: false
+        CorsConfiguration:
+          CorsRules:
+            - AllowedOrigins:
+                - '*'
+              AllowedMethods:
+                - GET
+                - PUT
+                - POST
+              AllowedHeaders:
+                - '*'
+        Tags:
+          - Key: Environment
+            Value: ${sls:stage}
+    
+    # Bucket Policy para hacer públicos los logos
+    AssetsBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref AssetsBucket
+        PolicyDocument:
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action: s3:GetObject
+              Resource: !Sub "${AssetsBucket.Arn}/*"
           
           DefaultCacheBehavior:
             TargetOriginId: S3Origin

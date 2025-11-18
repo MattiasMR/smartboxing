@@ -23,6 +23,25 @@
   gap: 15px;
 }
 
+.header-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.header-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.institution-name {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
 .header-logo {
   height: 50px; /* Increased from 40px to 50px to match taller header */
 }

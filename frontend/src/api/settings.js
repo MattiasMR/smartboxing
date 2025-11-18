@@ -34,6 +34,31 @@ export const updateClientSettings = async (settings) => {
   }
 };
 
+export const uploadLogo = async (file) => {
+  try {
+    // 1. Obtener presigned URL del backend
+    const { data } = await api.post('/settings/upload-logo', {
+      fileName: file.name,
+      fileType: file.type,
+    });
+
+    // 2. Subir archivo directamente a S3
+    await fetch(data.uploadUrl, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': file.type,
+      },
+    });
+
+    // 3. Retornar URL pública
+    return data.publicUrl;
+  } catch (error) {
+    console.error('Error uploading logo:', error);
+    throw error;
+  }
+};
+
 // ========== USER SETTINGS ==========
 
 export const getUserSettings = async () => {
@@ -70,6 +95,12 @@ export const applyTheme = (theme) => {
   if (!theme) return;
   
   const root = document.documentElement;
+  
+  // Aplicar logo si existe
+  if (theme.logoUrl) {
+    localStorage.setItem('app-logo', theme.logoUrl);
+    window.dispatchEvent(new CustomEvent('logoChanged', { detail: theme.logoUrl }));
+  }
   
   // Aplicar colores principales
   if (theme.primaryColor) {
@@ -163,6 +194,12 @@ export const loadAndApplySettings = async () => {
     if (clientSettings.texts?.appName) {
       localStorage.setItem('app-name', clientSettings.texts.appName);
       window.dispatchEvent(new CustomEvent('appNameChanged', { detail: clientSettings.texts.appName }));
+    }
+    
+    // Guardar institutionName
+    if (clientSettings.texts?.institutionName) {
+      localStorage.setItem('institution-name', clientSettings.texts.institutionName);
+      window.dispatchEvent(new CustomEvent('institutionNameChanged', { detail: clientSettings.texts.institutionName }));
     }
     
     // Aplicar preferencia de tema del usuario (override)
