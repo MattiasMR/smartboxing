@@ -6,29 +6,33 @@ import ChartCard from '../components/dashboard/ChartCard';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  const [dateRange, setDateRange] = useState({
+  const defaultRange = {
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0],
-  });
+  };
+  const [pendingRange, setPendingRange] = useState(defaultRange);
+  const [appliedRange, setAppliedRange] = useState(defaultRange);
 
   const { data: metrics, isLoading, error, refetch } = useQuery({
-    queryKey: ['dashboard', dateRange],
+    queryKey: ['dashboard', appliedRange],
     queryFn: () => getDashboardMetrics({
-      startDate: new Date(dateRange.startDate).toISOString(),
-      endDate: new Date(dateRange.endDate + 'T23:59:59').toISOString(),
+      startDate: new Date(appliedRange.startDate).toISOString(),
+      endDate: new Date(appliedRange.endDate + 'T23:59:59').toISOString(),
     }),
     refetchInterval: 60000, // Refetch cada minuto
   });
 
+  const staffMetrics = metrics?.staff || metrics?.doctors || { bySpecialty: {} };
+
   const handleDateChange = (e) => {
-    setDateRange(prev => ({
+    setPendingRange(prev => ({
       ...prev,
       [e.target.name]: e.target.value
     }));
   };
 
   const handleApplyFilters = () => {
-    refetch();
+    setAppliedRange({ ...pendingRange });
   };
 
   if (isLoading) {
@@ -64,7 +68,7 @@ const Dashboard = () => {
   );
 
   // Preparar datos para gráfico de especialidades
-  const specialtyData = Object.entries(metrics?.doctors?.bySpecialty || {}).map(
+  const specialtyData = Object.entries(staffMetrics?.bySpecialty || {}).map(
     ([specialty, count]) => ({
       name: specialty,
       value: count,
@@ -78,41 +82,43 @@ const Dashboard = () => {
         <div>
           <h1 className="dashboard__title">📊 Dashboard de KPIs</h1>
           <p className="dashboard__subtitle">
-            Período: {new Date(dateRange.startDate).toLocaleDateString()} - {new Date(dateRange.endDate).toLocaleDateString()}
+            Período: {new Date(appliedRange.startDate).toLocaleDateString()} - {new Date(appliedRange.endDate).toLocaleDateString()}
           </p>
         </div>
 
-        <div className="dashboard__filters">
-          <div className="dashboard__filter-group">
-            <label htmlFor="startDate">Desde</label>
-            <input
-              type="date"
-              id="startDate"
-              name="startDate"
-              value={dateRange.startDate}
-              onChange={handleDateChange}
-              className="dashboard__date-input"
-            />
-          </div>
+        <div className="dashboard__filters-card">
+          <div className="dashboard__filters">
+            <div className="dashboard__filter-group">
+              <label htmlFor="startDate">Desde</label>
+              <input
+                type="date"
+                id="startDate"
+                name="startDate"
+                value={pendingRange.startDate}
+                onChange={handleDateChange}
+                className="dashboard__date-input"
+              />
+            </div>
 
-          <div className="dashboard__filter-group">
-            <label htmlFor="endDate">Hasta</label>
-            <input
-              type="date"
-              id="endDate"
-              name="endDate"
-              value={dateRange.endDate}
-              onChange={handleDateChange}
-              className="dashboard__date-input"
-            />
-          </div>
+            <div className="dashboard__filter-group">
+              <label htmlFor="endDate">Hasta</label>
+              <input
+                type="date"
+                id="endDate"
+                name="endDate"
+                value={pendingRange.endDate}
+                onChange={handleDateChange}
+                className="dashboard__date-input"
+              />
+            </div>
 
-          <button 
-            onClick={handleApplyFilters}
-            className="btn btn--primary"
-          >
-            Aplicar
-          </button>
+            <button 
+              onClick={handleApplyFilters}
+              className="btn btn--primary dashboard__apply-btn"
+            >
+              Aplicar
+            </button>
+          </div>
         </div>
       </div>
 
@@ -135,10 +141,10 @@ const Dashboard = () => {
         />
 
         <MetricCard
-          title="Médicos Activos"
-          value={metrics?.summary?.activeDoctors || 0}
-          subtitle={`${Object.keys(metrics?.doctors?.bySpecialty || {}).length} especialidades`}
-          icon="👨‍⚕️"
+          title="Staff Activo"
+          value={metrics?.summary?.activeStaff ?? metrics?.summary?.activeDoctors ?? 0}
+          subtitle={`${Object.keys(staffMetrics?.bySpecialty || {}).length} especialidades activas`}
+          icon="👥"
           color="info"
         />
 
@@ -207,7 +213,7 @@ const Dashboard = () => {
         />
 
         <ChartCard
-          title="Médicos por Especialidad"
+          title="Especialidades Staff"
           type="pie"
           data={specialtyData}
           xKey="name"
@@ -237,6 +243,7 @@ const statusLabels = {
   'completed': 'Completadas',
   'cancelled': 'Canceladas',
   'no-show': 'No Asistió',
+  'sin-estado': 'Sin estado',
 };
 
 export default Dashboard;

@@ -4,7 +4,7 @@ export const BoxId = z.string().min(1);
 export const TenantId = z.string().min(1);
 
 export const BoxInput = z.object({
-  id: z.string().min(1),         // BOX#A1
+  id: z.string().min(1).regex(/^\d+$/, 'Usa solo números (001, 002, ...)'),         // BOX#A1
   nombre: z.string().min(1),       // "Box A1"
   pasillo: z.string().optional(),// "A" | "B" etc.
   estado: z.enum(['disponible','ocupado','mantenimiento']).default('disponible')

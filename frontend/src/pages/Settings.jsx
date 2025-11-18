@@ -73,7 +73,67 @@ const PROFESSIONAL_THEMES = {
   },
 };
 
-export default function Settings() {
+const CUSTOM_THEME_ID = 'custom';
+const THEME_COLOR_FIELDS = ['primaryColor', 'secondaryColor', 'accentColor'];
+
+const normalizeColor = (value = '') => value.trim().toLowerCase();
+
+const detectThemePreset = (theme = {}) => {
+  if (!theme) return CUSTOM_THEME_ID;
+  if (theme.selectedThemeId && PROFESSIONAL_THEMES[theme.selectedThemeId]) {
+    return theme.selectedThemeId;
+  }
+
+  const match = Object.values(PROFESSIONAL_THEMES).find(preset => (
+    normalizeColor(preset.colors.primary) === normalizeColor(theme.primaryColor) &&
+    normalizeColor(preset.colors.secondary) === normalizeColor(theme.secondaryColor) &&
+    normalizeColor(preset.colors.accent) === normalizeColor(theme.accentColor)
+  ));
+
+  return match?.id || CUSTOM_THEME_ID;
+};
+
+const DEFAULT_CLIENT_SETTINGS = {
+  theme: {
+    primaryColor: '#3B82F6',
+    secondaryColor: '#10B981',
+    accentColor: '#F59E0B',
+    darkMode: false,
+    logoUrl: '',
+    selectedThemeId: 'corporate',
+  },
+  texts: {
+    appName: 'SmartBoxing',
+    institutionName: 'Mi Institución de Salud',
+    welcomeMessage: 'Bienvenido al sistema de gestión de boxes y staff',
+    tagline: 'Gestiona tu staff y boxes eficientemente',
+  },
+  schedule: {
+    startTime: '08:00',
+    endTime: '20:00',
+    slotDuration: 30,
+    workDays: [1, 2, 3, 4, 5],
+  },
+  operational: {
+    allowOverlapping: false,
+    requirePatientConfirmation: true,
+    sendReminders: true,
+    reminderHoursBefore: 24,
+    maxAppointmentsPerDay: 50,
+    enableWaitingList: false,
+  },
+  branding: {
+    companyName: '',
+    contactEmail: '',
+    contactPhone: '',
+    website: '',
+    address: '',
+  },
+};
+
+const createDefaultClientSettings = () => JSON.parse(JSON.stringify(DEFAULT_CLIENT_SETTINGS));
+
+export default function SettingsProfessionalNew() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -82,42 +142,7 @@ export default function Settings() {
   const fileInputRef = useRef(null);
 
   // Client settings state
-  const [clientSettings, setClientSettings] = useState({
-    theme: {
-      primaryColor: '#3B82F6',
-      secondaryColor: '#10B981',
-      accentColor: '#F59E0B',
-      darkMode: false,
-      logoUrl: '',
-    },
-    texts: {
-      appName: 'SmartBoxing',
-      institutionName: 'Mi Institución de Salud',
-      welcomeMessage: 'Bienvenido al sistema de gestión',
-      tagline: 'Gestiona tus recursos médicos eficientemente',
-    },
-    schedule: {
-      startTime: '08:00',
-      endTime: '20:00',
-      slotDuration: 30,
-      workDays: [1, 2, 3, 4, 5],
-    },
-    operational: {
-      allowOverlapping: false,
-      requirePatientConfirmation: true,
-      sendReminders: true,
-      reminderHoursBefore: 24,
-      maxAppointmentsPerDay: 50,
-      enableWaitingList: false,
-    },
-    branding: {
-      companyName: '',
-      contactEmail: '',
-      contactPhone: '',
-      website: '',
-      address: '',
-    },
-  });
+  const [clientSettings, setClientSettings] = useState(() => createDefaultClientSettings());
 
   // User preferences state
   const [userPreferences, setUserPreferences] = useState({
@@ -128,7 +153,7 @@ export default function Settings() {
   });
 
   const [previewLogo, setPreviewLogo] = useState('');
-  const [selectedThemeId, setSelectedThemeId] = useState('corporate');
+  const [selectedThemeId, setSelectedThemeId] = useState(() => detectThemePreset(DEFAULT_CLIENT_SETTINGS.theme));
 
   useEffect(() => {
     loadSettings();
@@ -141,20 +166,27 @@ export default function Settings() {
         getClientSettings(),
         getUserSettings(),
       ]);
-      
-      // Merge client settings
-      setClientSettings(prev => ({
-        theme: { ...prev.theme, ...(client.theme || {}) },
-        texts: { ...prev.texts, ...(client.texts || {}) },
-        schedule: { ...prev.schedule, ...(client.schedule || {}) },
-        operational: { ...prev.operational, ...(client.operational || {}) },
-        branding: { ...prev.branding, ...(client.branding || {}) },
-      }));
 
-      // Set preview logo
-      if (client.theme?.logoUrl) {
-        setPreviewLogo(client.theme.logoUrl);
-      }
+      const mergedTheme = {
+        ...DEFAULT_CLIENT_SETTINGS.theme,
+        ...(client.theme || {}),
+        selectedThemeId: client.theme?.selectedThemeId,
+      };
+
+      const detectedThemeId = detectThemePreset(mergedTheme);
+      mergedTheme.selectedThemeId = detectedThemeId;
+
+      const mergedClientSettings = {
+        theme: mergedTheme,
+        texts: { ...DEFAULT_CLIENT_SETTINGS.texts, ...(client.texts || {}) },
+        schedule: { ...DEFAULT_CLIENT_SETTINGS.schedule, ...(client.schedule || {}) },
+        operational: { ...DEFAULT_CLIENT_SETTINGS.operational, ...(client.operational || {}) },
+        branding: { ...DEFAULT_CLIENT_SETTINGS.branding, ...(client.branding || {}) },
+      };
+
+      setClientSettings(mergedClientSettings);
+      setSelectedThemeId(detectedThemeId);
+      setPreviewLogo(mergedClientSettings.theme.logoUrl || '');
 
       // Merge user preferences
       if (user.preferences) {
@@ -189,6 +221,8 @@ export default function Settings() {
       return;
     }
 
+    const previousTheme = { ...clientSettings.theme };
+
     try {
       setUploading(true);
       
@@ -199,22 +233,29 @@ export default function Settings() {
 
       // Upload to S3
       const logoUrl = await uploadLogo(file);
-      
-      // Update settings
-      setClientSettings(prev => ({
-        ...prev,
-        theme: { ...prev.theme, logoUrl },
-      }));
 
-      // Apply immediately
-      localStorage.setItem('app-logo', logoUrl);
-      window.dispatchEvent(new CustomEvent('logoChanged', { detail: logoUrl }));
+      const updatedTheme = { ...clientSettings.theme, logoUrl };
+      const updatedSettings = { ...clientSettings, theme: updatedTheme };
 
-      showMessage('success', 'Logo subido exitosamente');
+      setClientSettings(updatedSettings);
+
+      // Apply immediately so header updates without reload
+      applyTheme(updatedTheme, { preserveMode: true });
+
+      // Persist automatically so logout/login keeps the logo
+      await updateClientSettings(updatedSettings);
+
+      showMessage('success', 'Logo subido y guardado exitosamente');
     } catch (error) {
       console.error('Error uploading logo:', error);
-      showMessage('error', 'Error al subir logo');
-      setPreviewLogo(''); // Revert preview
+      showMessage('error', 'Error al subir o guardar el logo');
+      setClientSettings(prev => ({
+        ...prev,
+        theme: previousTheme,
+      }));
+      applyTheme(previousTheme, { preserveMode: true });
+      setPreviewLogo(previousTheme.logoUrl || '');
+      setSelectedThemeId(detectThemePreset(previousTheme));
     } finally {
       setUploading(false);
     }
@@ -227,7 +268,7 @@ export default function Settings() {
       await updateClientSettings(clientSettings);
       
       // Apply theme immediately
-      applyTheme(clientSettings.theme);
+      applyTheme(clientSettings.theme, { preserveMode: true });
       
       // Update app name
       if (clientSettings.texts.appName) {
@@ -276,13 +317,27 @@ export default function Settings() {
   };
 
   const updateClientField = (section, field, value) => {
-    setClientSettings(prev => ({
-      ...prev,
-      [section]: {
+    const isThemeColorField = section === 'theme' && THEME_COLOR_FIELDS.includes(field);
+
+    setClientSettings(prev => {
+      const updatedSection = {
         ...prev[section],
         [field]: value,
-      },
-    }));
+      };
+
+      if (isThemeColorField) {
+        updatedSection.selectedThemeId = CUSTOM_THEME_ID;
+      }
+
+      return {
+        ...prev,
+        [section]: updatedSection,
+      };
+    });
+
+    if (isThemeColorField) {
+      setSelectedThemeId(CUSTOM_THEME_ID);
+    }
   };
 
   const updateUserField = (field, value) => {
@@ -303,6 +358,7 @@ export default function Settings() {
         primaryColor: theme.colors.primary,
         secondaryColor: theme.colors.secondary,
         accentColor: theme.colors.accent,
+        selectedThemeId: theme.id,
       },
     }));
 
@@ -401,6 +457,21 @@ export default function Settings() {
                 </li>
               </ul>
             </div>
+
+            <div className="settings-nav-section">
+              <h3 className="settings-nav-section-title">Personal</h3>
+              <ul className="settings-nav-list">
+                <li>
+                  <button
+                    className={`settings-nav-link ${activeSection === 'user' ? 'active' : ''}`}
+                    onClick={() => setActiveSection('user')}
+                  >
+                    <span className="settings-nav-icon">👤</span>
+                    <span>Preferencias</span>
+                  </button>
+                </li>
+              </ul>
+            </div>
           </nav>
         </aside>
 
@@ -463,7 +534,7 @@ export default function Settings() {
                       className="settings-input"
                       value={clientSettings.texts.welcomeMessage}
                       onChange={(e) => updateClientField('texts', 'welcomeMessage', e.target.value)}
-                      placeholder="Bienvenido al sistema de gestión"
+                      placeholder="Bienvenido al sistema de gestión de boxes y staff"
                     />
                   </div>
 
@@ -918,6 +989,49 @@ export default function Settings() {
                 </div>
               </div>
 
+              <div className="settings-card">
+                <div className="settings-card-header">
+                  <h2>Recordatorios y Notificaciones</h2>
+                </div>
+                <div className="settings-card-body">
+                  <div className="settings-form-group settings-checkbox-group">
+                    <label className="settings-checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={clientSettings.operational.sendReminders}
+                        onChange={(e) => updateClientField('operational', 'sendReminders', e.target.checked)}
+                      />
+                      <div>
+                        <span className="settings-checkbox-title">Enviar recordatorios automáticos</span>
+                        <p className="settings-checkbox-description">
+                          Envía recordatorios por email a los pacientes antes de su cita
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+
+                  {clientSettings.operational.sendReminders && (
+                    <div className="settings-form-group">
+                      <label className="settings-form-label" htmlFor="reminderHoursBefore">
+                        Enviar recordatorio (horas antes)
+                      </label>
+                      <input
+                        id="reminderHoursBefore"
+                        type="number"
+                        className="settings-input"
+                        min="1"
+                        max="72"
+                        value={clientSettings.operational.reminderHoursBefore}
+                        onChange={(e) => updateClientField('operational', 'reminderHoursBefore', Number(e.target.value))}
+                      />
+                      <p className="settings-form-description">
+                        Cuántas horas antes de la cita se enviará el recordatorio
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="settings-actions">
                 <button
                   onClick={handleSaveClientSettings}
@@ -930,7 +1044,102 @@ export default function Settings() {
             </>
           )}
 
+          {/* PREFERENCIAS DE USUARIO */}
+          {activeSection === 'user' && (
+            <>
+              <div className="settings-main-header">
+                <h1>Preferencias Personales</h1>
+                <p>Configuración específica para tu usuario</p>
+              </div>
 
+              <div className="settings-card">
+                <div className="settings-card-header">
+                  <h2>Apariencia</h2>
+                </div>
+                <div className="settings-card-body">
+                  <div className="settings-form-group">
+                    <label className="settings-form-label" htmlFor="userTheme">
+                      Tema de la interfaz
+                    </label>
+                    <select
+                      id="userTheme"
+                      className="settings-select"
+                      value={userPreferences.theme}
+                      onChange={(e) => updateUserField('theme', e.target.value)}
+                    >
+                      <option value="light">🌞 Modo Claro</option>
+                      <option value="dark">🌙 Modo Oscuro</option>
+                      <option value="auto">⚡ Automático (según sistema)</option>
+                    </select>
+                  </div>
+
+                  <div className="settings-form-group">
+                    <label className="settings-form-label" htmlFor="language">
+                      Idioma
+                    </label>
+                    <select
+                      id="language"
+                      className="settings-select"
+                      value={userPreferences.language}
+                      onChange={(e) => updateUserField('language', e.target.value)}
+                    >
+                      <option value="es">🇪🇸 Español</option>
+                      <option value="en">🇺🇸 English</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="settings-card">
+                <div className="settings-card-header">
+                  <h2>Notificaciones</h2>
+                </div>
+                <div className="settings-card-body">
+                  <div className="settings-form-group settings-checkbox-group">
+                    <label className="settings-checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={userPreferences.notifications}
+                        onChange={(e) => updateUserField('notifications', e.target.checked)}
+                      />
+                      <div>
+                        <span className="settings-checkbox-title">Notificaciones del navegador</span>
+                        <p className="settings-checkbox-description">
+                          Recibe notificaciones push en tu navegador
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+
+                  <div className="settings-form-group settings-checkbox-group">
+                    <label className="settings-checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={userPreferences.emailNotifications}
+                        onChange={(e) => updateUserField('emailNotifications', e.target.checked)}
+                      />
+                      <div>
+                        <span className="settings-checkbox-title">Notificaciones por correo</span>
+                        <p className="settings-checkbox-description">
+                          Recibe actualizaciones importantes por email
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="settings-actions">
+                <button
+                  onClick={handleSaveUserPreferences}
+                  disabled={saving}
+                  className="settings-btn-primary"
+                >
+                  {saving ? 'Guardando...' : 'Guardar Preferencias'}
+                </button>
+              </div>
+            </>
+          )}
         </main>
       </div>
     </div>

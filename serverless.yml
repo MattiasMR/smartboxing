@@ -121,7 +121,7 @@ provider:
   # Variables de entorno para todas las funciones
   environment:
     T_BOXES: ${self:service}-Boxes-${sls:stage}
-    T_DOCTORS: ${self:service}-Doctors-${sls:stage}
+    T_STAFF: ${self:service}-Staff-${sls:stage}
     T_APPOINTMENTS: ${self:service}-Appointments-${sls:stage}
     T_PATIENTS: ${self:service}-Patients-${sls:stage}
     T_CLIENT_SETTINGS: ${self:service}-ClientSettings-${sls:stage}
@@ -200,44 +200,44 @@ functions:
           method: delete
           authorizer: cognitoJwt
 
-  # ========== DOCTORS ==========
-  listDoctors:
-    handler: backend/src/handlers/doctors/list.main
+  # ========== STAFF ========== 
+  listStaff:
+    handler: backend/src/handlers/staff/list.main
     events:
       - httpApi:
-          path: /doctors
+          path: /staff
           method: get
           authorizer: cognitoJwt
   
-  getDoctor:
-    handler: backend/src/handlers/doctors/get.main
+  getStaffMember:
+    handler: backend/src/handlers/staff/get.main
     events:
       - httpApi:
-          path: /doctors/{id}
+          path: /staff/{id}
           method: get
           authorizer: cognitoJwt
   
-  createDoctor:
-    handler: backend/src/handlers/doctors/create.main
+  createStaffMember:
+    handler: backend/src/handlers/staff/create.main
     events:
       - httpApi:
-          path: /doctors
+          path: /staff
           method: post
           authorizer: cognitoJwt
   
-  updateDoctor:
-    handler: backend/src/handlers/doctors/update.main
+  updateStaffMember:
+    handler: backend/src/handlers/staff/update.main
     events:
       - httpApi:
-          path: /doctors/{id}
+          path: /staff/{id}
           method: put
           authorizer: cognitoJwt
   
-  deleteDoctor:
-    handler: backend/src/handlers/doctors/delete.main
+  deleteStaffMember:
+    handler: backend/src/handlers/staff/delete.main
     events:
       - httpApi:
-          path: /doctors/{id}
+          path: /staff/{id}
           method: delete
           authorizer: cognitoJwt
 
@@ -479,10 +479,10 @@ resources:
           - Key: Environment
             Value: ${sls:stage}
 
-    DoctorsTable:
+    StaffTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:provider.environment.T_DOCTORS}
+        TableName: ${self:provider.environment.T_STAFF}
         BillingMode: PAY_PER_REQUEST
         AttributeDefinitions:
           - AttributeName: tenantId
@@ -1030,9 +1030,9 @@ resources:
       Description: Nombre de la tabla Boxes
       Value: !Ref BoxesTable
 
-    DoctorsTableName:
-      Description: Nombre de la tabla Doctors
-      Value: !Ref DoctorsTable
+    StaffTableName:
+      Description: Nombre de la tabla Staff
+      Value: !Ref StaffTable
 
     AppointmentsTableName:
       Description: Nombre de la tabla Appointments

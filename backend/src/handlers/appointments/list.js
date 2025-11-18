@@ -1,6 +1,7 @@
 import { QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { handler } from '../../lib/http.js';
 import { doc } from '../../lib/db.js';
+import { withLegacyDoctorFields } from './schemas.js';
 
 export const main = handler(async (event) => {
   const claims = event.requestContext?.authorizer?.jwt?.claims ?? {};
@@ -12,5 +13,6 @@ export const main = handler(async (event) => {
     KeyConditionExpression: 'tenantId = :t',
     ExpressionAttributeValues: { ':t': tenantId }
   }));
-  return { items: out.Items ?? [] };
+  const items = (out.Items ?? []).map(withLegacyDoctorFields);
+  return { items };
 });

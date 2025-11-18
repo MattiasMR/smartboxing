@@ -1,6 +1,7 @@
-import { UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { handler, parseBody } from '../../lib/http.js';
 import { doc } from '../../lib/db.js';
+import { normalizeStaffFields, AppointmentStatus } from './schemas.js';
 
 export const main = handler(async (event) => {
   const claims = event.requestContext?.authorizer?.jwt?.claims ?? {};
@@ -8,8 +9,18 @@ export const main = handler(async (event) => {
   const id = decodeURIComponent(event.pathParameters?.id || '');
 
   const body = parseBody(event);
-  const patch = body.patch || {};
+  const patch = normalizeStaffFields(body.patch || {});
   if (!Object.keys(patch).length) throw new Error('No hay cambios');
+
+  if (patch.status && !AppointmentStatus.options.includes(patch.status)) {
+    const err = new Error('Estado de cita inválido');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  if (patch.idStaff) {
+    await ensureStaffExists(tenantId, patch.idStaff);
+  }
 
   const names = {};
   const values = {};
@@ -31,3 +42,17 @@ export const main = handler(async (event) => {
 
   return { updated: true, id };
 });
+
+async function ensureStaffExists(tenantId, idStaff) {
+  const table = process.env.T_STAFF;
+  if (!table) throw new Error('Falta T_STAFF');
+  const { Item } = await doc.send(new GetCommand({
+    TableName: table,
+    Key: { tenantId, id: idStaff }
+  }));
+  if (!Item) {
+    const err = new Error('Staff no encontrado');
+    err.statusCode = 400;
+    throw err;
+  }
+}

@@ -11,7 +11,7 @@ const lambda = new LambdaClient({});
 // Lista de funciones críticas a mantener calientes
 const CRITICAL_FUNCTIONS = [
   'smartboxing-dev-listBoxes',
-  'smartboxing-dev-listDoctors',
+  'smartboxing-dev-listStaff',
   'smartboxing-dev-listAppointments',
   'smartboxing-dev-getDashboard',
   'smartboxing-dev-getClientSettings',

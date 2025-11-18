@@ -1,6 +1,6 @@
 // src/components/doctors/DoctorCard.jsx
 import { Link } from 'react-router-dom';
-import { FaEdit, FaTrash, FaUserMd, FaEnvelope, FaPhone } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaUserTie, FaEnvelope, FaPhone } from 'react-icons/fa';
 import './DoctorCard.css';
 
 export default function DoctorCard({ doctor, onDelete }) {
@@ -8,7 +8,7 @@ export default function DoctorCard({ doctor, onDelete }) {
     <div className="doctor-card">
       <div className="doctor-card-header">
         <div className="doctor-avatar">
-          <FaUserMd />
+          <FaUserTie />
         </div>
         <div className="doctor-header-info">
           <h3 className="doctor-card-title">{doctor.nombre}</h3>
@@ -42,13 +42,13 @@ export default function DoctorCard({ doctor, onDelete }) {
       </div>
 
       <div className="doctor-card-actions">
-        <Link to={`/doctors/${encodeURIComponent(doctor.id)}/edit`} className="btn-edit">
+        <Link to={`/staff/${encodeURIComponent(doctor.id)}/edit`} className="btn-edit">
           <FaEdit /> Editar
         </Link>
         <button 
           onClick={() => onDelete(doctor.id)} 
           className="btn-delete"
-          title="Eliminar doctor"
+          title="Eliminar miembro del staff"
         >
           <FaTrash /> Eliminar
         </button>

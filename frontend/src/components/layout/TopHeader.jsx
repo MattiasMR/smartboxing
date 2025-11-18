@@ -5,8 +5,6 @@ import { useAuth } from '../../auth/useAuth';
 import { logoutUrl } from '../../auth/cognito.js';
 import './TopHeader.css';
 
-const userAvatar = 'https://i.pravatar.cc/40';
-
 function TopHeader({ onMenuClick, isOpen }) {
   const [now, setNow] = useState(new Date());
   const [appName, setAppName] = useState(() => {
@@ -110,7 +108,6 @@ function TopHeader({ onMenuClick, isOpen }) {
         </div>
 
         <div className="header-right" style={{ display: 'flex', alignItems: 'center' }}>
-          <img src={userAvatar} alt="User Avatar" style={{ borderRadius: '50%', marginRight: '10px' }} />
           <span style={{ marginRight: '10px', color: 'var(--text-primary)' }}>{user?.name || 'Usuario'}</span>
           <button onClick={handleLogout} className="logout-btn">
             Log Out

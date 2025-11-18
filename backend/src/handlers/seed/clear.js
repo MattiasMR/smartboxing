@@ -6,7 +6,7 @@ const client = new DynamoDBClient({});
 const db = DynamoDBDocumentClient.from(client);
 
 const T_BOXES = process.env.T_BOXES;
-const T_DOCTORS = process.env.T_DOCTORS;
+const T_STAFF = process.env.T_STAFF;
 const T_APPOINTMENTS = process.env.T_APPOINTMENTS;
 
 /**
@@ -22,9 +22,11 @@ export const main = handler(async (event) => {
     throw error;
   }
 
+  const staffResults = { deleted: 0, failed: 0 };
   const results = {
     boxes: { deleted: 0, failed: 0 },
-    doctors: { deleted: 0, failed: 0 },
+    staff: staffResults,
+    doctors: staffResults, // backward compatibility for old dashboards
     appointments: { deleted: 0, failed: 0 }
   };
 
@@ -80,19 +82,19 @@ export const main = handler(async (event) => {
       results.appointments = result;
     }
 
-    // 2. Borrar Doctors (usando Query - optimizado)
-    const doctorsResponse = await db.send(new QueryCommand({
-      TableName: T_DOCTORS,
+    // 2. Borrar Staff (usando Query - optimizado)
+    const staffResponse = await db.send(new QueryCommand({
+      TableName: T_STAFF,
       KeyConditionExpression: 'tenantId = :tenantId',
       ExpressionAttributeValues: { ':tenantId': tenantId },
       ProjectionExpression: 'tenantId, id'
     }));
-    const doctors = doctorsResponse.Items || [];
-    console.log(`Encontrados ${doctors.length} doctores para borrar`);
+    const staff = staffResponse.Items || [];
+    console.log(`Encontrados ${staff.length} miembros de staff para borrar`);
     
-    if (doctors.length > 0) {
-      const result = await batchDelete(T_DOCTORS, doctors, ['tenantId', 'id']);
-      results.doctors = result;
+    if (staff.length > 0) {
+      const result = await batchDelete(T_STAFF, staff, ['tenantId', 'id']);
+      results.staff = result;
     }
 
     // 3. Borrar Boxes (usando Query - optimizado)
@@ -115,7 +117,7 @@ export const main = handler(async (event) => {
     return {
       message: 'Base de datos limpiada exitosamente',
       results,
-      totalDeleted: results.boxes.deleted + results.doctors.deleted + results.appointments.deleted
+      totalDeleted: results.boxes.deleted + results.staff.deleted + results.appointments.deleted
     };
 
   } catch (error) {

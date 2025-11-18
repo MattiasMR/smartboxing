@@ -49,13 +49,13 @@ async function clearTable(tableName) {
 async function main() {
   const tables = [
     process.env.T_BOXES,
-    process.env.T_DOCTORS,
+    process.env.T_STAFF,
     process.env.T_APPOINTMENTS,
   ].filter(Boolean);
   
   if (tables.length === 0) {
     console.error('❌ No se encontraron tablas en las variables de entorno');
-    console.error('   Asegúrate de tener T_BOXES, T_DOCTORS y T_APPOINTMENTS definidas');
+    console.error('   Asegúrate de tener T_BOXES, T_STAFF y T_APPOINTMENTS definidas');
     process.exit(1);
   }
   

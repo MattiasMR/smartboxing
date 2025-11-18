@@ -21,11 +21,12 @@ export const main = handler(async (event) => {
         accentColor: '#F59E0B',
         darkMode: false,
         logoUrl: '',
+        selectedThemeId: 'corporate',
       },
       texts: {
         appName: 'SmartBoxing',
         institutionName: 'Mi Institución de Salud',
-        welcomeMessage: 'Bienvenido al sistema de gestión',
+        welcomeMessage: 'Bienvenido al sistema de gestión de boxes y staff',
         tagline: 'Gestiona tus recursos médicos eficientemente',
       },
       schedule: {

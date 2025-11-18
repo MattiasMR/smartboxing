@@ -28,6 +28,43 @@
   padding: 2rem;
 }
 
+.chart-tooltip {
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  padding: 0.75rem 1rem;
+  min-width: 160px;
+  color: #f8fafc;
+}
+
+.chart-tooltip__label {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.chart-tooltip__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.chart-tooltip__list li {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  line-height: 1.2;
+}
+
+.chart-tooltip__list strong {
+  color: var(--text-primary);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .chart-card {

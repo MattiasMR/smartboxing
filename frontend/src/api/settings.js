@@ -18,7 +18,7 @@ export const getClientSettings = async () => {
       },
       texts: {
         appName: 'SmartBoxing',
-        welcomeMessage: 'Bienvenido al sistema de gestión médica',
+          welcomeMessage: 'Bienvenido al sistema de gestión de boxes y staff',
       },
     };
   }
@@ -51,8 +51,8 @@ export const uploadLogo = async (file) => {
       },
     });
 
-    // 3. Retornar URL pública
-    return data.publicUrl;
+    // 3. Retornar URL pública normalizada
+    return sanitizeLogoUrl(data.publicUrl);
   } catch (error) {
     console.error('Error uploading logo:', error);
     throw error;
@@ -91,15 +91,17 @@ export const updateUserSettings = async (preferences) => {
 
 // ========== HELPER FUNCTIONS ==========
 
-export const applyTheme = (theme) => {
+export const applyTheme = (theme, options = {}) => {
   if (!theme) return;
   
   const root = document.documentElement;
+  const { preserveMode = false } = options;
   
   // Aplicar logo si existe
   if (theme.logoUrl) {
-    localStorage.setItem('app-logo', theme.logoUrl);
-    window.dispatchEvent(new CustomEvent('logoChanged', { detail: theme.logoUrl }));
+    const safeLogoUrl = sanitizeLogoUrl(theme.logoUrl);
+    localStorage.setItem('app-logo', safeLogoUrl);
+    window.dispatchEvent(new CustomEvent('logoChanged', { detail: safeLogoUrl }));
   }
   
   // Aplicar colores principales
@@ -143,18 +145,26 @@ export const applyTheme = (theme) => {
   }
   
   // Aplicar modo oscuro
-  if (theme.darkMode !== undefined) {
-    root.setAttribute('data-theme', theme.darkMode ? 'dark' : 'light');
-    // Guardar preferencia en localStorage
-    localStorage.setItem('app-theme', theme.darkMode ? 'dark' : 'light');
-    
-    // Recalcular hover-bg con la opacidad correcta para el tema
-    if (theme.primaryColor) {
-      const rgb = hexToRgb(theme.primaryColor);
-      if (rgb) {
-        const isDark = theme.darkMode;
-        root.style.setProperty('--hover-bg', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${isDark ? 0.15 : 0.08})`);
-      }
+  const storedMode = localStorage.getItem('app-theme');
+  let currentMode = root.getAttribute('data-theme') || storedMode || 'light';
+
+  if (!preserveMode && typeof theme.darkMode === 'boolean') {
+    currentMode = theme.darkMode ? 'dark' : 'light';
+    root.setAttribute('data-theme', currentMode);
+    localStorage.setItem('app-theme', currentMode);
+  } else if (preserveMode) {
+    currentMode = storedMode || currentMode;
+    root.setAttribute('data-theme', currentMode);
+  } else if (!storedMode && !root.getAttribute('data-theme')) {
+    root.setAttribute('data-theme', currentMode);
+  }
+
+  // Recalcular hover-bg con la opacidad correcta para el tema usando el modo actual
+  if (theme.primaryColor) {
+    const rgb = hexToRgb(theme.primaryColor);
+    if (rgb) {
+      const isDark = currentMode === 'dark';
+      root.style.setProperty('--hover-bg', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${isDark ? 0.15 : 0.08})`);
     }
   }
 };
@@ -178,6 +188,25 @@ function hexToRgb(hex) {
  */
 function rgbToHex(r, g, b) {
   return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
+function sanitizeLogoUrl(url) {
+  if (!url) return url;
+  try {
+    // Encode characters like # that break URLs when stored raw
+    const [base, query] = url.split('?');
+    const encodedBase = base
+      .split('/')
+      .map((segment, index) => {
+        if (index < 3) return segment; // keep protocol + '' + domain as-is
+        return encodeURIComponent(decodeURIComponent(segment));
+      })
+      .join('/');
+    return query ? `${encodedBase}?${query}` : encodedBase;
+  } catch (error) {
+    console.warn('Error sanitizing logo URL', error);
+    return url.replace(/#/g, '%23');
+  }
 }
 
 export const loadAndApplySettings = async () => {

@@ -9,7 +9,7 @@ import { DynamoDBDocumentClient, PutCommand, ScanCommand } from '@aws-sdk/lib-dy
 const client = new DynamoDBClient({ region: 'us-east-1' });
 const ddb = DynamoDBDocumentClient.from(client);
 
-const TABLE_STAFF = process.env.T_DOCTORS || 'smartboxing-Doctors-dev';
+const TABLE_STAFF = process.env.T_STAFF || 'smartboxing-Staff-dev';
 const TABLE_BOXES = process.env.T_BOXES || 'smartboxing-Boxes-dev';
 const TABLE_BOOKINGS = process.env.T_APPOINTMENTS || 'smartboxing-Appointments-dev';
 

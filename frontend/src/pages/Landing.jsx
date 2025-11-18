@@ -1,9 +1,22 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
+import './Landing.css';
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  const handleScrollTop = (event) => {
+    event.preventDefault();
+    const scrollElement = document.scrollingElement || document.documentElement;
+    if (scrollElement?.scrollTo) {
+      scrollElement.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      scrollElement.scrollTop = 0;
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.body.scrollTop = 0;
+  };
 
   const handleGetStarted = () => {
     if (user) {
@@ -14,14 +27,14 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="landing-page">
+    <div className="landing-page" id="top">
       {/* Navigation */}
       <nav className="landing-nav">
         <div className="nav-container">
-          <Link to="#inicio" className="nav-logo">
+          <a href="#top" className="nav-logo" onClick={handleScrollTop}>
             <div className="nav-logo-icon">📦</div>
             <span>SmartBoxing</span>
-          </Link>
+          </a>
           <div className="nav-links">
             <a href="#features">Características</a>
             <a href="#pricing">Precios</a>

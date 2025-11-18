@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { seedDatabase, clearDatabaseBulk } from '../api/seed';
-import { api } from '../api/client';
+import { seedDatabase, clearDatabase } from '../api/seed';
 import './SeedPage.css';
 
 export default function SeedPage() {
@@ -10,7 +9,7 @@ export default function SeedPage() {
   const [error, setError] = useState(null);
   const [config, setConfig] = useState({
     numBoxes: 10,
-    numDoctors: 8,
+    numStaff: 8,
     numAppointments: 15
   });
 
@@ -23,34 +22,13 @@ export default function SeedPage() {
     try {
       const result = await seedDatabase({
         ...config,
+        numDoctors: config.numStaff,
         onProgress: (prog) => setProgress(prog)
       });
       setResults(result);
       setProgress(null);
     } catch (err) {
       setError(err.message);
-      setProgress(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleBulkSeed = async () => {
-    setLoading(true);
-    setError(null);
-    setResults(null);
-    setProgress({ step: 'starting', message: 'Llamando endpoint bulk...' });
-
-    try {
-      const response = await api.post('/seed/bulk', config);
-      setResults({
-        boxes: { success: response.data.results.boxes.success, failed: response.data.results.boxes.failed },
-        doctors: { success: response.data.results.doctors.success, failed: response.data.results.doctors.failed },
-        appointments: { success: response.data.results.appointments.success, failed: response.data.results.appointments.failed }
-      });
-      setProgress(null);
-    } catch (err) {
-      setError(err.response?.data?.message || err.message);
       setProgress(null);
     } finally {
       setLoading(false);
@@ -68,7 +46,9 @@ export default function SeedPage() {
     setProgress({ step: 'starting', message: 'Borrando todo...' });
 
     try {
-      const result = await clearDatabaseBulk();
+      const result = await clearDatabase({
+        onProgress: (prog) => setProgress(prog)
+      });
       setResults(result);
       setProgress(null);
     } catch (err) {
@@ -88,7 +68,8 @@ export default function SeedPage() {
     
     const stepNames = {
       boxes: '📦 Boxes',
-      doctors: '👨‍⚕️ Doctores',
+      staff: '👥 Staff',
+      doctors: '👥 Staff',
       appointments: '📅 Citas'
     };
     
@@ -100,8 +81,8 @@ export default function SeedPage() {
       <div className="seed-container">
         <h1>🌱 Poblar Base de Datos</h1>
         <p className="seed-description">
-          Crea datos de prueba realistas usando Faker.js. Todos los IDs serán del formato 
-          <code>BOX-A1</code>, <code>DOCTOR-001</code>, <code>APPT-001</code>.
+          Crea datos de prueba realistas usando Faker.js. Los IDs serán correlativos 
+          <code>001</code>, <code>002</code>, etc. para boxes, staff y citas.
         </p>
 
         <div className="seed-config">
@@ -120,14 +101,14 @@ export default function SeedPage() {
               />
             </div>
             <div className="config-item">
-              <label htmlFor="numDoctors">Doctores:</label>
+              <label htmlFor="numStaff">Staff:</label>
               <input
-                id="numDoctors"
+                id="numStaff"
                 type="number"
                 min="1"
                 max="50"
-                value={config.numDoctors}
-                onChange={(e) => setConfig({ ...config, numDoctors: parseInt(e.target.value) || 1 })}
+                value={config.numStaff}
+                onChange={(e) => setConfig({ ...config, numStaff: parseInt(e.target.value) || 1 })}
                 disabled={loading}
               />
             </div>
@@ -153,13 +134,6 @@ export default function SeedPage() {
             className="btn-seed"
           >
             {loading ? '⏳ Procesando...' : '🌱 Poblar BD (API)'}
-          </button>
-          <button
-            onClick={handleBulkSeed}
-            disabled={loading}
-            className="btn-seed-bulk"
-          >
-            {loading ? '⏳ Procesando...' : '⚡ Poblar BD (Bulk)'}
           </button>
           <button
             onClick={handleClear}
@@ -203,12 +177,12 @@ export default function SeedPage() {
                 </p>
               </div>
             )}
-            {results.doctors && (
+            {(results.staff || results.doctors) && (
               <div className="result-section">
-                <h4>👨‍⚕️ Doctores</h4>
+                <h4>👥 Staff</h4>
                 <p>
-                  ✓ Creados: {results.doctors.success || results.doctors.deleted || 0}
-                  {(results.doctors.failed > 0) && <span> | ✗ Fallidos: {results.doctors.failed}</span>}
+                  ✓ Creados: {(results.staff?.success || results.staff?.deleted || results.doctors?.success || results.doctors?.deleted || 0)}
+                  {((results.staff?.failed || results.doctors?.failed || 0) > 0) && <span> | ✗ Fallidos: {results.staff?.failed || results.doctors?.failed}</span>}
                 </p>
               </div>
             )}
@@ -228,11 +202,10 @@ export default function SeedPage() {
           <h3>ℹ️ Información</h3>
           <ul>
             <li><strong>Poblar BD (API):</strong> Crea registros uno por uno usando los endpoints normales. Más lento pero con progreso detallado.</li>
-            <li><strong>Poblar BD (Bulk):</strong> Usa BatchWrite de DynamoDB. Hasta 10x más rápido, pero sin progreso intermedio.</li>
-            <li><strong>Boxes:</strong> Se crean con IDs aleatorios (BOX-A1, BOX-B3, etc.)</li>
-            <li><strong>Doctores:</strong> Nombres realistas en español con especialidades médicas</li>
+            <li><strong>Boxes:</strong> Se crean con IDs correlativos (001, 002, ...)</li>
+            <li><strong>Staff:</strong> Nombres realistas en español con roles o especialidades</li>
             <li><strong>Citas:</strong> Fechas entre -7 días y +14 días, horarios 8:00-18:00</li>
-            <li><strong>Limpiar BD:</strong> Borra todos los registros (citas → doctores → boxes)</li>
+            <li><strong>Limpiar BD:</strong> Borra todos los registros (citas → staff → boxes)</li>
           </ul>
         </div>
       </div>

@@ -10,7 +10,7 @@ const tenantId = process.env.SEED_TENANT ?? 'TENANT-demo';
 
 // Cantidad de registros a crear (modificable vía env vars)
 const NUM_BOXES = parseInt(process.env.NUM_BOXES || '10', 10);
-const NUM_DOCTORS = parseInt(process.env.NUM_DOCTORS || '8', 10);
+const NUM_STAFF = parseInt(process.env.NUM_STAFF || process.env.NUM_DOCTORS || '8', 10);
 const NUM_APPOINTMENTS = parseInt(process.env.NUM_APPOINTMENTS || '15', 10);
 
 async function seedTable(table, items) {
@@ -38,8 +38,8 @@ function generateBoxes(count) {
   return boxes;
 }
 
-function generateDoctors(count) {
-  const doctors = [];
+function generateStaff(count) {
+  const staff = [];
   const especialidades = [
     'Pediatría',
     'Traumatología',
@@ -58,7 +58,7 @@ function generateDoctors(count) {
     const gender = faker.helpers.arrayElement(['male', 'female']);
     const prefix = gender === 'female' ? 'Dra.' : 'Dr.';
     
-    doctors.push({
+    staff.push({
       tenantId,
       id: `DOCTOR-${String(i).padStart(3, '0')}`,
       nombre: `${prefix} ${firstName} ${lastName}`,
@@ -66,16 +66,16 @@ function generateDoctors(count) {
       estado: faker.helpers.arrayElement(['activo', 'inactivo']),
     });
   }
-  return doctors;
+  return staff;
 }
 
-function generateAppointments(count, boxes, doctors) {
+function generateAppointments(count, boxes, staff) {
   const appointments = [];
   const now = new Date();
   
   for (let i = 1; i <= count; i++) {
     const box = faker.helpers.arrayElement(boxes);
-    const doctor = faker.helpers.arrayElement(doctors);
+    const staffMember = faker.helpers.arrayElement(staff);
     
     // Generar fecha aleatoria entre -7 días y +14 días
     const daysOffset = faker.number.int({ min: -7, max: 14 });
@@ -90,7 +90,7 @@ function generateAppointments(count, boxes, doctors) {
       tenantId,
       id: `APPT-${String(i).padStart(3, '0')}`,
       idBox: box.id,
-      idDoctor: doctor.id,
+      idStaff: staffMember.id,
       startAt: startDate.toISOString(),
       endAt: endDate.toISOString(),
     });
@@ -100,33 +100,33 @@ function generateAppointments(count, boxes, doctors) {
 
 async function main() {
   const T_BOXES = process.env.T_BOXES;
-  const T_DOCTORS = process.env.T_DOCTORS;
+  const T_STAFF = process.env.T_STAFF;
   const T_APPOINTMENTS = process.env.T_APPOINTMENTS;
   
   if (!T_BOXES) throw new Error('Falta T_BOXES');
-  if (!T_DOCTORS) throw new Error('Falta T_DOCTORS');
+  if (!T_STAFF) throw new Error('Falta T_STAFF');
   if (!T_APPOINTMENTS) throw new Error('Falta T_APPOINTMENTS');
 
-  console.log(`🌱 Generando ${NUM_BOXES} boxes, ${NUM_DOCTORS} doctores, ${NUM_APPOINTMENTS} citas...`);
+  console.log(`🌱 Generando ${NUM_BOXES} boxes, ${NUM_STAFF} miembros de staff, ${NUM_APPOINTMENTS} citas...`);
   
   // Generar datos
   const boxes = generateBoxes(NUM_BOXES);
-  const doctors = generateDoctors(NUM_DOCTORS);
-  const appointments = generateAppointments(NUM_APPOINTMENTS, boxes, doctors);
+  const staff = generateStaff(NUM_STAFF);
+  const appointments = generateAppointments(NUM_APPOINTMENTS, boxes, staff);
 
   // Insertar en DynamoDB
   console.log('\n📦 Insertando Boxes...');
   await seedTable(T_BOXES, boxes);
   
-  console.log('\n👨‍⚕️ Insertando Doctores...');
-  await seedTable(T_DOCTORS, doctors);
+  console.log('\n👥 Insertando Staff...');
+  await seedTable(T_STAFF, staff);
   
   console.log('\n📅 Insertando Citas...');
   await seedTable(T_APPOINTMENTS, appointments);
 
   console.log('\n✅ Seed completado exitosamente!');
   console.log(`   - ${boxes.length} boxes creados`);
-  console.log(`   - ${doctors.length} doctores creados`);
+  console.log(`   - ${staff.length} miembros de staff creados`);
   console.log(`   - ${appointments.length} citas creadas`);
 }
 

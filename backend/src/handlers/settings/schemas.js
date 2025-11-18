@@ -8,6 +8,7 @@ export const ClientThemeSchema = z.object({
   darkMode: z.boolean().optional(),
   logoUrl: z.string().optional(), // Permitir URL o vacío
   backgroundUrl: z.string().optional(),
+  selectedThemeId: z.string().max(50).optional(),
 });
 
 // Schema para textos personalizados del cliente

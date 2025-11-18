@@ -26,16 +26,31 @@
   margin: 0;
 }
 
+.dashboard__filters-card {
+  background: var(--background-primary);
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--border-primary);
+  padding: 1rem 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
 .dashboard__filters {
   display: flex;
   gap: 1rem;
   align-items: flex-end;
+  flex-wrap: wrap;
 }
 
 .dashboard__filter-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: var(--border-radius-md);
+  background: var(--card-background);
+  border: 1px solid var(--border-light);
+  flex: 1 1 180px;
+  box-shadow: var(--shadow-xs);
 }
 
 .dashboard__filter-group label {
@@ -48,9 +63,16 @@
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--border-color);
   border-radius: 6px;
-  font-size: 0.875rem;
-  background: var(--card-background);
+  font-size: 0.9rem;
+  background: var(--background-primary);
   color: var(--text-primary);
+  width: 100%;
+}
+.dashboard__apply-btn {
+  align-self: stretch;
+  min-height: 48px;
+  padding: 0 1.75rem;
+  font-weight: 600;
 }
 
 .dashboard__date-input:focus {
@@ -84,14 +106,19 @@
 
 /* Footer */
 .dashboard__footer {
-  display: flex;
-  justify-content: space-between;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
   align-items: center;
   padding: 1rem;
   background: var(--card-background);
-  border-radius: 8px;
+    width: 100%;
   margin-top: 2rem;
 }
+
+  .dashboard__filters-card {
+    width: 100%;
+  }
 
 .dashboard__timestamp {
   font-size: 0.875rem;

@@ -23,9 +23,16 @@ export const main = handler(async (event) => {
     };
   }
 
+  // Sanitizar tenantId para que el key sea válido en URLs
+  const normalizedTenantId = (tenantId.replace(/[^a-zA-Z0-9-_]/g, '-') || 'tenant');
+
+  const extensionMap = {
+    'image/svg+xml': 'svg'
+  };
+  const fileExtension = extensionMap[fileType] || fileType.split('/')[1];
+
   // Generar nombre único para el archivo
-  const fileExtension = fileType.split('/')[1];
-  const key = `logos/${tenantId}/${randomUUID()}.${fileExtension}`;
+  const key = `logos/${normalizedTenantId}/${randomUUID()}.${fileExtension}`;
   const bucketName = `${process.env.SERVICE_NAME || 'smartboxing'}-assets-${process.env.STAGE || 'dev'}`;
 
   // Crear comando de PutObject

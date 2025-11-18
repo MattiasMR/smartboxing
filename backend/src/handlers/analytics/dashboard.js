@@ -8,8 +8,29 @@ const dynamo = DynamoDBDocumentClient.from(client);
 const TABLES = {
   appointments: process.env.T_APPOINTMENTS,
   boxes: process.env.T_BOXES,
-  doctors: process.env.T_DOCTORS,
+  staff: process.env.T_STAFF,
   patients: process.env.T_PATIENTS,
+};
+TABLES.doctors = TABLES.staff; // backward compatibility while frontend migrates
+
+const BOX_STATUS_ALIASES = {
+  disponible: 'available',
+  available: 'available',
+  ocupado: 'occupied',
+  occupied: 'occupied',
+  mantenimiento: 'maintenance',
+  maintenance: 'maintenance',
+};
+
+const normalizeBoxStatus = (status) => {
+  if (!status) return 'unknown';
+  const key = status.toLowerCase();
+  return BOX_STATUS_ALIASES[key] || key;
+};
+
+const normalizeAppointmentStatus = (status) => {
+  if (!status) return 'sin-estado';
+  return String(status).toLowerCase();
 };
 
 /**
@@ -26,7 +47,7 @@ const TABLES = {
  * - startDate: ISO date (default: hace 30 días)
  * - endDate: ISO date (default: hoy)
  * - boxId: ID de box específico (opcional)
- * - doctorId: ID de doctor específico (opcional)
+ * - staffId: ID de miembro del staff (alias doctorId)
  */
 export const main = async (event) => {
   try {
@@ -39,21 +60,23 @@ export const main = async (event) => {
     const startDate = params.startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
     // Filtros opcionales
+    const staffFilter = params.staffId || params.doctorId;
     const filters = {
       boxId: params.boxId,
-      doctorId: params.doctorId,
+      staffId: staffFilter,
+      doctorId: staffFilter,
     };
 
     // Ejecutar todas las queries en paralelo
     const [
       appointmentsData,
       boxesData,
-      doctorsData,
+      staffData,
       patientsData,
     ] = await Promise.all([
       getAppointmentsMetrics(tenantId, startDate, endDate, filters),
       getBoxesMetrics(tenantId),
-      getDoctorsMetrics(tenantId),
+      getStaffMetrics(tenantId),
       getPatientsMetrics(tenantId),
     ]);
 
@@ -67,12 +90,14 @@ export const main = async (event) => {
       summary: {
         totalAppointments: appointmentsData.total,
         activeBoxes: boxesData.active,
-        activeDoctors: doctorsData.active,
+        activeStaff: staffData.active,
+        activeDoctors: staffData.active,
         totalPatients: patientsData.total,
       },
       appointments: appointmentsData,
       boxes: boxesData,
-      doctors: doctorsData,
+      staff: staffData,
+      doctors: staffData,
       patients: patientsData,
       timestamp: new Date().toISOString(),
     };
@@ -109,15 +134,20 @@ async function getAppointmentsMetrics(tenantId, startDate, endDate, filters = {}
 
     // Aplicar filtros adicionales
     if (filters.boxId) {
-      appointments = appointments.filter(apt => apt.boxId === filters.boxId);
+      appointments = appointments.filter(apt => (apt.idBox ?? apt.boxId) === filters.boxId);
     }
-    if (filters.doctorId) {
-      appointments = appointments.filter(apt => apt.doctorId === filters.doctorId);
+    if (filters.staffId || filters.doctorId) {
+      const staffFilterId = filters.staffId || filters.doctorId;
+      appointments = appointments.filter((apt) => {
+        const staffId = apt.idStaff ?? apt.idDoctor ?? apt.doctorId;
+        return staffId === staffFilterId;
+      });
     }
 
     // Agrupar por estado
     const byStatus = appointments.reduce((acc, apt) => {
-      acc[apt.status] = (acc[apt.status] || 0) + 1;
+      const normalizedStatus = normalizeAppointmentStatus(apt.status || apt.estado);
+      acc[normalizedStatus] = (acc[normalizedStatus] || 0) + 1;
       return acc;
     }, {});
 
@@ -142,8 +172,9 @@ async function getAppointmentsMetrics(tenantId, startDate, endDate, filters = {}
 
     // Agrupar por box (top 5)
     const byBox = appointments.reduce((acc, apt) => {
-      if (apt.boxId) {
-        acc[apt.boxId] = (acc[apt.boxId] || 0) + 1;
+      const boxId = apt.idBox ?? apt.boxId;
+      if (boxId) {
+        acc[boxId] = (acc[boxId] || 0) + 1;
       }
       return acc;
     }, {});
@@ -153,16 +184,17 @@ async function getAppointmentsMetrics(tenantId, startDate, endDate, filters = {}
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
-    // Agrupar por doctor (top 5)
-    const byDoctor = appointments.reduce((acc, apt) => {
-      if (apt.doctorId) {
-        acc[apt.doctorId] = (acc[apt.doctorId] || 0) + 1;
+    // Agrupar por staff (top 5)
+    const byStaff = appointments.reduce((acc, apt) => {
+      const staffId = apt.idStaff ?? apt.idDoctor ?? apt.doctorId;
+      if (staffId) {
+        acc[staffId] = (acc[staffId] || 0) + 1;
       }
       return acc;
     }, {});
     
-    const topDoctors = Object.entries(byDoctor)
-      .map(([doctorId, count]) => ({ doctorId, count }))
+    const topStaff = Object.entries(byStaff)
+      .map(([staffId, count]) => ({ staffId, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
@@ -173,7 +205,8 @@ async function getAppointmentsMetrics(tenantId, startDate, endDate, filters = {}
       completionRate: parseFloat(completionRate),
       dailyData,
       topBoxes,
-      topDoctors,
+      topStaff,
+      topDoctors: topStaff,
       completed,
       scheduled: byStatus['scheduled'] || 0,
       cancelled: byStatus['cancelled'] || 0,
@@ -189,6 +222,7 @@ async function getAppointmentsMetrics(tenantId, startDate, endDate, filters = {}
       completionRate: 0,
       dailyData: [],
       topBoxes: [],
+      topStaff: [],
       topDoctors: [],
       completed: 0,
       scheduled: 0,
@@ -220,7 +254,8 @@ async function getBoxesMetrics(tenantId) {
 
     // Agrupar por estado
     const byStatus = boxes.reduce((acc, box) => {
-      acc[box.status] = (acc[box.status] || 0) + 1;
+      const normalizedStatus = normalizeBoxStatus(box.status || box.estado);
+      acc[normalizedStatus] = (acc[normalizedStatus] || 0) + 1;
       return acc;
     }, {});
 
@@ -254,12 +289,12 @@ async function getBoxesMetrics(tenantId) {
 }
 
 /**
- * Métricas de médicos
+ * Métricas de staff
  */
-async function getDoctorsMetrics(tenantId) {
+async function getStaffMetrics(tenantId) {
   try {
     const command = new ScanCommand({
-      TableName: TABLES.doctors,
+      TableName: TABLES.staff,
       FilterExpression: '#tenantId = :tenantId',
       ExpressionAttributeNames: {
         '#tenantId': 'tenantId',
@@ -270,22 +305,22 @@ async function getDoctorsMetrics(tenantId) {
     });
 
     const result = await dynamo.send(command);
-    const doctors = result.Items || [];
+    const staff = result.Items || [];
 
     // Agrupar por especialidad
-    const bySpecialty = doctors.reduce((acc, doc) => {
-      const specialty = doc.specialty || 'Sin especialidad';
+    const bySpecialty = staff.reduce((acc, doc) => {
+      const specialty = doc.specialty || doc.especialidad || 'Sin especialidad';
       acc[specialty] = (acc[specialty] || 0) + 1;
       return acc;
     }, {});
 
     return {
-      total: doctors.length,
-      active: doctors.length, // Todos los médicos registrados están activos
+      total: staff.length,
+      active: staff.length, // Todos los miembros registrados están activos
       bySpecialty,
     };
   } catch (error) {
-    console.error('Error fetching doctors metrics:', error);
+    console.error('Error fetching staff metrics:', error);
     return {
       total: 0,
       active: 0,

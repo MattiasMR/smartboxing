@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,6 +7,7 @@ import { api } from '../api/client.js';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { FaSave, FaTimes, FaSpinner } from 'react-icons/fa';
 import './Forms.css';
+import { nextSequentialId } from '../utils/idHelpers.js';
 
 const BoxSchema = z.object({
   id: z.string().min(1, 'El ID es requerido'),
@@ -20,10 +22,11 @@ export default function BoxForm() {
   const isEdit = !!id;
   const nav = useNavigate();
   const qc = useQueryClient();
+  const [feedback, setFeedback] = useState(null);
 
   console.log('[BoxForm] Mode:', isEdit ? 'EDIT' : 'CREATE', 'ID:', id);
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
     resolver: zodResolver(BoxSchema),
     defaultValues: { id: '', nombre: '', pasillo: '', estado: 'disponible' }
   });
@@ -46,18 +49,72 @@ export default function BoxForm() {
     cacheTime: 10 * 60 * 1000 // 10 minutos
   });
 
+  const { data: allBoxes = [] } = useQuery({
+    queryKey: ['boxes', 'all'],
+    queryFn: async () => (await api.get('/boxes')).data.items,
+    enabled: !isEdit,
+    staleTime: 60 * 1000
+  });
+
+  const autoId = useMemo(() => (
+    !isEdit && allBoxes ? nextSequentialId(allBoxes) : null
+  ), [allBoxes, isEdit]);
+
+  useEffect(() => {
+    if (!isEdit && autoId) {
+      setValue('id', autoId, { shouldValidate: true });
+    }
+  }, [autoId, isEdit, setValue]);
+
+  const showFeedback = (type, message) => setFeedback({ type, message });
+  const clearFeedback = () => setFeedback(null);
+  const handleSuccessNavigation = () => {
+    setTimeout(() => nav('/boxes'), 900);
+  };
+  const getErrorMessage = (error, fallback) => (
+    error?.response?.data?.message || fallback
+  );
+
   const createMut = useMutation({
     mutationFn: async (values) => api.post('/boxes', { box: values }),
-    onSuccess: () => { qc.invalidateQueries(['boxes']); nav('/boxes'); }
+    onSuccess: () => {
+      qc.invalidateQueries(['boxes']);
+      showFeedback('success', '✅ Box creado correctamente');
+      handleSuccessNavigation();
+    },
+    onError: (error) => {
+      showFeedback('error', getErrorMessage(error, 'No pudimos crear el box. Intenta nuevamente.'));
+    }
   });
 
   const updateMut = useMutation({
     mutationFn: async (values) => api.put(`/boxes/${encodeURIComponent(id)}`, { patch: values }),
-    onSuccess: () => { qc.invalidateQueries(['boxes']); nav('/boxes'); }
+    onSuccess: () => {
+      qc.invalidateQueries(['boxes']);
+      showFeedback('success', '✅ Cambios guardados');
+      handleSuccessNavigation();
+    },
+    onError: (error) => {
+      showFeedback('error', getErrorMessage(error, 'No pudimos guardar los cambios. Revisa los datos.'));
+    }
   });
 
-  const onSubmit = (values) => (isEdit ? updateMut.mutate(values) : createMut.mutate(values));
+  const onSubmit = (values) => {
+    clearFeedback();
+    if (!isEdit && !values.id) {
+      showFeedback('error', 'No pudimos generar un ID automático. Refresca e inténtalo nuevamente.');
+      return;
+    }
+
+    if (isEdit) {
+      updateMut.mutate(values);
+      return;
+    }
+
+    createMut.mutate(values);
+  };
   const isSubmitting = createMut.isPending || updateMut.isPending;
+  const disableSubmit = isSubmitting || (!isEdit && !autoId);
 
   if (loadingBox) {
     return (
@@ -78,6 +135,12 @@ export default function BoxForm() {
           </p>
         </div>
 
+        {feedback && (
+          <div className={`form-feedback form-feedback--${feedback.type}`}>
+            {feedback.message}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit(onSubmit)} className="form">
           <div className="form-row">
             <div className="form-group">
@@ -87,12 +150,12 @@ export default function BoxForm() {
               <input 
                 id="box-id"
                 {...register('id')} 
-                disabled={isEdit}
+                readOnly
                 className={`form-input ${errors.id ? 'error' : ''}`}
-                placeholder="Ej: BOX-001"
-                title={isEdit ? 'El ID no se puede modificar' : ''}
+                placeholder="Ej: 001"
+                title="El ID se asigna automáticamente"
               />
-              {isEdit && <span className="form-hint">El ID no se puede modificar en modo edición</span>}
+              <span className="form-hint">El ID se genera automáticamente y no se puede cambiar.</span>
               {errors.id && <span className="error-message">{errors.id.message}</span>}
             </div>
 
@@ -143,7 +206,7 @@ export default function BoxForm() {
             <Link to="/boxes" className="btn-secondary">
               <FaTimes /> Cancelar
             </Link>
-            <button type="submit" className="btn-primary" disabled={isSubmitting}>
+            <button type="submit" className="btn-primary" disabled={disableSubmit}>
               {isSubmitting ? (
                 <><FaSpinner className="spinner-small" /> Guardando...</>
               ) : (

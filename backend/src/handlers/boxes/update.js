@@ -9,7 +9,7 @@ export const main = handler(async (event) => {
   const fallbackTenant = claims['custom:tenantId'] ?? 'TENANT#demo';
 
   const parsed = UpdateBoxSchema.parse({
-    tenantId: body.tenantId ?? fallbackTenant,
+    tenantId: fallbackTenant,
     id: event.pathParameters?.id,
     patch: body.patch
   });

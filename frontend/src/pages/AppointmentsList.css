@@ -175,6 +175,65 @@
   font-size: 0.9375rem;
 }
 
+.box-cell,
+.staff-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.box-cell__name,
+.staff-cell__name {
+  font-weight: 600;
+}
+
+.box-cell__meta,
+.staff-cell__meta {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-chip--scheduled {
+  background: rgba(59, 130, 246, 0.15);
+  color: #1d4ed8;
+}
+
+.status-chip--confirmed {
+  background: rgba(16, 185, 129, 0.15);
+  color: #047857;
+}
+
+.status-chip--completed {
+  background: rgba(34, 197, 94, 0.15);
+  color: #15803d;
+}
+
+.status-chip--cancelled {
+  background: rgba(248, 113, 113, 0.15);
+  color: #b91c1c;
+}
+
+.status-chip--no-show {
+  background: rgba(251, 191, 36, 0.15);
+  color: #b45309;
+}
+
+.status-chip--default {
+  background: rgba(148, 163, 184, 0.2);
+  color: #475569;
+}
+
 .date-cell {
   display: flex;
   align-items: center;

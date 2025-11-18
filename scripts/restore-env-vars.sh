@@ -6,11 +6,11 @@ FUNCTIONS=(
   "createBox"
   "updateBox"
   "deleteBox"
-  "listDoctors"
-  "getDoctor"
-  "createDoctor"
-  "updateDoctor"
-  "deleteDoctor"
+  "listStaff"
+  "getStaffMember"
+  "createStaffMember"
+  "updateStaffMember"
+  "deleteStaffMember"
   "listAppointments"
   "getAppointment"
   "createAppointment"
@@ -23,7 +23,7 @@ FUNCTIONS=(
   "getDashboard"
 )
 
-ENV_VARS="Variables={CHAOS_ENABLED=false,T_BOXES=smartboxing-Boxes-dev,T_DOCTORS=smartboxing-Doctors-dev,T_APPOINTMENTS=smartboxing-Appointments-dev,T_PATIENTS=smartboxing-Patients-dev,T_CLIENT_SETTINGS=smartboxing-ClientSettings-dev,T_USER_SETTINGS=smartboxing-UserSettings-dev,USER_POOL_ID=us-east-1_flcHOKjMy,USER_POOL_CLIENT_ID=7o3mbd6s94sp7jtb0p300pc4un}"
+ENV_VARS="Variables={CHAOS_ENABLED=false,T_BOXES=smartboxing-Boxes-dev,T_STAFF=smartboxing-Staff-dev,T_APPOINTMENTS=smartboxing-Appointments-dev,T_PATIENTS=smartboxing-Patients-dev,T_CLIENT_SETTINGS=smartboxing-ClientSettings-dev,T_USER_SETTINGS=smartboxing-UserSettings-dev,USER_POOL_ID=us-east-1_flcHOKjMy,USER_POOL_CLIENT_ID=7o3mbd6s94sp7jtb0p300pc4un}"
 
 echo "🔧 Restaurando variables de entorno en todas las Lambdas..."
 

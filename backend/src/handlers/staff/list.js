@@ -6,7 +6,7 @@ export const main = handler(async (event) => {
   const claims = event.requestContext?.authorizer?.jwt?.claims ?? {};
   const tenantId = claims['custom:tenantId'] ?? 'TENANT#demo';
   const out = await doc.send(new QueryCommand({
-    TableName: process.env.T_DOCTORS,
+    TableName: process.env.T_STAFF,
     KeyConditionExpression: 'tenantId = :t',
     ExpressionAttributeValues: { ':t': tenantId }
   }));

@@ -5,24 +5,51 @@ import { api } from './client.js';
  * Pobla la base de datos con datos de prueba usando la API
  * @param {Object} options - Opciones de generación
  * @param {number} options.numBoxes - Cantidad de boxes a crear (default: 10)
- * @param {number} options.numDoctors - Cantidad de doctores a crear (default: 8)
+ * @param {number} options.numStaff - Cantidad de miembros de staff a crear (default: 8)
  * @param {number} options.numAppointments - Cantidad de citas a crear (default: 15)
  * @param {Function} options.onProgress - Callback para reportar progreso
  * @returns {Promise<Object>} - Resultado con estadísticas
  */
+const boxStatusOptions = ['disponible', 'ocupado', 'mantenimiento'];
+const boxStatusMap = {
+  disponible: 'available',
+  ocupado: 'occupied',
+  mantenimiento: 'maintenance'
+};
+
+const appointmentStatusPool = [
+  'scheduled', 'scheduled', 'scheduled',
+  'confirmed', 'confirmed',
+  'completed', 'completed', 'completed', 'completed',
+  'cancelled',
+  'no-show'
+];
+
+const pickRandom = (collection) => collection[Math.floor(Math.random() * collection.length)];
+
+const createIdFormatter = (count = 1) => {
+  const width = Math.max(3, String(Math.max(1, count)).length);
+  return (index) => String(index).padStart(width, '0');
+};
+
 export async function seedDatabase(options = {}) {
   const {
     numBoxes = 10,
-    numDoctors = 8,
+    numStaff = options.numDoctors ?? 8,
     numAppointments = 15,
     onProgress = () => {}
   } = options;
 
+  const formatBoxId = createIdFormatter(numBoxes);
+  const formatStaffId = createIdFormatter(numStaff);
+  const formatAppointmentId = createIdFormatter(numAppointments);
+
   const results = {
     boxes: { success: 0, failed: 0, ids: [] },
-    doctors: { success: 0, failed: 0, ids: [] },
+    staff: { success: 0, failed: 0, ids: [] },
     appointments: { success: 0, failed: 0, ids: [] }
   };
+  results.doctors = results.staff; // legacy consumer support
 
   try {
     // 1. Crear Boxes
@@ -31,16 +58,17 @@ export async function seedDatabase(options = {}) {
     
     for (let i = 1; i <= numBoxes; i++) {
       const pasillo = pasillos[Math.floor(Math.random() * pasillos.length)];
-      const id = `BOX-${pasillo}${i}`;
-      const estados = ['disponible', 'ocupado', 'mantenimiento'];
-      
+      const id = formatBoxId(i);
+      const estado = pickRandom(boxStatusOptions);
+
       try {
         await api.post('/boxes', {
           box: {
             id,
-            nombre: `Box ${pasillo}${i}`,
+            nombre: `Box ${id}`,
             pasillo,
-            estado: estados[Math.floor(Math.random() * estados.length)]
+            estado,
+            status: boxStatusMap[estado]
           }
         });
         results.boxes.success++;
@@ -52,47 +80,49 @@ export async function seedDatabase(options = {}) {
       }
     }
 
-    // 2. Crear Doctores
-    onProgress({ step: 'doctors', current: 0, total: numDoctors });
+    // 2. Crear Staff
+    onProgress({ step: 'staff', current: 0, total: numStaff });
     const especialidades = [
-      'Pediatría', 'Traumatología', 'Dermatología', 'Cardiología',
-      'Neurología', 'Oftalmología', 'Ginecología', 'Medicina General', 'Psiquiatría'
+      'Medicina General', 'Cardiología', 'Dermatología', 'Pediatría',
+      'Traumatología', 'Neurología', 'Oftalmología', 'Ginecología', 'Psiquiatría'
     ];
     
-    const timestamp = Date.now();
-    for (let i = 1; i <= numDoctors; i++) {
-      const id = `DOCTOR-${String(timestamp + i).slice(-6)}`;
+    for (let i = 1; i <= numStaff; i++) {
+      const id = formatStaffId(i);
       const firstName = faker.person.firstName();
       const lastName = faker.person.lastName();
-      const genero = Math.random() > 0.5 ? 'Dr.' : 'Dra.';
       const especialidad = especialidades[Math.floor(Math.random() * especialidades.length)];
       
       try {
-        await api.post('/doctors', {
-          doctor: {
+        await api.post('/staff', {
+          staff: {
             id,
-            nombre: `${genero} ${firstName} ${lastName}`,
+            nombre: `${firstName} ${lastName}`,
             especialidad,
+            specialty: especialidad,
             estado: Math.random() > 0.2 ? 'activo' : 'inactivo'
           }
         });
-        results.doctors.success++;
-        results.doctors.ids.push(id);
-        onProgress({ step: 'doctors', current: i, total: numDoctors });
+        results.staff.success++;
+        results.staff.ids.push(id);
+        onProgress({ step: 'staff', current: i, total: numStaff });
       } catch (error) {
-        console.error(`Error creando doctor ${id}:`, error);
-        results.doctors.failed++;
+        console.error(`Error creando staff ${id}:`, error);
+        results.staff.failed++;
       }
     }
 
     // 3. Crear Citas
     onProgress({ step: 'appointments', current: 0, total: numAppointments });
     
-    const apptTimestamp = Date.now();
+    if (results.boxes.ids.length === 0 || results.staff.ids.length === 0) {
+      throw new Error('No hay boxes o staff disponibles para crear citas. Ejecuta primero las secciones anteriores.');
+    }
+
     for (let i = 1; i <= numAppointments; i++) {
-      const id = `APPT-${String(apptTimestamp + i).slice(-6)}`;
+      const id = formatAppointmentId(i);
       const boxId = results.boxes.ids[Math.floor(Math.random() * results.boxes.ids.length)];
-      const doctorId = results.doctors.ids[Math.floor(Math.random() * results.doctors.ids.length)];
+      const staffId = results.staff.ids[Math.floor(Math.random() * results.staff.ids.length)];
       
       // Fecha aleatoria entre -7 días y +14 días
       const daysOffset = Math.floor(Math.random() * 21) - 7;
@@ -111,7 +141,8 @@ export async function seedDatabase(options = {}) {
           appointment: {
             id,
             idBox: boxId,
-            idDoctor: doctorId,
+            idStaff: staffId,
+            status: pickRandom(appointmentStatusPool),
             startAt: startDate.toISOString(),
             endAt: endDate.toISOString()
           }
@@ -141,32 +172,33 @@ export async function seedDatabase(options = {}) {
 export async function clearDatabaseBulk() {
   const results = {
     boxes: { deleted: 0, failed: 0 },
-    doctors: { deleted: 0, failed: 0 },
+    staff: { deleted: 0, failed: 0 },
     appointments: { deleted: 0, failed: 0 }
   };
+  results.doctors = results.staff;
 
   try {
     // Obtener TODAS las listas en paralelo
-    const [appointmentsResponse, doctorsResponse, boxesResponse] = await Promise.all([
+    const [appointmentsResponse, staffResponse, boxesResponse] = await Promise.all([
       api.get('/appointments'),
-      api.get('/doctors'),
+      api.get('/staff'),
       api.get('/boxes')
     ]);
 
     const appointments = appointmentsResponse.data.items || [];
-    const doctors = doctorsResponse.data.items || [];
+    const staff = staffResponse.data.items || [];
     const boxes = boxesResponse.data.items || [];
 
-    // Borrar TODO en paralelo (appointments, doctors y boxes simultáneamente)
-    const [appointmentResults, doctorResults, boxResults] = await Promise.all([
+    // Borrar TODO en paralelo (appointments, staff y boxes simultáneamente)
+    const [appointmentResults, staffResults, boxResults] = await Promise.all([
       Promise.allSettled(
         appointments.map(appointment => 
           api.delete(`/appointments/${encodeURIComponent(appointment.id)}`)
         )
       ),
       Promise.allSettled(
-        doctors.map(doctor => 
-          api.delete(`/doctors/${encodeURIComponent(doctor.id)}`)
+        staff.map(member => 
+          api.delete(`/staff/${encodeURIComponent(member.id)}`)
         )
       ),
       Promise.allSettled(
@@ -178,8 +210,8 @@ export async function clearDatabaseBulk() {
     
     results.appointments.deleted = appointmentResults.filter(r => r.status === 'fulfilled').length;
     results.appointments.failed = appointmentResults.filter(r => r.status === 'rejected').length;
-    results.doctors.deleted = doctorResults.filter(r => r.status === 'fulfilled').length;
-    results.doctors.failed = doctorResults.filter(r => r.status === 'rejected').length;
+    results.staff.deleted = staffResults.filter(r => r.status === 'fulfilled').length;
+    results.staff.failed = staffResults.filter(r => r.status === 'rejected').length;
     results.boxes.deleted = boxResults.filter(r => r.status === 'fulfilled').length;
     results.boxes.failed = boxResults.filter(r => r.status === 'rejected').length;
 
@@ -202,9 +234,10 @@ export async function clearDatabase(options = {}) {
   
   const results = {
     boxes: { deleted: 0, failed: 0 },
-    doctors: { deleted: 0, failed: 0 },
+    staff: { deleted: 0, failed: 0 },
     appointments: { deleted: 0, failed: 0 }
   };
+  results.doctors = results.staff;
 
   try {
     // 1. Borrar Citas
@@ -227,23 +260,23 @@ export async function clearDatabase(options = {}) {
       }
     }
 
-    // 2. Borrar Doctores
-    onProgress({ step: 'doctors', message: 'Obteniendo doctores...' });
-    const doctorsResponse = await api.get('/doctors');
-    const doctors = doctorsResponse.data.items || [];
+    // 2. Borrar Staff
+    onProgress({ step: 'staff', message: 'Obteniendo staff...' });
+    const staffResponse = await api.get('/staff');
+    const staff = staffResponse.data.items || [];
     
-    for (let i = 0; i < doctors.length; i++) {
+    for (let i = 0; i < staff.length; i++) {
       try {
-        await api.delete(`/doctors/${encodeURIComponent(doctors[i].id)}`);
-        results.doctors.deleted++;
+        await api.delete(`/staff/${encodeURIComponent(staff[i].id)}`);
+        results.staff.deleted++;
         onProgress({ 
-          step: 'doctors', 
+          step: 'staff', 
           current: i + 1, 
-          total: doctors.length 
+          total: staff.length 
         });
       } catch (error) {
-        console.error(`Error borrando doctor ${doctors[i].id}:`, error);
-        results.doctors.failed++;
+        console.error(`Error borrando staff ${staff[i].id}:`, error);
+        results.staff.failed++;
       }
     }
 

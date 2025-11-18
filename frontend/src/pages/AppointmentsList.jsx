@@ -1,7 +1,7 @@
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../api/client.js';
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
 import { FaPlus, FaSpinner, FaEdit, FaCalendarAlt, FaFilter } from 'react-icons/fa';
 import './AppointmentsList.css';
 
@@ -14,12 +14,18 @@ async function fetchAppointments({ from, to }) {
 }
 
 export default function AppointmentsList() {
-  const [from, setFrom] = useState('');
-  const [to, setTo] = useState('');
-  const { data = [], isLoading, refetch } = useQuery({
-    queryKey: ['appointments', { from, to }],
-    queryFn: () => fetchAppointments({ from, to })
+  const [filters, setFilters] = useState({ from: '', to: '' });
+  const [draftFrom, setDraftFrom] = useState('');
+  const [draftTo, setDraftTo] = useState('');
+  const { data = [], isLoading } = useQuery({
+    queryKey: ['appointments', filters],
+    queryFn: () => fetchAppointments(filters)
   });
+  const { data: boxes = [] } = useQuery({ queryKey: ['boxes'], queryFn: async () => (await api.get('/boxes')).data.items });
+  const { data: staff = [] } = useQuery({ queryKey: ['staff'], queryFn: async () => (await api.get('/staff')).data.items });
+
+  const boxMap = useMemo(() => Object.fromEntries((boxes || []).map((box) => [box.id, box])), [boxes]);
+  const staffMap = useMemo(() => Object.fromEntries((staff || []).map((member) => [member.id, member])), [staff]);
 
   const formatDateTime = (isoString) => {
     if (!isoString) return '—';
@@ -28,6 +34,63 @@ export default function AppointmentsList() {
       dateStyle: 'short',
       timeStyle: 'short'
     }).format(date);
+  };
+
+  const getDuration = (appointment) => {
+    if (appointment.duracionMinutos) {
+      return `${appointment.duracionMinutos} min`;
+    }
+
+    if (appointment.startAt && appointment.endAt) {
+      const diff = (new Date(appointment.endAt) - new Date(appointment.startAt)) / 60000;
+      if (Number.isFinite(diff) && diff > 0) {
+        return `${diff} min`;
+      }
+    }
+
+    return '—';
+  };
+
+  const statusInfo = {
+    scheduled: { label: 'Agendada', tone: 'scheduled' },
+    confirmed: { label: 'Confirmada', tone: 'confirmed' },
+    completed: { label: 'Completada', tone: 'completed' },
+    cancelled: { label: 'Cancelada', tone: 'cancelled' },
+    'no-show': { label: 'No asistió', tone: 'no-show' }
+  };
+
+  const renderBoxCell = (appointment) => {
+    const box = boxMap[appointment.idBox];
+    if (!box) {
+      return appointment.idBox || '—';
+    }
+
+    return (
+      <div className="box-cell">
+        <span className="box-cell__name">{box.nombre || `Box ${box.id}`}</span>
+        <span className="box-cell__meta">
+          ID {box.id}
+          {box.pasillo ? ` · Pasillo ${box.pasillo}` : ''}
+        </span>
+      </div>
+    );
+  };
+
+  const renderStaffCell = (appointment) => {
+    const staffMember = staffMap[appointment.idStaff || appointment.idDoctor];
+    if (!staffMember) {
+      return appointment.idStaff || appointment.idDoctor || '—';
+    }
+
+    return (
+      <div className="staff-cell">
+        <span className="staff-cell__name">{staffMember.nombre}</span>
+        <span className="staff-cell__meta">
+          ID {staffMember.id}
+          {staffMember.especialidad ? ` · ${staffMember.especialidad}` : ''}
+        </span>
+      </div>
+    );
   };
 
   if (isLoading) {
@@ -44,9 +107,9 @@ export default function AppointmentsList() {
       <div className="page-header">
         <div className="page-header-content">
           <h1 className="page-title">
-            <FaCalendarAlt /> Citas Médicas
+            <FaCalendarAlt /> Asignaciones de Staff
           </h1>
-          <p className="page-subtitle">Gestiona las citas de tu clínica</p>
+          <p className="page-subtitle">Gestiona las citas de tu organización asignando staff a boxes</p>
         </div>
         <Link to="/appointments/new" className="btn-primary">
           <FaPlus /> Nueva Cita
@@ -63,8 +126,8 @@ export default function AppointmentsList() {
             <input 
               id="from-date"
               type="datetime-local" 
-              value={from} 
-              onChange={e => setFrom(e.target.value)}
+              value={draftFrom} 
+              onChange={e => setDraftFrom(e.target.value)}
               className="filter-input"
             />
           </div>
@@ -73,12 +136,15 @@ export default function AppointmentsList() {
             <input 
               id="to-date"
               type="datetime-local" 
-              value={to} 
-              onChange={e => setTo(e.target.value)}
+              value={draftTo} 
+              onChange={e => setDraftTo(e.target.value)}
               className="filter-input"
             />
           </div>
-          <button onClick={() => refetch()} className="btn-filter">
+          <button
+            onClick={() => setFilters({ from: draftFrom, to: draftTo })}
+            className="btn-filter"
+          >
             <FaFilter /> Aplicar Filtros
           </button>
         </div>
@@ -99,21 +165,28 @@ export default function AppointmentsList() {
               <tr>
                 <th>Fecha y Hora</th>
                 <th>Box</th>
-                <th>Doctor</th>
+                <th>Staff</th>
+                <th>Estado</th>
                 <th>Duración</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {data.map(appointment => (
-                <tr key={appointment.startAt}>
+                <tr key={appointment.id || appointment.startAt}>
                   <td className="date-cell">
                     <FaCalendarAlt className="cell-icon" />
                     {formatDateTime(appointment.startAt)}
                   </td>
-                  <td>{appointment.idBox || '—'}</td>
-                  <td>{appointment.idDoctor || '—'}</td>
-                  <td>{appointment.duracionMinutos ? `${appointment.duracionMinutos} min` : '—'}</td>
+                  <td>{renderBoxCell(appointment)}</td>
+                  <td>{renderStaffCell(appointment)}</td>
+                  <td>
+                    {(() => {
+                      const info = statusInfo[appointment.status] || { label: appointment.status || '—', tone: 'default' };
+                      return <span className={`status-chip status-chip--${info.tone}`}>{info.label}</span>;
+                    })()}
+                  </td>
+                  <td>{getDuration(appointment)}</td>
                   <td className="actions-cell">
                     <Link 
                       to={`/appointments/${encodeURIComponent(appointment.id)}/edit`}

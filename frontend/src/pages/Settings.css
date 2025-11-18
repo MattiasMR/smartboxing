@@ -91,9 +91,11 @@
   border-right: 1px solid var(--border-light, #e5e7eb);
   flex-shrink: 0;
   position: sticky;
-  top: 61px;
-  height: calc(100vh - 61px);
+  top: 88px;
+  max-height: calc(100vh - 96px);
   overflow-y: auto;
+  padding-bottom: 1rem;
+  align-self: flex-start;
 }
 
 [data-theme="dark"] .settings-sidebar {
@@ -808,7 +810,7 @@
   .settings-sidebar {
     width: 100%;
     position: static;
-    height: auto;
+    max-height: none;
     border-right: none;
     border-bottom: 1px solid var(--border-light, #e5e7eb);
   }

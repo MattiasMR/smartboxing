@@ -7,7 +7,7 @@ import MainLayout from './components/layout/MainLayout.jsx';
 import { useTheme } from './hooks/useTheme.js';
 import { useEffect } from 'react';
 
-// Pages
+// New pages with custom Cognito auth
 import LandingPage from './pages/Landing.jsx';
 import LoginPage from './pages/Login.jsx';
 import RegisterPage from './pages/Register.jsx';
@@ -64,9 +64,10 @@ function AppContent() {
           <Route path="/boxes/new" element={<BoxForm />} />
           <Route path="/boxes/:id/edit" element={<BoxForm />} />
 
-          <Route path="/doctors" element={<DoctorsList />} />
-          <Route path="/doctors/new" element={<DoctorForm />} />
-          <Route path="/doctors/:id/edit" element={<DoctorForm />} />
+          <Route path="/staff" element={<DoctorsList />} />
+          <Route path="/staff/new" element={<DoctorForm />} />
+          <Route path="/staff/:id/edit" element={<DoctorForm />} />
+          <Route path="/doctors/*" element={<Navigate to="/staff" replace />} />
 
           <Route path="/appointments" element={<AppointmentsList />} />
           <Route path="/appointments/new" element={<AppointmentForm />} />

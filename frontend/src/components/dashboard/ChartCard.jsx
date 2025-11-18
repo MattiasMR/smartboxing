@@ -13,18 +13,40 @@ import {
 } from 'recharts';
 import './ChartCard.css';
 
-const COLORS = {
-  primary: '#4299e1',
-  success: '#48bb78',
-  warning: '#ed8936',
-  danger: '#f56565',
-  info: '#4299e1',
+const THEME_COLORS = [
+  'var(--primary)',
+  'var(--primary-light)',
+  'var(--secondary)',
+  'var(--accent)',
+  'var(--info)'
+];
+
+const TooltipCard = ({ active, payload, label }) => {
+  if (!active || !payload || payload.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="chart-tooltip">
+      <p className="chart-tooltip__label">{label}</p>
+      <ul className="chart-tooltip__list">
+        {payload.map((entry) => (
+          <li key={entry.name} style={{ color: entry.color }}>
+            <span>{entry.name}</span>
+            <strong>{entry.value}</strong>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 };
 
 /**
  * Tarjeta con gráfico
  */
 const ChartCard = ({ title, type = 'bar', data, dataKey, xKey, colors, height = 300 }) => {
+  const palette = (colors && colors.length > 0) ? colors : THEME_COLORS;
+
   const renderChart = () => {
     switch (type) {
       case 'bar':
@@ -41,17 +63,11 @@ const ChartCard = ({ title, type = 'bar', data, dataKey, xKey, colors, height = 
                 stroke="var(--text-secondary)"
                 fontSize={12}
               />
-              <Tooltip 
-                contentStyle={{
-                  backgroundColor: 'var(--card-background)',
-                  border: '1px solid var(--border-color)',
-                  borderRadius: '8px',
-                }}
-              />
+              <Tooltip content={<TooltipCard />} cursor={{ fill: 'rgba(0, 0, 0, 0.08)' }} />
               <Legend />
               <Bar 
                 dataKey={dataKey} 
-                fill={colors?.[0] || COLORS.primary}
+                fill={palette[0]}
                 radius={[8, 8, 0, 0]}
               />
             </BarChart>
@@ -74,17 +90,11 @@ const ChartCard = ({ title, type = 'bar', data, dataKey, xKey, colors, height = 
                 {data.map((entry, index) => (
                   <Cell 
                     key={`cell-${index}`} 
-                    fill={colors?.[index] || Object.values(COLORS)[index % Object.values(COLORS).length]} 
+                    fill={palette[index % palette.length]} 
                   />
                 ))}
               </Pie>
-              <Tooltip 
-                contentStyle={{
-                  backgroundColor: 'var(--card-background)',
-                  border: '1px solid var(--border-color)',
-                  borderRadius: '8px',
-                }}
-              />
+              <Tooltip content={<TooltipCard />} />
               <Legend />
             </PieChart>
           </ResponsiveContainer>

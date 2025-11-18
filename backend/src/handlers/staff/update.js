@@ -21,7 +21,7 @@ export const main = handler(async (event) => {
   }
 
   await doc.send(new UpdateCommand({
-    TableName: process.env.T_DOCTORS,
+    TableName: process.env.T_STAFF,
     Key: { tenantId, id },
     UpdateExpression: 'SET ' + sets.join(', '),
     ExpressionAttributeNames: names,
