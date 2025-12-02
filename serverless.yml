@@ -185,6 +185,15 @@ functions:
           path: /boxes
           method: get
           authorizer: cognitoJwt
+    # ⭐ Canary Deployment Configuration
+    deploymentSettings:
+      type: Canary10Percent5Minutes
+      alias: live
+      preTrafficHook: preTrafficHook
+      postTrafficHook: postTrafficHook
+      alarms:
+        - CanaryErrorAlarm
+        - CanaryLatencyAlarm
   
   getBox:
     handler: backend/src/handlers/boxes/get.main
@@ -193,6 +202,15 @@ functions:
           path: /boxes/{id}
           method: get
           authorizer: cognitoJwt
+    # ⭐ Canary Deployment Configuration
+    deploymentSettings:
+      type: Canary10Percent5Minutes
+      alias: live
+      preTrafficHook: preTrafficHook
+      postTrafficHook: postTrafficHook
+      alarms:
+        - CanaryErrorAlarm
+        - CanaryLatencyAlarm
   
   createBox:
     handler: backend/src/handlers/boxes/create.main
@@ -201,6 +219,15 @@ functions:
           path: /boxes
           method: post
           authorizer: cognitoJwt
+    # ⭐ Canary Deployment Configuration
+    deploymentSettings:
+      type: Canary10Percent5Minutes
+      alias: live
+      preTrafficHook: preTrafficHook
+      postTrafficHook: postTrafficHook
+      alarms:
+        - CanaryErrorAlarm
+        - CanaryLatencyAlarm
   
   updateBox:
     handler: backend/src/handlers/boxes/update.main
@@ -226,6 +253,15 @@ functions:
           path: /staff
           method: get
           authorizer: cognitoJwt
+    # ⭐ Canary Deployment Configuration
+    deploymentSettings:
+      type: Canary10Percent5Minutes
+      alias: live
+      preTrafficHook: preTrafficHook
+      postTrafficHook: postTrafficHook
+      alarms:
+        - CanaryErrorAlarm
+        - CanaryLatencyAlarm
   
   getStaffMember:
     handler: backend/src/handlers/staff/get.main
@@ -242,6 +278,15 @@ functions:
           path: /staff
           method: post
           authorizer: cognitoJwt
+    # ⭐ Canary Deployment Configuration
+    deploymentSettings:
+      type: Canary10Percent5Minutes
+      alias: live
+      preTrafficHook: preTrafficHook
+      postTrafficHook: postTrafficHook
+      alarms:
+        - CanaryErrorAlarm
+        - CanaryLatencyAlarm
   
   updateStaffMember:
     handler: backend/src/handlers/staff/update.main
@@ -267,6 +312,15 @@ functions:
           path: /appointments
           method: get
           authorizer: cognitoJwt
+    # ⭐ Canary Deployment Configuration
+    deploymentSettings:
+      type: Canary10Percent5Minutes
+      alias: live
+      preTrafficHook: preTrafficHook
+      postTrafficHook: postTrafficHook
+      alarms:
+        - CanaryErrorAlarm
+        - CanaryLatencyAlarm
   
   getAppointment:
     handler: backend/src/handlers/appointments/get.main
@@ -275,6 +329,15 @@ functions:
           path: /appointments/{id}
           method: get
           authorizer: cognitoJwt
+    # ⭐ Canary Deployment Configuration
+    deploymentSettings:
+      type: Canary10Percent5Minutes
+      alias: live
+      preTrafficHook: preTrafficHook
+      postTrafficHook: postTrafficHook
+      alarms:
+        - CanaryErrorAlarm
+        - CanaryLatencyAlarm
   
   createAppointment:
     handler: backend/src/handlers/appointments/create.main
@@ -283,6 +346,15 @@ functions:
           path: /appointments
           method: post
           authorizer: cognitoJwt
+    # ⭐ Canary Deployment Configuration
+    deploymentSettings:
+      type: Canary10Percent5Minutes
+      alias: live
+      preTrafficHook: preTrafficHook
+      postTrafficHook: postTrafficHook
+      alarms:
+        - CanaryErrorAlarm
+        - CanaryLatencyAlarm
   
   updateAppointment:
     handler: backend/src/handlers/appointments/update.main
@@ -308,6 +380,15 @@ functions:
           path: /patients
           method: get
           authorizer: cognitoJwt
+    # ⭐ Canary Deployment Configuration
+    deploymentSettings:
+      type: Canary10Percent5Minutes
+      alias: live
+      preTrafficHook: preTrafficHook
+      postTrafficHook: postTrafficHook
+      alarms:
+        - CanaryErrorAlarm
+        - CanaryLatencyAlarm
   
   getPatient:
     handler: backend/src/handlers/patients/get.main
@@ -366,6 +447,15 @@ functions:
           path: /settings/client
           method: get
           authorizer: cognitoJwt
+    # ⭐ Canary Deployment Configuration
+    deploymentSettings:
+      type: Canary10Percent5Minutes
+      alias: live
+      preTrafficHook: preTrafficHook
+      postTrafficHook: postTrafficHook
+      alarms:
+        - CanaryErrorAlarm
+        - CanaryLatencyAlarm
   
   updateClientSettings:
     handler: backend/src/handlers/settings/client-put.main
@@ -410,6 +500,15 @@ functions:
           path: /analytics/dashboard
           method: get
           authorizer: cognitoJwt
+    # ⭐ Canary Deployment Configuration
+    deploymentSettings:
+      type: Canary10Percent5Minutes
+      alias: live
+      preTrafficHook: preTrafficHook
+      postTrafficHook: postTrafficHook
+      alarms:
+        - CanaryErrorAlarm
+        - CanaryLatencyAlarm
 
   # ========== DEPLOYMENT HOOKS (CANARY) ==========
   preTrafficHook:
