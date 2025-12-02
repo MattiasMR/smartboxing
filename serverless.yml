@@ -1,5 +1,5 @@
-org: twinmtt
-app: smartboxing
+# org: twinmtt
+# app: smartboxing
 service: smartboxing
 
 useDotenv: true
@@ -13,7 +13,7 @@ plugins:
 custom:
   # Sync de archivos frontend a S3 (sin ACL, usar bucket policy)
   s3Sync:
-    - bucketName: ${self:service}-frontend-${sls:stage}-v2
+    - bucketName: ${self:service}-frontend-${sls:stage}-v3
       localDir: frontend/dist
       deleteRemoved: true
       # NO usar acl (el bucket tiene ACLs bloqueadas)
@@ -52,6 +52,12 @@ provider:
   runtime: nodejs22.x
   region: ${env:AWS_REGION, 'us-east-1'}
   stage: ${opt:stage, 'dev'}
+  
+  # Deployment bucket configuration
+  deploymentBucket:
+    name: ${self:service}-deployment-${sls:stage}-${aws:accountId}
+    serverSideEncryption: AES256
+    blockPublicAccess: true
   
   # Performance: Timeout para requests complejos
   timeout: 29  # 29 segundos (API Gateway max es 30s)
@@ -454,7 +460,7 @@ resources:
     CognitoUserPoolDomain:
       Type: AWS::Cognito::UserPoolDomain
       Properties:
-        Domain: ${self:service}-${sls:stage}
+        Domain: ${self:service}-${sls:stage}-v3
         UserPoolId: !Ref CognitoUserPool
 
     # ==================== DYNAMODB TABLES ====================
@@ -594,7 +600,7 @@ resources:
     FrontendBucket:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:service}-frontend-${sls:stage}-v2
+        BucketName: ${self:service}-frontend-${sls:stage}-v3
         PublicAccessBlockConfiguration:
           BlockPublicAcls: true
           BlockPublicPolicy: true
@@ -688,7 +694,7 @@ resources:
     AssetsBucket:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:service}-assets-${sls:stage}
+        BucketName: ${self:service}-assets-${sls:stage}-v3
         PublicAccessBlockConfiguration:
           BlockPublicAcls: false
           BlockPublicPolicy: false

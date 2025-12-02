@@ -2,5 +2,8 @@
 .serverless
 node_modules
 
+serverless.yml
+
 /docs
 /chaos_serverless_demo
+/serverless.yml
