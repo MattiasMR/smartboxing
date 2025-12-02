@@ -1,6 +1,38 @@
-# SmartBoxing �
+# SmartBoxing 🥊
 
 Sistema de gestión de boxes y citas médicas con arquitectura serverless en AWS.
+
+---
+
+## 🐦 Estado del Canary Deployment
+
+**🚧 EN DESARROLLO - Rama: `milan`**
+
+### ✅ Completado (Fase 1-2)
+
+- ✅ **Infraestructura CodeDeploy:** Application, Service Role, Deployment Group
+- ✅ **CloudWatch Alarms:** Error Rate, Latency (p99), Throttle Rate
+- ✅ **SNS Topic:** Notificaciones de alertas configuradas
+- ✅ **Lambda Hooks:** Pre-traffic y Post-traffic hooks implementados
+- ✅ **Permisos IAM:** CodeDeploy puede gestionar Lambda aliases y versiones
+- ✅ **Funciones Críticas:** 11 funciones configuradas con canary deployment
+  - Boxes: `listBoxes`, `getBox`, `createBox`
+  - Staff: `listStaff`, `createStaffMember`
+  - Appointments: `listAppointments`, `getAppointment`, `createAppointment`
+  - Patients: `listPatients`
+  - Settings: `getClientSettings`
+  - Analytics: `getDashboard`
+
+### 🔄 Próximos Pasos (Fase 3)
+
+- ⏳ Crear script de monitoreo (`scripts/canary-monitor.mjs`)
+- ⏳ Modificar GitHub Actions workflow (dev normal / prod canary)
+- ⏳ Testing completo del canary deployment
+- ⏳ Documentación de evidencia académica
+
+### 📋 Ver Plan Completo
+
+Consulta `docs/CANARY_DEPLOYMENT_PLAN.md` para el plan detallado paso a paso.
 
 ---
 
