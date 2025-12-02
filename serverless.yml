@@ -103,6 +103,18 @@ provider:
             - lambda:InvokeFunction
           Resource:
             - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-*"
+        # Permisos para Canary Deployment (CodeDeploy)
+        - Effect: Allow
+          Action:
+            - lambda:PublishVersion
+            - lambda:CreateAlias
+            - lambda:UpdateAlias
+            - lambda:GetAlias
+            - lambda:DeleteAlias
+            - codedeploy:*
+          Resource:
+            - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-*"
+            - !Sub "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:*"
   
   # 🔒 VPC Configuration - DESHABILITADO (performance issues)
   # TODO: Investigar Hyperplane ENI setup time en producción
@@ -398,6 +410,21 @@ functions:
           path: /analytics/dashboard
           method: get
           authorizer: cognitoJwt
+
+  # ========== DEPLOYMENT HOOKS (CANARY) ==========
+  preTrafficHook:
+    handler: backend/src/handlers/deployment/pre-traffic-hook.main
+    timeout: 30
+    environment:
+      AWS_REGION: ${self:provider.region}
+    # NO tiene events HTTP, solo se ejecuta por CodeDeploy
+  
+  postTrafficHook:
+    handler: backend/src/handlers/deployment/post-traffic-hook.main
+    timeout: 30
+    environment:
+      AWS_REGION: ${self:provider.region}
+    # NO tiene events HTTP, solo se ejecuta por CodeDeploy
 
 resources:
   Resources:
@@ -975,6 +1002,119 @@ resources:
         Tags:
           - Key: Name
             Value: ${self:service}-flow-logs-${sls:stage}
+
+    # ════════════════════════════════════════════════════════════════
+    # 🐦 CANARY DEPLOYMENT - AWS CODEDEPLOY
+    # ════════════════════════════════════════════════════════════════
+    
+    # CodeDeploy Application
+    CodeDeployApplication:
+      Type: AWS::CodeDeploy::Application
+      Properties:
+        ApplicationName: ${self:service}-${sls:stage}
+        ComputePlatform: Lambda
+    
+    # IAM Role para CodeDeploy
+    CodeDeployServiceRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: ${self:service}-${sls:stage}-codedeploy-role
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: codedeploy.amazonaws.com
+              Action: sts:AssumeRole
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AWSCodeDeployRoleForLambda
+        Policies:
+          - PolicyName: CodeDeployLambdaPolicy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - lambda:InvokeFunction
+                    - lambda:UpdateAlias
+                    - lambda:GetAlias
+                    - lambda:GetProvisionedConcurrencyConfig
+                  Resource:
+                    - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-*"
+                - Effect: Allow
+                  Action:
+                    - cloudwatch:DescribeAlarms
+                  Resource: '*'
+    
+    # SNS Topic para notificaciones de canary
+    CanaryAlertTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: ${self:service}-${sls:stage}-canary-alerts
+        DisplayName: SmartBoxing Canary Deployment Alerts
+        Subscriptions:
+          - Endpoint: milan.munoz@udd.cl
+            Protocol: email
+    
+    # CloudWatch Alarm: Error Rate > 5%
+    CanaryErrorAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ${self:service}-${sls:stage}-canary-errors
+        AlarmDescription: Canary deployment error rate is too high
+        MetricName: Errors
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: 60
+        EvaluationPeriods: 2
+        Threshold: 5
+        ComparisonOperator: GreaterThanThreshold
+        TreatMissingData: notBreaching
+        ActionsEnabled: true
+        AlarmActions:
+          - !Ref CanaryAlertTopic
+        Dimensions:
+          - Name: FunctionName
+            Value: ${self:service}-${sls:stage}-listBoxes
+    
+    # CloudWatch Alarm: Latency p99 > 2000ms
+    CanaryLatencyAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ${self:service}-${sls:stage}-canary-latency
+        AlarmDescription: Canary deployment latency is too high
+        MetricName: Duration
+        Namespace: AWS/Lambda
+        ExtendedStatistic: p99
+        Period: 60
+        EvaluationPeriods: 2
+        Threshold: 2000
+        ComparisonOperator: GreaterThanThreshold
+        TreatMissingData: notBreaching
+        ActionsEnabled: true
+        AlarmActions:
+          - !Ref CanaryAlertTopic
+        Dimensions:
+          - Name: FunctionName
+            Value: ${self:service}-${sls:stage}-listBoxes
+    
+    # CloudWatch Alarm: Throttle Rate > 1%
+    CanaryThrottleAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ${self:service}-${sls:stage}-canary-throttles
+        AlarmDescription: Canary deployment throttle rate is too high
+        MetricName: Throttles
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: 60
+        EvaluationPeriods: 2
+        Threshold: 5
+        ComparisonOperator: GreaterThanThreshold
+        TreatMissingData: notBreaching
+        ActionsEnabled: true
+        AlarmActions:
+          - !Ref CanaryAlertTopic
 
   # ════════════════════════════════════════════════════════════════
   # OUTPUTS
