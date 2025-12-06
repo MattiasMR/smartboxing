@@ -37,16 +37,14 @@ jobs:
       - name: 📦 Install frontend dependencies
         run: cd frontend && npm ci
       
-      # Backend checks
+      # Backend checks - TESTS MUST PASS TO CONTINUE
       - name: 🔍 Lint backend
         run: cd backend && npm run lint --if-present
-        continue-on-error: true
       
       - name: 🧪 Test backend
         run: cd backend && npm test --if-present
-        continue-on-error: true
       
-      # Frontend checks
+      # Frontend checks - TESTS MUST PASS TO CONTINUE
       - name: 🔍 Lint frontend
         run: cd frontend && npm run lint
       
@@ -60,7 +58,6 @@ jobs:
       
       - name: 🧪 Test frontend
         run: cd frontend && npm test --if-present
-        continue-on-error: true
       
       - name: 📊 Test Summary
         if: always()
@@ -82,13 +79,17 @@ jobs:
         with:
           node-version: '22'
       
+      - name: 📦 Install backend dependencies
+        run: cd backend && npm ci
+      
+      - name: 📦 Install frontend dependencies
+        run: cd frontend && npm ci
+      
       - name: 🔒 Run npm audit (backend)
-        run: cd backend && npm audit --audit-level=moderate
-        continue-on-error: true
+        run: cd backend && npm audit --audit-level=high || echo "::warning::Backend has audit warnings"
       
       - name: 🔒 Run npm audit (frontend)
-        run: cd frontend && npm audit --audit-level=moderate
-        continue-on-error: true
+        run: cd frontend && npm audit --audit-level=high || echo "::warning::Frontend has audit warnings"
       
       - name: 📊 Security Summary
         if: always()

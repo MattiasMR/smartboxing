@@ -11,6 +11,18 @@ plugins:
 
 # Configuración de plugins
 custom:
+  # Orígenes CORS permitidos por stage
+  allowedOrigins:
+    dev: '*'
+    staging: '*'
+    prod: !Sub 'https://${CloudFrontDistribution.DomainName}'
+  
+  # Nivel de log por stage
+  logLevel:
+    dev: 'DEBUG'
+    staging: 'INFO'
+    prod: 'INFO'
+  
   # Sync de archivos frontend a S3 (sin ACL, usar bucket policy)
   s3Sync:
     - bucketName: ${self:service}-frontend-${sls:stage}-v3
@@ -138,14 +150,25 @@ provider:
 
   # Variables de entorno para todas las funciones
   environment:
+    # Configuración de tablas DynamoDB
     T_BOXES: ${self:service}-Boxes-${sls:stage}
     T_STAFF: ${self:service}-Staff-${sls:stage}
     T_APPOINTMENTS: ${self:service}-Appointments-${sls:stage}
     T_PATIENTS: ${self:service}-Patients-${sls:stage}
     T_CLIENT_SETTINGS: ${self:service}-ClientSettings-${sls:stage}
     T_USER_SETTINGS: ${self:service}-UserSettings-${sls:stage}
+    # Cognito
     USER_POOL_ID: !Ref CognitoUserPool
     USER_POOL_CLIENT_ID: !Ref CognitoUserPoolClient
+    # Entorno y versión
+    STAGE: ${sls:stage}
+    APP_VERSION: ${env:APP_VERSION, '1.0.0'}
+    # CORS - En producción, restringir a CloudFront URL
+    ALLOWED_ORIGINS: ${self:custom.allowedOrigins.${sls:stage}, '*'}
+    # Observabilidad
+    LOG_LEVEL: ${self:custom.logLevel.${sls:stage}, 'DEBUG'}
+    # Chaos Engineering - Deshabilitado por defecto
+    CHAOS_ENABLED: 'false'
 
 build:
   esbuild:

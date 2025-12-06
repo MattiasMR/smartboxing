@@ -1,0 +1,257 @@
+name: 🌪️ Chaos Engineering Tests
+
+on:
+  # Manual trigger para ejecutar experimentos de chaos
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to run chaos tests'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+      error_rate:
+        description: 'Error injection rate (0.0 - 0.3)'
+        required: true
+        default: '0.1'
+        type: string
+      latency_rate:
+        description: 'Latency injection rate (0.0 - 0.3)'
+        required: true
+        default: '0.1'
+        type: string
+      duration_minutes:
+        description: 'Test duration in minutes'
+        required: true
+        default: '5'
+        type: string
+  
+  # También se puede ejecutar como parte del pipeline de staging
+  push:
+    branches:
+      - develop
+    paths:
+      - 'backend/src/lib/chaos.js'
+      - '.github/workflows/chaos-tests.yml'
+
+env:
+  NODE_VERSION: '22'
+  AWS_REGION: 'us-east-1'
+
+jobs:
+  # Job 1: Validar configuración de chaos
+  validate-chaos-config:
+    name: 🔍 Validate Chaos Configuration
+    runs-on: ubuntu-latest
+    outputs:
+      can_run: ${{ steps.validate.outputs.can_run }}
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: 📦 Install backend dependencies
+        run: cd backend && npm ci
+      
+      - name: 🧪 Run Chaos Unit Tests
+        run: cd backend && npm test -- --testPathPattern=chaos
+      
+      - name: ✅ Validate Configuration
+        id: validate
+        run: |
+          ERROR_RATE="${{ github.event.inputs.error_rate || '0.1' }}"
+          LATENCY_RATE="${{ github.event.inputs.latency_rate || '0.1' }}"
+          
+          # Validar que los rates estén en rango seguro
+          if (( $(echo "$ERROR_RATE > 0.3" | bc -l) )); then
+            echo "❌ Error rate too high for safety ($ERROR_RATE > 0.3)"
+            exit 1
+          fi
+          
+          if (( $(echo "$LATENCY_RATE > 0.3" | bc -l) )); then
+            echo "❌ Latency rate too high for safety ($LATENCY_RATE > 0.3)"
+            exit 1
+          fi
+          
+          echo "✅ Chaos configuration validated"
+          echo "can_run=true" >> $GITHUB_OUTPUT
+
+  # Job 2: Ejecutar experimento de chaos
+  run-chaos-experiment:
+    name: 🌪️ Run Chaos Experiment
+    runs-on: ubuntu-latest
+    needs: validate-chaos-config
+    if: needs.validate-chaos-config.outputs.can_run == 'true'
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: 📦 Install dependencies
+        run: npm ci && cd backend && npm ci
+      
+      - name: 🔐 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: 🌪️ Enable Chaos Mode
+        id: enable-chaos
+        run: |
+          STAGE="${{ github.event.inputs.environment || 'dev' }}"
+          ERROR_RATE="${{ github.event.inputs.error_rate || '0.1' }}"
+          LATENCY_RATE="${{ github.event.inputs.latency_rate || '0.1' }}"
+          
+          echo "🔧 Enabling chaos mode on $STAGE environment"
+          echo "   Error Rate: $ERROR_RATE"
+          echo "   Latency Rate: $LATENCY_RATE"
+          
+          # Actualizar variables de entorno en Lambda via CLI
+          # Esto asume que tienes permisos para actualizar funciones Lambda
+          node scripts/chaos-toggle.mjs enable --stage=$STAGE --error-rate=$ERROR_RATE --latency-rate=$LATENCY_RATE
+          
+          echo "chaos_enabled=true" >> $GITHUB_OUTPUT
+        env:
+          AWS_REGION: ${{ env.AWS_REGION }}
+      
+      - name: ⏱️ Run Load Test During Chaos
+        run: |
+          DURATION="${{ github.event.inputs.duration_minutes || '5' }}"
+          STAGE="${{ github.event.inputs.environment || 'dev' }}"
+          
+          echo "🧪 Running load test for $DURATION minutes..."
+          
+          # Obtener URL del API
+          STACK_NAME="smartboxing-$STAGE"
+          API_URL=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" --output text 2>/dev/null || echo "")
+          
+          if [ -z "$API_URL" ]; then
+            echo "⚠️ Could not get API URL, using placeholder"
+            API_URL="https://placeholder.execute-api.$AWS_REGION.amazonaws.com"
+          fi
+          
+          echo "API URL: $API_URL"
+          
+          # Ejecutar requests de prueba
+          START_TIME=$(date +%s)
+          END_TIME=$((START_TIME + DURATION * 60))
+          SUCCESS=0
+          FAILURES=0
+          TOTAL=0
+          
+          while [ $(date +%s) -lt $END_TIME ]; do
+            RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/health" --max-time 10 || echo "000")
+            TOTAL=$((TOTAL + 1))
+            
+            if [ "$RESPONSE" = "200" ]; then
+              SUCCESS=$((SUCCESS + 1))
+            else
+              FAILURES=$((FAILURES + 1))
+            fi
+            
+            # Esperar entre requests
+            sleep 2
+          done
+          
+          # Calcular métricas
+          ERROR_RATE=$(echo "scale=4; $FAILURES / $TOTAL" | bc)
+          SUCCESS_RATE=$(echo "scale=4; $SUCCESS / $TOTAL" | bc)
+          
+          echo ""
+          echo "📊 Chaos Experiment Results:"
+          echo "   Total Requests: $TOTAL"
+          echo "   Successful: $SUCCESS"
+          echo "   Failed: $FAILURES"
+          echo "   Error Rate: $ERROR_RATE"
+          echo "   Success Rate: $SUCCESS_RATE"
+          
+          # Guardar métricas para el reporte
+          echo "TOTAL_REQUESTS=$TOTAL" >> $GITHUB_ENV
+          echo "SUCCESS_COUNT=$SUCCESS" >> $GITHUB_ENV
+          echo "FAILURE_COUNT=$FAILURES" >> $GITHUB_ENV
+          echo "ERROR_RATE=$ERROR_RATE" >> $GITHUB_ENV
+      
+      - name: 🔧 Disable Chaos Mode
+        if: always()
+        run: |
+          STAGE="${{ github.event.inputs.environment || 'dev' }}"
+          
+          echo "🔧 Disabling chaos mode on $STAGE environment"
+          node scripts/chaos-toggle.mjs disable --stage=$STAGE || true
+      
+      - name: 📊 Evaluate SLOs
+        id: evaluate-slos
+        run: |
+          ERROR_RATE="${{ env.ERROR_RATE }}"
+          
+          # SLO: Error budget debe ser < 1%
+          SLO_ERROR_TARGET="0.01"
+          
+          if (( $(echo "$ERROR_RATE > $SLO_ERROR_TARGET" | bc -l) )); then
+            echo "❌ SLO VIOLATION: Error rate ($ERROR_RATE) exceeds target ($SLO_ERROR_TARGET)"
+            echo "slo_passed=false" >> $GITHUB_OUTPUT
+          else
+            echo "✅ SLO MET: Error rate ($ERROR_RATE) within target ($SLO_ERROR_TARGET)"
+            echo "slo_passed=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: 📊 Generate Report
+        if: always()
+        run: |
+          echo "## 🌪️ Chaos Engineering Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Configuration" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** ${{ github.event.inputs.environment || 'dev' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Error Rate:** ${{ github.event.inputs.error_rate || '0.1' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Latency Rate:** ${{ github.event.inputs.latency_rate || '0.1' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Duration:** ${{ github.event.inputs.duration_minutes || '5' }} minutes" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Results" >> $GITHUB_STEP_SUMMARY
+          echo "- **Total Requests:** ${{ env.TOTAL_REQUESTS }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Successful:** ${{ env.SUCCESS_COUNT }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Failed:** ${{ env.FAILURE_COUNT }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Observed Error Rate:** ${{ env.ERROR_RATE }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### SLO Evaluation" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.evaluate-slos.outputs.slo_passed }}" = "true" ]; then
+            echo "✅ **All SLOs met** - System is resilient" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **SLO violation detected** - Remediation needed" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: ❌ Fail if SLOs violated
+        if: steps.evaluate-slos.outputs.slo_passed == 'false'
+        run: |
+          echo "❌ Chaos experiment revealed SLO violations"
+          exit 1
+
+  # Job 3: Notificar resultados
+  notify:
+    name: 📢 Notify Results
+    runs-on: ubuntu-latest
+    needs: [run-chaos-experiment]
+    if: always()
+    
+    steps:
+      - name: 📢 Report Status
+        run: |
+          if [ "${{ needs.run-chaos-experiment.result }}" = "success" ]; then
+            echo "✅ Chaos experiment completed successfully - System is resilient!"
+          else
+            echo "⚠️ Chaos experiment revealed issues - Review needed"
+          fi
