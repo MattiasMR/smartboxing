@@ -196,6 +196,49 @@ El canary deployment se revierte automáticamente si se disparan estas alarmas:
 
 Las alertas se envían a: **milan.munoz@udd.cl** vía SNS.
 
+### Testing del Canary Deployment
+
+Valida el canary deployment con el script de testing:
+
+```bash
+# Test de rollback con simulación de errores
+node scripts/test-canary-rollback.mjs \
+  --scenario=errors \
+  --function=listBoxes \
+  --stage=prod \
+  --iterations=10
+
+# Test de rollback con simulación de latencia alta
+node scripts/test-canary-rollback.mjs \
+  --scenario=latency \
+  --function=getBox \
+  --stage=prod \
+  --iterations=15
+
+# Test de rollback con simulación de throttles
+node scripts/test-canary-rollback.mjs \
+  --scenario=throttle \
+  --function=createBox \
+  --stage=prod \
+  --iterations=20
+
+# Ver ayuda y opciones
+node scripts/test-canary-rollback.mjs --help
+```
+
+**Escenarios de Testing:**
+- **errors:** Simula >5 errores/2min para disparar CanaryErrorAlarm
+- **latency:** Simula latencia p99 >2000ms para disparar CanaryLatencyAlarm
+- **throttle:** Simula >5 throttles/2min para disparar CanaryThrottleAlarm
+
+El script activa chaos mode, ejecuta invocaciones, valida alarmas, y desactiva chaos mode automáticamente.
+
+📖 **Documentación Completa:**
+- Testing Guide: `docs/TESTING_GUIDE.md`
+- Evidencia Académica: `docs/EVIDENCIA_CANARY.md`
+- Plan de Implementación: `docs/CANARY_DEPLOYMENT_PLAN.md`
+- Estado Actual: `docs/estadoCanario.md`
+
 ---
 
 ### Desarrollo Local
@@ -256,9 +299,23 @@ sls invoke local -f health
 ### Testing
 
 - **Unit Tests:** Vitest
+- **Integration Tests:** Canary deployment with rollback validation
 - **Security:** OWASP ZAP, npm audit, Gitleaks
 - **Accessibility:** axe-core, jest-axe, Lighthouse CI, Pa11y
+- **Chaos Engineering:** Fault injection with `test-canary-rollback.mjs`
 - **Coverage:** ~78% OWASP Top 10, ~75% WCAG 2.1 AA
+
+**Canary Testing Commands:**
+```bash
+# Run unit tests
+npm test
+
+# Test canary rollback (requires AWS credentials)
+node scripts/test-canary-rollback.mjs --scenario=errors --function=listBoxes --stage=prod
+
+# Monitor active canary deployment
+node scripts/canary-monitor.mjs --stage=prod
+```
 
 ---
 
