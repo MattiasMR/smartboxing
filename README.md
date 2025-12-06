@@ -4,38 +4,6 @@ Sistema de gestión de boxes y citas médicas con arquitectura serverless en AWS
 
 ---
 
-## 🐦 Estado del Canary Deployment
-
-**🚧 EN DESARROLLO - Rama: `milan`**
-
-### ✅ Completado (Fase 1-2)
-
-- ✅ **Infraestructura CodeDeploy:** Application, Service Role, Deployment Group
-- ✅ **CloudWatch Alarms:** Error Rate, Latency (p99), Throttle Rate
-- ✅ **SNS Topic:** Notificaciones de alertas configuradas
-- ✅ **Lambda Hooks:** Pre-traffic y Post-traffic hooks implementados
-- ✅ **Permisos IAM:** CodeDeploy puede gestionar Lambda aliases y versiones
-- ✅ **Funciones Críticas:** 11 funciones configuradas con canary deployment
-  - Boxes: `listBoxes`, `getBox`, `createBox`
-  - Staff: `listStaff`, `createStaffMember`
-  - Appointments: `listAppointments`, `getAppointment`, `createAppointment`
-  - Patients: `listPatients`
-  - Settings: `getClientSettings`
-  - Analytics: `getDashboard`
-
-### 🔄 Próximos Pasos (Fase 3)
-
-- ⏳ Crear script de monitoreo (`scripts/canary-monitor.mjs`)
-- ⏳ Modificar GitHub Actions workflow (dev normal / prod canary)
-- ⏳ Testing completo del canary deployment
-- ⏳ Documentación de evidencia académica
-
-### 📋 Ver Plan Completo
-
-Consulta `docs/CANARY_DEPLOYMENT_PLAN.md` para el plan detallado paso a paso.
-
----
-
 ## 🚀 Quick Start
 
 ### Prerequisitos
@@ -145,6 +113,91 @@ aws s3 rb s3://smartboxing-deployment-dev-384722508633 --force
 - Logs de CloudWatch (estos se borran después de 30 días)
 - Buckets S3 con contenido (hay que vaciarlos primero)
 
+---
+
+## 🐤 CI/CD y Canary Deployment
+
+### Estrategia Dual de Deployment
+
+SmartBoxing utiliza una estrategia dual para deployments seguros y controlados:
+
+#### 1. **Development (Automático)**
+- **Trigger:** Push a la rama `main`
+- **Tipo:** Deployment normal (sin canary)
+- **Duración:** ~5-8 minutos
+- **Propósito:** Testing rápido de nuevas features
+
+```bash
+# Hacer push a main dispara el deploy automático a dev
+git push origin main
+```
+
+#### 2. **Production (Manual con Canary)**
+- **Trigger:** Manual via GitHub Actions
+- **Tipo:** Canary deployment progresivo
+- **Configuración:** 10% → 50% → 100%
+- **Timeline:** 10% (5min) → 50% (10min) → 100% (5min)
+- **Duración total:** ~20-25 minutos
+- **Rollback:** Automático si falla CloudWatch Alarms
+
+**Cómo ejecutar deploy canary a producción:**
+
+1. Ir a **Actions** en GitHub
+2. Seleccionar workflow **"🚀 Deploy SmartBoxing"**
+3. Click en **"Run workflow"**
+4. Seleccionar `stage: prod`
+5. Aprobar deployment (requiere aprobación manual)
+6. Monitorear progreso del canary
+
+### Monitoreo del Canary Deployment
+
+El script `canary-monitor.mjs` permite monitorear en tiempo real:
+
+```bash
+# Monitorear deployment en producción (timeout 20min)
+node scripts/canary-monitor.mjs --stage=prod --timeout=20
+
+# Monitorear deployment en desarrollo (si se configura)
+node scripts/canary-monitor.mjs --stage=dev
+
+# Ver opciones disponibles
+node scripts/canary-monitor.mjs --help
+```
+
+**Output del monitoring:**
+- ✅ Estado del deployment (InProgress, Succeeded, Failed)
+- 📊 Métricas de CloudWatch (errores, latencia, throttles)
+- 🕐 Timeline y progreso (10% → 50% → 100%)
+- ⚠️ Alertas en tiempo real
+- 🔄 Detección automática de rollback
+
+### Funciones con Canary Deployment
+
+Las siguientes 11 funciones críticas usan canary deployment en producción:
+
+| Categoría | Funciones |
+|-----------|-----------|
+| **Boxes** | `listBoxes`, `getBox`, `createBox` |
+| **Staff** | `listStaff`, `createStaffMember` |
+| **Appointments** | `listAppointments`, `getAppointment`, `createAppointment` |
+| **Patients** | `listPatients` |
+| **Settings** | `getClientSettings` |
+| **Analytics** | `getDashboard` |
+
+**Nota:** Operaciones de actualización y eliminación NO usan canary para evitar inconsistencias de datos.
+
+### CloudWatch Alarms (Rollback Automático)
+
+El canary deployment se revierte automáticamente si se disparan estas alarmas:
+
+- **CanaryErrorAlarm:** >5 errores en 2 minutos
+- **CanaryLatencyAlarm:** P99 latency >2000ms
+- **CanaryThrottleAlarm:** >5 throttles en 2 minutos
+
+Las alertas se envían a: **milan.munoz@udd.cl** vía SNS.
+
+---
+
 ### Desarrollo Local
 
 ```bash
@@ -187,7 +240,14 @@ sls invoke local -f health
 
 ### DevOps
 
-- **CI/CD:** GitHub Actions (3 workflows: deploy, security, accessibility)
+- **CI/CD:** GitHub Actions (dual deployment strategy)
+  - **Development:** Normal deployment on push to `main`
+  - **Production:** Canary deployment with manual trigger (10% → 50% → 100%)
+- **Canary Deployment:** AWS CodeDeploy with automatic rollback
+  - CloudWatch Alarms: Error rate, latency (p99), throttle rate
+  - Pre/Post-traffic Lambda hooks for validation
+  - Real-time monitoring with `scripts/canary-monitor.mjs`
+  - 11 critical functions with progressive deployment
 - **IaC:** CloudFormation (via Serverless)
 - **Hosting:** S3 + CloudFront
 - **Logs:** CloudWatch
