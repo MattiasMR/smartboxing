@@ -11,8 +11,8 @@ import { BrowserRouter } from 'react-router-dom';
 // Extend expect with jest-axe matchers
 expect.extend(toHaveNoViolations);
 
-// Helper to wrap components with Router
-const renderWithRouter = (component) => {
+// Helper to wrap components with Router (prefixed with _ to indicate intentionally unused)
+const _renderWithRouter = (component) => {
   return render(
     <BrowserRouter>
       {component}

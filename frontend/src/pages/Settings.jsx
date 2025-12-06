@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   getClientSettings, 
   updateClientSettings,
@@ -155,11 +155,7 @@ export default function SettingsProfessionalNew() {
   const [previewLogo, setPreviewLogo] = useState('');
   const [selectedThemeId, setSelectedThemeId] = useState(() => detectThemePreset(DEFAULT_CLIENT_SETTINGS.theme));
 
-  useEffect(() => {
-    loadSettings();
-  }, []);
-
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     try {
       setLoading(true);
       const [client, user] = await Promise.all([
@@ -198,7 +194,11 @@ export default function SettingsProfessionalNew() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
   const showMessage = (type, text) => {
     setMessage({ type, text });

@@ -112,8 +112,9 @@ export const signIn = (email, password) => {
         console.error('Authentication error:', err);
         reject(err);
       },
-      newPasswordRequired: (userAttributes, requiredAttributes) => {
+      newPasswordRequired: () => {
         // Handle new password required
+        // userAttributes and requiredAttributes intentionally not used
         console.log('New password required');
         reject(new Error('NEW_PASSWORD_REQUIRED'));
       },
