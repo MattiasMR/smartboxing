@@ -2,13 +2,13 @@ import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { handler } from '../../lib/http.js';
 import { randomUUID } from 'crypto';
+import { getRequiredTenantId } from '../../lib/auth.js';
 
 const s3Client = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
 
 // Generar presigned URL para upload directo desde frontend
 export const main = handler(async (event) => {
-  const claims = event.requestContext?.authorizer?.jwt?.claims ?? {};
-  const tenantId = claims['custom:tenantId'] ?? 'TENANT#demo';
+  const tenantId = getRequiredTenantId(event);
   
   const { fileName, fileType } = JSON.parse(event.body || '{}');
   

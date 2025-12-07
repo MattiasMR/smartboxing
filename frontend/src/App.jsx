@@ -33,9 +33,14 @@ import TenantForm from './pages/admin/TenantForm.jsx';
 import UsersList from './pages/admin/UsersList.jsx';
 import UserForm from './pages/admin/UserForm.jsx';
 
+// Tenancy pages
+import MyTenancies from './pages/tenancy/MyTenancies.jsx';
+import RequestTenancy from './pages/tenancy/RequestTenancy.jsx';
+import TenancyRequestsList from './pages/tenancy/TenancyRequestsList.jsx';
+
 const qc = new QueryClient();
 
-// Componente para redirigir root según autenticación
+// Componente para redirigir root según autenticación y rol
 function RootRedirect() {
   const { user, loading } = useAuth();
 
@@ -45,7 +50,22 @@ function RootRedirect() {
     </div>;
   }
 
-  return user ? <Navigate to="/dashboard" replace /> : <LandingPage />;
+  if (!user) {
+    return <LandingPage />;
+  }
+
+  // Super admin sin tenencia activa → Panel Admin
+  if (user.role === 'super_admin' && !user.tenantId) {
+    return <Navigate to="/admin/tenants" replace />;
+  }
+
+  // Usuario con tenencia → Dashboard
+  if (user.tenantId) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // Usuario sin tenencia → Mis Tenencias
+  return <Navigate to="/account/tenancies" replace />;
 }
 
 function AppContent() {
@@ -64,8 +84,8 @@ function AppContent() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
 
-        {/* Rutas protegidas con Layout */}
-        <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+        {/* Rutas protegidas con Layout - requieren tenant activo */}
+        <Route element={<ProtectedRoute requireTenant><MainLayout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<Dashboard />} />
           
           <Route path="/boxes" element={<BoxesList />} />
@@ -84,6 +104,12 @@ function AppContent() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/seed" element={<SeedPage />} />
         </Route>
+        
+        {/* Account routes - no requieren tenant */}
+        <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+          <Route path="/account/tenancies" element={<MyTenancies />} />
+          <Route path="/account/request-tenancy" element={<RequestTenancy />} />
+        </Route>
 
         {/* Admin routes - require tenant_admin or super_admin */}
         <Route element={<AdminRoute><AdminLayout /></AdminRoute>}>
@@ -91,6 +117,9 @@ function AppContent() {
           <Route path="/admin/tenants" element={<AdminRoute requireSuperAdmin><TenantsList /></AdminRoute>} />
           <Route path="/admin/tenants/new" element={<AdminRoute requireSuperAdmin><TenantForm /></AdminRoute>} />
           <Route path="/admin/tenants/:id/edit" element={<AdminRoute requireSuperAdmin><TenantForm /></AdminRoute>} />
+          
+          {/* Tenancy Requests - super_admin only */}
+          <Route path="/admin/tenancy-requests" element={<AdminRoute requireSuperAdmin><TenancyRequestsList /></AdminRoute>} />
           
           {/* Users - tenant_admin or super_admin */}
           <Route path="/admin/users" element={<UsersList />} />

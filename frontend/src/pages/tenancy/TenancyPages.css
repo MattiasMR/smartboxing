@@ -1,0 +1,513 @@
+/* TenancyPages.css - Styles for tenancy management pages */
+
+/* Page Layout */
+.tenancy-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.tenancy-page-header {
+  margin-bottom: 2rem;
+}
+
+.tenancy-back-link {
+  display: inline-block;
+  color: var(--text-secondary, #64748b);
+  text-decoration: none;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  transition: color 0.2s;
+}
+
+.tenancy-back-link:hover {
+  color: var(--primary-color, #3b82f6);
+}
+
+.tenancy-page-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary, #1a202c);
+  margin: 0 0 0.5rem 0;
+}
+
+.tenancy-page-subtitle {
+  color: var(--text-secondary, #64748b);
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Loading & Alerts */
+.tenancy-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: var(--text-secondary, #64748b);
+}
+
+.tenancy-success-alert {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+}
+
+.tenancy-error-alert {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+/* Card */
+.tenancy-card {
+  background: var(--bg-primary, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Sections */
+.tenancy-section {
+  margin-bottom: 2.5rem;
+}
+
+.tenancy-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.tenancy-section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary, #1a202c);
+  margin: 0;
+}
+
+/* Grid for tenant cards */
+.tenancy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Tenant Card */
+.tenancy-tenant-card {
+  position: relative;
+  text-align: center;
+  padding: 2rem 1.5rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.tenancy-tenant-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.tenancy-tenant-active {
+  border-color: var(--primary-color, #3b82f6);
+  background: linear-gradient(to bottom, rgba(59, 130, 246, 0.05), transparent);
+}
+
+.tenancy-active-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: var(--primary-color, #3b82f6);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+}
+
+.tenancy-tenant-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.tenancy-tenant-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary, #1a202c);
+  margin: 0 0 0.5rem 0;
+}
+
+.tenancy-tenant-role {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #64748b);
+  margin-bottom: 1rem;
+}
+
+/* Empty State */
+.tenancy-empty-state {
+  text-align: center;
+  padding: 2rem;
+}
+
+.tenancy-empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.tenancy-empty-state h3 {
+  font-size: 1.125rem;
+  color: var(--text-primary, #1a202c);
+  margin: 0 0 0.5rem 0;
+}
+
+.tenancy-empty-state p {
+  color: var(--text-secondary, #64748b);
+  margin: 0;
+}
+
+.tenancy-no-requests {
+  color: var(--text-secondary, #64748b);
+  text-align: center;
+  padding: 1rem;
+  margin: 0;
+}
+
+.tenancy-no-requests a {
+  color: var(--primary-color, #3b82f6);
+  text-decoration: none;
+}
+
+.tenancy-no-requests a:hover {
+  text-decoration: underline;
+}
+
+/* Table */
+.tenancy-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.tenancy-table th,
+.tenancy-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+
+.tenancy-table th {
+  font-weight: 600;
+  color: var(--text-secondary, #64748b);
+  background: var(--bg-secondary, #f8fafc);
+}
+
+.tenancy-slug {
+  background: var(--bg-secondary, #f1f5f9);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #64748b);
+}
+
+/* Badges */
+.tenancy-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.tenancy-badge-warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.tenancy-badge-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.tenancy-badge-danger {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+/* Buttons */
+.tenancy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.tenancy-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.tenancy-btn-primary {
+  background: var(--primary-color, #3b82f6);
+  color: white;
+}
+
+.tenancy-btn-primary:hover:not(:disabled) {
+  background: var(--primary-hover, #2563eb);
+}
+
+.tenancy-btn-secondary {
+  background: var(--bg-secondary, #f1f5f9);
+  color: var(--text-primary, #1a202c);
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.tenancy-btn-secondary:hover:not(:disabled) {
+  background: var(--bg-hover, #e2e8f0);
+}
+
+.tenancy-btn-full {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+/* Form */
+.tenancy-form {
+  max-width: 600px;
+}
+
+.tenancy-form-group {
+  margin-bottom: 1.25rem;
+}
+
+.tenancy-form-group label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary, #1a202c);
+  margin-bottom: 0.5rem;
+}
+
+.tenancy-form-group input,
+.tenancy-form-group textarea,
+.tenancy-form-group select {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  background: var(--bg-primary, #ffffff);
+  color: var(--text-primary, #1a202c);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.tenancy-form-group input:focus,
+.tenancy-form-group textarea:focus,
+.tenancy-form-group select:focus {
+  outline: none;
+  border-color: var(--primary-color, #3b82f6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.tenancy-form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.tenancy-form-help {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #64748b);
+}
+
+.tenancy-form-error {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: #dc2626;
+}
+
+.tenancy-form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color, #e2e8f0);
+}
+
+/* Select */
+.tenancy-select {
+  padding: 0.5rem 2rem 0.5rem 0.75rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  background: var(--bg-primary, #ffffff);
+  color: var(--text-primary, #1a202c);
+  cursor: pointer;
+  min-width: 180px;
+}
+
+/* Pending Notice */
+.tenancy-pending-notice {
+  text-align: center;
+  padding: 2rem;
+}
+
+.tenancy-pending-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.tenancy-pending-notice h2 {
+  font-size: 1.5rem;
+  color: var(--text-primary, #1a202c);
+  margin: 0 0 1rem 0;
+}
+
+.tenancy-pending-notice p {
+  color: var(--text-secondary, #64748b);
+  margin: 0 0 0.5rem 0;
+}
+
+.tenancy-pending-date {
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem !important;
+}
+
+/* Review Modal */
+.tenancy-review-modal {
+  max-width: 500px;
+}
+
+.tenancy-review-details {
+  background: var(--bg-secondary, #f8fafc);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.tenancy-review-details p {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+}
+
+.tenancy-review-details p:last-child {
+  margin-bottom: 0;
+}
+
+.tenancy-review-confirm {
+  margin-bottom: 1rem;
+}
+
+.tenancy-review-confirm p {
+  font-weight: 500;
+  margin: 0 0 0.5rem 0;
+}
+
+.tenancy-review-confirm ul {
+  margin: 0;
+  padding-left: 1.5rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary, #64748b);
+}
+
+.tenancy-review-confirm li {
+  margin-bottom: 0.25rem;
+}
+
+.tenancy-description-preview {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #64748b);
+  margin-top: 0.25rem;
+}
+
+.tenancy-reviewed-info {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #64748b);
+}
+
+/* Admin button colors */
+.admin-btn-success {
+  background: #16a34a;
+  color: white;
+}
+
+.admin-btn-success:hover {
+  background: #15803d;
+}
+
+/* Modal actions */
+.admin-modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color, #e2e8f0);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .tenancy-page {
+    padding: 1rem;
+  }
+
+  .tenancy-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .tenancy-section-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tenancy-table {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .admin-modal-actions {
+    flex-direction: column;
+  }
+}
+
+/* Enter tenancy button with spinner */
+.tenancy-btn-enter {
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.tenancy-btn-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: tenancy-spin 0.6s linear infinite;
+}
+
+@keyframes tenancy-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

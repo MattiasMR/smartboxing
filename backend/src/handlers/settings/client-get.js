@@ -1,10 +1,31 @@
 import { GetCommand } from '@aws-sdk/lib-dynamodb';
 import { handler } from '../../lib/http.js';
 import { doc } from '../../lib/db.js';
+import { getOptionalTenantId } from '../../lib/auth.js';
 
 export const main = handler(async (event) => {
-  const claims = event.requestContext?.authorizer?.jwt?.claims ?? {};
-  const tenantId = claims['custom:tenantId'] ?? 'TENANT#demo';
+  const tenantId = getOptionalTenantId(event);
+
+  // If no tenant assigned, return global defaults
+  if (!tenantId) {
+    return {
+      tenantId: null,
+      theme: {
+        primaryColor: '#3B82F6',
+        secondaryColor: '#10B981',
+        accentColor: '#F59E0B',
+        darkMode: false,
+        logoUrl: '',
+        selectedThemeId: 'corporate',
+      },
+      texts: {
+        appName: 'SmartBoxing',
+        institutionName: 'Sistema de Gestión',
+        welcomeMessage: 'Bienvenido al sistema de gestión',
+        tagline: 'Gestiona tus recursos eficientemente',
+      },
+    };
+  }
 
   const result = await doc.send(new GetCommand({
     TableName: process.env.T_CLIENT_SETTINGS,

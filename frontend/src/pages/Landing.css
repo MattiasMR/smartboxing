@@ -549,3 +549,28 @@
     padding: 2rem;
   }
 }
+
+/* Mobile login button - always visible on mobile */
+.nav-mobile-login {
+  display: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  background: linear-gradient(120deg, var(--landing-primary), var(--landing-secondary));
+  color: #fff;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.nav-mobile-login:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+}
+
+@media (max-width: 768px) {
+  .nav-mobile-login {
+    display: inline-flex;
+  }
+}

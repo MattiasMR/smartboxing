@@ -1,10 +1,10 @@
 import { UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { handler, parseBody } from '../../lib/http.js';
 import { doc } from '../../lib/db.js';
+import { getRequiredTenantId } from '../../lib/auth.js';
 
 export const main = handler(async (event) => {
-  const claims = event.requestContext?.authorizer?.jwt?.claims ?? {};
-  const tenantId = claims['custom:tenantId'] ?? 'TENANT#demo';
+  const tenantId = getRequiredTenantId(event);
   const id = event.pathParameters?.id;
 
   const body = parseBody(event);

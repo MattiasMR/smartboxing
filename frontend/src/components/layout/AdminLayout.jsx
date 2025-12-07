@@ -49,7 +49,15 @@ function AdminLayout() {
                   onClick={handleCloseNav}
                 >
                   <span className="nav-icon">🏢</span>
-                  Hospitales
+                  Tenencias
+                </NavLink>
+                <NavLink 
+                  to="/admin/tenancy-requests" 
+                  className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}
+                  onClick={handleCloseNav}
+                >
+                  <span className="nav-icon">📋</span>
+                  Solicitudes
                 </NavLink>
               </>
             )}

@@ -146,7 +146,14 @@ const generateAppointments = (count, boxIds, staffIds, tenantId) => {
 
 export const main = handler(async (event) => {
   const claims = event.requestContext?.authorizer?.jwt?.claims ?? {};
-  const tenantId = claims['custom:tenantId'] ?? 'TENANT#demo';
+  const tenantId = claims['custom:tenantId'];
+  
+  // Require tenant for seeding
+  if (!tenantId) {
+    const error = new Error('No tenant assigned. Please request a tenancy first to seed data.');
+    error.statusCode = 403;
+    throw error;
+  }
   
   const body = parseBody(event);
   const numBoxes = parseInt(body.numBoxes) || 10;

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { FaBars } from 'react-icons/fa';
 import { useAuth } from '../../auth/useAuth';
 import { logoutUrl } from '../../auth/cognito.js';
+import TenantSelector from './TenantSelector.jsx';
 import './TopHeader.css';
 
 function TopHeader({ onMenuClick, isOpen }) {
@@ -107,8 +108,9 @@ function TopHeader({ onMenuClick, isOpen }) {
           </div>
         </div>
 
-        <div className="header-right" style={{ display: 'flex', alignItems: 'center' }}>
-          <span style={{ marginRight: '10px', color: 'var(--text-primary)' }}>{user?.name || 'Usuario'}</span>
+        <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <TenantSelector />
+          <span style={{ color: 'var(--text-primary)' }}>{user?.name || 'Usuario'}</span>
           <button onClick={handleLogout} className="logout-btn">
             Log Out
           </button>

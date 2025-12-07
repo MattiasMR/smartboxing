@@ -2,20 +2,23 @@
 import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './Sidebar.css';
-import { FaTh, FaCalendarAlt, FaUsers, FaTimes, FaCog, FaChartBar, FaUserShield } from 'react-icons/fa';
+import { FaTh, FaCalendarAlt, FaUsers, FaTimes, FaCog, FaChartBar, FaUserShield, FaBuilding } from 'react-icons/fa';
 import { useAuthContext } from '../../auth/AuthContext.js';
 
-const mainNavItems = [
+// Items que requieren una tenencia activa
+const tenantNavItems = [
   { id: 'dashboard', label: 'Dashboard', icon: <FaChartBar />, path: '/dashboard' },
   { id: 'boxes', label: 'Boxes', icon: <FaTh />, path: '/boxes' },
   { id: 'staff', label: 'Staff', icon: <FaUsers />, path: '/staff' },
   { id: 'appointments', label: 'Citas', icon: <FaCalendarAlt />, path: '/appointments' },
-  { id: 'settings', label: 'Configuración', icon: <FaCog />, path: '/settings' },
 ];
 
 function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
-  const { isTenantAdmin } = useAuthContext();
+  const { isTenantAdmin, isSuperAdmin, tenantId } = useAuthContext();
+  
+  // Determinar si el usuario tiene una tenencia activa
+  const hasTenancy = !!tenantId;
 
   // Close mobile nav on any navigation
   useEffect(() => {
@@ -64,23 +67,47 @@ function Sidebar({ isOpen, onClose }) {
 
   const renderMainMenu = () => (
      <ul>
-      {mainNavItems.map(item => (
-        <li key={item.id} className={location.pathname === item.path ? 'active' : ''}>
-          <Link to={item.path} onClick={handleLinkClick}>
-            {item.icon}
-            <span className="nav-label" style={item.id === 'analyst' ? { color: 'var(--secondary-color)' } : {}}>{item.label}</span>
-          </Link>
-        </li>
-      ))}
-      
-      {/* Admin link - only visible for tenant_admin and super_admin */}
-      {isTenantAdmin() && (
+      {/* Panel Admin - first for super_admin, or visible for tenant_admin */}
+      {(isSuperAdmin() || isTenantAdmin()) && (
         <li className={location.pathname.startsWith('/admin') ? 'active admin-link' : 'admin-link'}>
-          <Link to="/admin/users" onClick={handleLinkClick}>
+          <Link to={isSuperAdmin() ? "/admin/tenants" : "/admin/users"} onClick={handleLinkClick}>
             <FaUserShield />
             <span className="nav-label">Panel Admin</span>
           </Link>
         </li>
+      )}
+      
+      {/* My Tenancies - always visible */}
+      <li className={location.pathname.startsWith('/account/tenancies') ? 'active' : ''}>
+        <Link to="/account/tenancies" onClick={handleLinkClick}>
+          <FaBuilding />
+          <span className="nav-label">Mis Tenencias</span>
+        </Link>
+      </li>
+      
+      {/* Settings - always visible */}
+      <li className={location.pathname === '/settings' ? 'active' : ''}>
+        <Link to="/settings" onClick={handleLinkClick}>
+          <FaCog />
+          <span className="nav-label">Configuración</span>
+        </Link>
+      </li>
+      
+      {/* Tenant-specific items - only show if user has an active tenancy */}
+      {hasTenancy && (
+        <>
+          <li className="nav-divider">
+            <span className="nav-divider-text">Gestión de Tenencia</span>
+          </li>
+          {tenantNavItems.map(item => (
+            <li key={item.id} className={location.pathname === item.path ? 'active' : ''}>
+              <Link to={item.path} onClick={handleLinkClick}>
+                {item.icon}
+                <span className="nav-label">{item.label}</span>
+              </Link>
+            </li>
+          ))}
+        </>
       )}
     </ul>
   );

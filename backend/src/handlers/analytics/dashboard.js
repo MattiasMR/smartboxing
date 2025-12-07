@@ -89,7 +89,16 @@ const normalizeAppointmentStatus = (status) => {
 export const main = handler(async (event) => {
   const params = event.queryStringParameters || {};
   const claims = event.requestContext?.authorizer?.jwt?.claims ?? {};
-  const tenantId = claims['custom:tenantId'] ?? 'TENANT#demo';
+  const tenantId = claims['custom:tenantId'];
+  
+  // Require tenant for dashboard
+  if (!tenantId) {
+    return {
+      statusCode: 403,
+      error: 'No tenant assigned. Please request a tenancy first.',
+      metrics: null,
+    };
+  }
   
   logger.info('Dashboard request', { tenantId, params });
   

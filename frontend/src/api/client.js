@@ -5,8 +5,10 @@ export const api = axios.create({
 });
 
 // Interceptor para agregar token a las peticiones
+// IMPORTANTE: Usamos id_token porque contiene los custom claims (role, tenantId, etc.)
+// El access_token de Cognito NO incluye custom claims
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access_token');
+  const token = localStorage.getItem('id_token');
   if (token) {
     // Verificar si el token ha expirado
     const expiresAt = localStorage.getItem('expires_at');

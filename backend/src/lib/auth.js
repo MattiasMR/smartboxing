@@ -179,3 +179,31 @@ export const getTenantIdForOperation = (event, requestedTenantId = null) => {
   
   return user.tenantId;
 };
+
+/**
+ * Extract required tenantId from JWT claims
+ * Throws 403 error if no tenantId is assigned
+ * Use this for tenant-scoped operations (boxes, staff, appointments, etc.)
+ */
+export const getRequiredTenantId = (event) => {
+  const claims = event.requestContext?.authorizer?.jwt?.claims ?? {};
+  const tenantId = claims['custom:tenantId'];
+  
+  if (!tenantId) {
+    const error = new Error('No tenant assigned. Please request a tenancy first.');
+    error.statusCode = 403;
+    throw error;
+  }
+  
+  return tenantId;
+};
+
+/**
+ * Extract optional tenantId from JWT claims
+ * Returns null if no tenantId is assigned
+ * Use this for operations that can work without a tenant (like listing user's requests)
+ */
+export const getOptionalTenantId = (event) => {
+  const claims = event.requestContext?.authorizer?.jwt?.claims ?? {};
+  return claims['custom:tenantId'] || null;
+};

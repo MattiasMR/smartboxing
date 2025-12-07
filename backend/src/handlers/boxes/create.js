@@ -2,14 +2,14 @@ import { PutCommand } from '@aws-sdk/lib-dynamodb';
 import { handler, parseBody } from '../../lib/http.js';
 import { doc } from '../../lib/db.js';
 import { CreateBoxSchema } from './schemas.js';
+import { getRequiredTenantId } from '../../lib/auth.js';
 
 export const main = handler(async (event) => {
   const body = parseBody(event);
-  const claims = event.requestContext?.authorizer?.jwt?.claims ?? {};
-  const fallbackTenant = claims['custom:tenantId'] ?? 'TENANT#demo';
+  const tenantId = getRequiredTenantId(event);
 
   const parsed = CreateBoxSchema.parse({
-    tenantId: fallbackTenant,
+    tenantId: tenantId,
     box: body.box
   });
 

@@ -108,9 +108,7 @@
 
 /* Admin link special styling */
 .sidebar li.admin-link {
-  margin-top: 1rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid var(--border-secondary);
+  margin-top: 0;
 }
 
 .sidebar li.admin-link a {
@@ -120,6 +118,21 @@
 .sidebar li.admin-link.active a {
   background-color: rgba(var(--secondary-color-rgb, 234, 179, 8), 0.1);
   color: var(--secondary-color);
+}
+
+/* Nav divider with text */
+.sidebar li.nav-divider {
+  padding: 1rem 15px 0.5rem;
+  margin-top: 0.5rem;
+  border-top: 1px solid var(--border-secondary);
+}
+
+.sidebar li.nav-divider .nav-divider-text {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary, #64748b);
 }
 
 /* --- REGLAS PARA MÓVILES --- */

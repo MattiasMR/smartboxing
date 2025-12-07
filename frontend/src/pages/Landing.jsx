@@ -35,6 +35,17 @@ export default function LandingPage() {
             <div className="nav-logo-icon">📦</div>
             <span>SmartBoxing</span>
           </a>
+          {/* Mobile login button - always visible */}
+          {!user && (
+            <Link to="/login" className="nav-mobile-login">
+              Iniciar Sesión
+            </Link>
+          )}
+          {user && (
+            <Link to="/dashboard" className="nav-mobile-login">
+              Dashboard
+            </Link>
+          )}
           <div className="nav-links">
             <a href="#features">Características</a>
             <a href="#pricing">Precios</a>

@@ -6,7 +6,23 @@ import { faker } from '@faker-js/faker';
 const client = new DynamoDBClient({});
 const doc = DynamoDBDocumentClient.from(client, { marshallOptions: { removeUndefinedValues: true } });
 
-const tenantId = process.env.SEED_TENANT ?? 'TENANT-demo';
+// REQUIRED: Must provide a valid tenant UUID
+const tenantId = process.env.SEED_TENANT;
+
+if (!tenantId) {
+  console.error('❌ Error: SEED_TENANT environment variable is required.');
+  console.error('   Please provide a valid tenant UUID (e.g., from Tenants table).');
+  console.error('   Example: SEED_TENANT=914c345c-31d4-4088-8829-872667dc0fbe npm run seed');
+  process.exit(1);
+}
+
+// Validate UUID format
+const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+if (!uuidRegex.test(tenantId)) {
+  console.error('❌ Error: SEED_TENANT must be a valid UUID.');
+  console.error(`   Got: ${tenantId}`);
+  process.exit(1);
+}
 
 // Cantidad de registros a crear (modificable vía env vars)
 const NUM_BOXES = parseInt(process.env.NUM_BOXES || '10', 10);

@@ -111,7 +111,7 @@ export default function UserForm() {
   // Available roles based on current user's role
   const availableRoles = isSuperAdmin()
     ? [
-        { value: 'tenant_admin', label: 'Admin de Hospital' },
+        { value: 'tenant_admin', label: 'Administrador de Organización' },
         { value: 'staff', label: 'Staff' },
       ]
     : [
@@ -123,12 +123,12 @@ export default function UserForm() {
       <div className="admin-page-header">
         <div>
           <h1 className="admin-page-title">
-            {isEditing ? '✏️ Editar Usuario' : '➕ Invitar Usuario'}
+            {isEditing ? '✏️ Editar Usuario' : '➕ Crear Usuario'}
           </h1>
           <p className="admin-page-subtitle">
             {isEditing 
               ? `Editando: ${existingUser?.email}` 
-              : 'Invita a un nuevo usuario al sistema'}
+              : 'Crea un nuevo usuario para la organización'}
           </p>
         </div>
       </div>
@@ -157,7 +157,7 @@ export default function UserForm() {
                   className="admin-form-input"
                   required
                   disabled={isEditing}
-                  placeholder="usuario@hospital.cl"
+                  placeholder="usuario@organizacion.cl"
                 />
               </div>
               
@@ -176,7 +176,7 @@ export default function UserForm() {
               
               {isSuperAdmin() && !isEditing && (
                 <div className="admin-form-group">
-                  <label className="admin-form-label">Hospital *</label>
+                  <label className="admin-form-label">Organización *</label>
                   <select
                     name="tenantId"
                     value={formData.tenantId}
@@ -184,7 +184,7 @@ export default function UserForm() {
                     className="admin-form-select"
                     required
                   >
-                    <option value="">Selecciona un hospital</option>
+                    <option value="">Selecciona una organización</option>
                     {tenants
                       .filter(t => t.status === 'active')
                       .map((t) => (
@@ -197,10 +197,10 @@ export default function UserForm() {
               
               {!isSuperAdmin() && !isEditing && (
                 <div className="admin-form-group">
-                  <label className="admin-form-label">Hospital</label>
+                  <label className="admin-form-label">Organización</label>
                   <input
                     type="text"
-                    value={currentTenantName || 'Hospital actual'}
+                    value={currentTenantName || 'Organización actual'}
                     className="admin-form-input"
                     disabled
                   />
@@ -221,7 +221,7 @@ export default function UserForm() {
                 </select>
                 <small className="admin-form-help">
                   {formData.role === 'tenant_admin' 
-                    ? 'Puede gestionar usuarios y configuración del hospital'
+                    ? 'Puede gestionar usuarios y configuración de la organización'
                     : 'Acceso básico al sistema (boxes, citas, pacientes)'}
                 </small>
               </div>
@@ -257,7 +257,7 @@ export default function UserForm() {
               >
                 {isPending 
                   ? 'Guardando...' 
-                  : (isEditing ? 'Guardar Cambios' : 'Enviar Invitación')}
+                  : (isEditing ? 'Guardar Cambios' : 'Crear Usuario')}
               </button>
             </div>
           </form>

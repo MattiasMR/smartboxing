@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { signUp, confirmSignUp } from '../auth/cognitoAuth';
-import { listPublicTenants } from '../api/admin.js';
 import './AuthPages.css';
 
 export default function RegisterPage() {
@@ -11,31 +10,10 @@ export default function RegisterPage() {
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [selectedTenant, setSelectedTenant] = useState('');
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  
-  // Load available tenants
-  const [tenants, setTenants] = useState([]);
-  const [loadingTenants, setLoadingTenants] = useState(true);
-  
-  useEffect(() => {
-    loadTenants();
-  }, []);
-  
-  const loadTenants = async () => {
-    try {
-      const data = await listPublicTenants();
-      setTenants(data.tenants || []);
-    } catch (err) {
-      console.error('Error loading tenants:', err);
-      // Don't show error - tenants are optional
-    } finally {
-      setLoadingTenants(false);
-    }
-  };
 
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -55,13 +33,10 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      // Find selected tenant info
-      const tenant = tenants.find(t => t.id === selectedTenant);
-      
+      // Create user without tenant - they will request a tenancy after registration
       await signUp(email, password, {
         name,
-        tenantId: selectedTenant || undefined,
-        tenantName: tenant?.name || undefined,
+        // No tenantId - user will request tenancy after registration
       });
       setSuccess('¡Cuenta creada! Revisa tu email para el código de verificación.');
       setStep('confirm');
@@ -168,29 +143,6 @@ export default function RegisterPage() {
                 disabled={loading}
               />
             </div>
-
-            {tenants.length > 0 && (
-              <div className="form-group">
-                <label htmlFor="tenant">Hospital / Institución</label>
-                <select
-                  id="tenant"
-                  value={selectedTenant}
-                  onChange={(e) => setSelectedTenant(e.target.value)}
-                  disabled={loading || loadingTenants}
-                  className="auth-select"
-                >
-                  <option value="">Selecciona tu hospital...</option>
-                  {tenants.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name}
-                    </option>
-                  ))}
-                </select>
-                <small className="form-hint">
-                  Selecciona el hospital donde trabajas
-                </small>
-              </div>
-            )}
 
             <div className="form-group">
               <label htmlFor="password">Contraseña</label>

@@ -48,9 +48,11 @@ export const signUp = (email, password, attributes = {}) => {
       );
     }
     
-    // Default role is staff for self-registered users
+    // Default role is tenant_admin for self-registered users
+    // They will be able to request tenancies after registration
+    // Staff users are created by tenant_admins through the admin panel
     attributeList.push(
-      new CognitoUserAttribute({ Name: 'custom:role', Value: 'staff' })
+      new CognitoUserAttribute({ Name: 'custom:role', Value: 'tenant_admin' })
     );
 
     userPool.signUp(email, password, attributeList, null, (err, result) => {

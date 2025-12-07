@@ -76,11 +76,11 @@ export default function UsersList() {
         <div>
           <h1 className="admin-page-title">👥 Usuarios</h1>
           <p className="admin-page-subtitle">
-            Gestiona los usuarios del sistema
+            Gestiona los usuarios de la organización
           </p>
         </div>
         <Link to="/admin/users/new" className="admin-btn admin-btn-primary">
-          + Invitar Usuario
+          + Crear Usuario
         </Link>
       </div>
       
@@ -92,7 +92,7 @@ export default function UsersList() {
             value={selectedTenant}
             onChange={(e) => setSelectedTenant(e.target.value)}
           >
-            <option value="">Todos los hospitales</option>
+            <option value="">Todas las organizaciones</option>
             {tenants.map((t) => (
               <option key={t.id} value={t.id}>{t.name}</option>
             ))}
@@ -106,10 +106,10 @@ export default function UsersList() {
             <div className="admin-empty-state-icon">👤</div>
             <h3 className="admin-empty-state-title">No hay usuarios</h3>
             <p className="admin-empty-state-description">
-              Invita al primer usuario para que se una al sistema.
+              Crea el primer usuario para la organización.
             </p>
             <Link to="/admin/users/new" className="admin-btn admin-btn-primary">
-              Invitar Usuario
+              Crear Usuario
             </Link>
           </div>
         </div>
@@ -120,7 +120,7 @@ export default function UsersList() {
               <tr>
                 <th>Usuario</th>
                 <th>Rol</th>
-                {isSuperAdmin() && <th>Hospital</th>}
+                {isSuperAdmin() && <th>Organización</th>}
                 <th>Estado</th>
                 <th>Creado</th>
                 <th>Acciones</th>
