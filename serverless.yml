@@ -169,7 +169,7 @@ provider:
     T_USER_SETTINGS: ${self:service}-UserSettings-${sls:stage}
     # Multi-tenant tables
     T_TENANTS: ${self:service}-Tenants-${sls:stage}
-    T_TENANT_USERS: ${self:service}-TenantUsers-${sls:stage}
+    T_TENANT_USERS: ${self:service}-TenantUsersV2-${sls:stage}
     T_TENANCY_REQUESTS: ${self:service}-TenancyRequests-${sls:stage}
     # Feature Flags (Canary Deployment)
     T_FEATURE_FLAGS: ${self:service}-${sls:stage}-feature-flags
@@ -888,8 +888,10 @@ resources:
 
     TenantUsersTable:
       Type: AWS::DynamoDB::Table
+      DeletionPolicy: Delete
+      UpdateReplacePolicy: Delete
       Properties:
-        TableName: ${self:provider.environment.T_TENANT_USERS}
+        TableName: ${self:service}-TenantUsersV2-${sls:stage}
         BillingMode: PAY_PER_REQUEST
         AttributeDefinitions:
           - AttributeName: cognitoSub
@@ -899,11 +901,15 @@ resources:
         KeySchema:
           - AttributeName: cognitoSub
             KeyType: HASH
+          - AttributeName: tenantId
+            KeyType: RANGE
         GlobalSecondaryIndexes:
           - IndexName: ByTenant
             KeySchema:
               - AttributeName: tenantId
                 KeyType: HASH
+              - AttributeName: cognitoSub
+                KeyType: RANGE
             Projection:
               ProjectionType: ALL
         PointInTimeRecoverySpecification:

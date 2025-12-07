@@ -3,13 +3,13 @@
  * Allows tenant_admin to switch between tenants they manage
  */
 
-import { GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand } from '@aws-sdk/lib-dynamodb';
 import { 
   CognitoIdentityProviderClient, 
   AdminUpdateUserAttributesCommand 
 } from '@aws-sdk/client-cognito-identity-provider';
 import { handler, parseBody } from '../../lib/http.js';
-import { extractUser, ROLES } from '../../lib/auth.js';
+import { extractUser } from '../../lib/auth.js';
 import { doc } from '../../lib/db.js';
 
 const T_TENANT_USERS = process.env.T_TENANT_USERS;
@@ -36,25 +36,22 @@ export const main = handler(async (event) => {
     throw error;
   }
   
-  // Verify user has access to this tenant
-  const { ScanCommand } = await import('@aws-sdk/lib-dynamodb');
-  
-  const membershipResult = await doc.send(new ScanCommand({
+  // Verify user has access to this tenant using composite key (cognitoSub + tenantId)
+  const membershipResult = await doc.send(new GetCommand({
     TableName: T_TENANT_USERS,
-    FilterExpression: 'cognitoSub = :userId AND tenantId = :tenantId',
-    ExpressionAttributeValues: {
-      ':userId': user.sub,
-      ':tenantId': tenantId,
+    Key: {
+      cognitoSub: user.sub,
+      tenantId: tenantId,
     },
   }));
   
-  if (!membershipResult.Items || membershipResult.Items.length === 0) {
+  if (!membershipResult.Item) {
     const error = new Error('No tienes acceso a esta tenencia');
     error.statusCode = 403;
     throw error;
   }
   
-  const membership = membershipResult.Items[0];
+  const membership = membershipResult.Item;
   
   // Get tenant details
   const tenantResult = await doc.send(new GetCommand({

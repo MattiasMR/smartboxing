@@ -20,25 +20,12 @@ export const main = handler(async (event) => {
     throw error;
   }
   
-  // Get all tenant memberships for this user
-  // Note: TenantUsers table has cognitoSub as primary key
-  // We need to scan with filter for all tenants where user is tenant_admin
-  
-  // First, let's query by user
-  const result = await doc.send(new GetCommand({
+  // Query all tenant memberships for this user using the partition key
+  // TenantUsers table now has cognitoSub (PK) + tenantId (SK)
+  const memberships = await doc.send(new QueryCommand({
     TableName: T_TENANT_USERS,
-    Key: { cognitoSub: user.sub },
-  }));
-  
-  // The current model stores one tenant per user
-  // For multi-tenant admins, we need to query by tenantId index
-  // Let's scan for all records where this user is tenant_admin
-  
-  const { ScanCommand } = await import('@aws-sdk/lib-dynamodb');
-  
-  const memberships = await doc.send(new ScanCommand({
-    TableName: T_TENANT_USERS,
-    FilterExpression: 'cognitoSub = :userId AND #role = :adminRole',
+    KeyConditionExpression: 'cognitoSub = :userId',
+    FilterExpression: '#role = :adminRole',
     ExpressionAttributeNames: { '#role': 'role' },
     ExpressionAttributeValues: {
       ':userId': user.sub,
@@ -58,8 +45,8 @@ export const main = handler(async (event) => {
       
       if (tenantResult.Item && tenantResult.Item.status === 'active') {
         tenants.push({
-          id: tenantResult.Item.id,
-          name: tenantResult.Item.name,
+          tenantId: tenantResult.Item.id,
+          tenantName: tenantResult.Item.name,
           slug: tenantResult.Item.slug,
           logo: tenantResult.Item.settings?.logo || null,
           role: membership.role,
@@ -71,7 +58,7 @@ export const main = handler(async (event) => {
   }
   
   return {
-    tenants,
+    tenancies: tenants,
     count: tenants.length,
     currentTenantId: user.tenantId,
   };
