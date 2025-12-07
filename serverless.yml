@@ -8,7 +8,6 @@ useDotenv: true
 plugins:
   - serverless-s3-sync
   - serverless-scriptable-plugin
-  - serverless-plugin-canary-deployments
 
 # Configuración de plugins
 custom:
@@ -128,6 +127,16 @@ provider:
             - cognito-idp:ListUsers
           Resource:
             - !Sub "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/*"
+        # DynamoDB permissions for Feature Flags (Canary)
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:Query
+            - dynamodb:Scan
+          Resource:
+            - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${self:service}-${sls:stage}-feature-flags"
   
   # 🔒 VPC Configuration - DESHABILITADO (performance issues)
   # TODO: Investigar Hyperplane ENI setup time en producción
@@ -161,6 +170,8 @@ provider:
     # Multi-tenant tables
     T_TENANTS: ${self:service}-Tenants-${sls:stage}
     T_TENANT_USERS: ${self:service}-TenantUsers-${sls:stage}
+    # Feature Flags (Canary Deployment)
+    T_FEATURE_FLAGS: ${self:service}-${sls:stage}-feature-flags
     # Cognito
     USER_POOL_ID: !Ref CognitoUserPool
     USER_POOL_CLIENT_ID: !Ref CognitoUserPoolClient
@@ -212,15 +223,6 @@ functions:
           path: /boxes
           method: get
           authorizer: cognitoJwt
-    # ⚡ Canary Deployment Configuration
-    deploymentSettings:
-      type: Canary10Percent5Minutes
-      alias: live
-      preTrafficHook: preTrafficHook
-      postTrafficHook: postTrafficHook
-      alarms:
-        - CanaryErrorAlarm
-        - CanaryLatencyAlarm
   
   getBox:
     handler: backend/src/handlers/boxes/get.main
@@ -229,15 +231,6 @@ functions:
           path: /boxes/{id}
           method: get
           authorizer: cognitoJwt
-    # ⚡ Canary Deployment Configuration
-    deploymentSettings:
-      type: Canary10Percent5Minutes
-      alias: live
-      preTrafficHook: preTrafficHook
-      postTrafficHook: postTrafficHook
-      alarms:
-        - CanaryErrorAlarm
-        - CanaryLatencyAlarm
   
   createBox:
     handler: backend/src/handlers/boxes/create.main
@@ -246,15 +239,6 @@ functions:
           path: /boxes
           method: post
           authorizer: cognitoJwt
-    # ⚡ Canary Deployment Configuration
-    deploymentSettings:
-      type: Canary10Percent5Minutes
-      alias: live
-      preTrafficHook: preTrafficHook
-      postTrafficHook: postTrafficHook
-      alarms:
-        - CanaryErrorAlarm
-        - CanaryLatencyAlarm
   
   updateBox:
     handler: backend/src/handlers/boxes/update.main
@@ -280,15 +264,6 @@ functions:
           path: /staff
           method: get
           authorizer: cognitoJwt
-    # ⚡ Canary Deployment Configuration
-    deploymentSettings:
-      type: Canary10Percent5Minutes
-      alias: live
-      preTrafficHook: preTrafficHook
-      postTrafficHook: postTrafficHook
-      alarms:
-        - CanaryErrorAlarm
-        - CanaryLatencyAlarm
   
   getStaffMember:
     handler: backend/src/handlers/staff/get.main
@@ -305,15 +280,6 @@ functions:
           path: /staff
           method: post
           authorizer: cognitoJwt
-    # ⚡ Canary Deployment Configuration
-    deploymentSettings:
-      type: Canary10Percent5Minutes
-      alias: live
-      preTrafficHook: preTrafficHook
-      postTrafficHook: postTrafficHook
-      alarms:
-        - CanaryErrorAlarm
-        - CanaryLatencyAlarm
   
   updateStaffMember:
     handler: backend/src/handlers/staff/update.main
@@ -339,15 +305,6 @@ functions:
           path: /appointments
           method: get
           authorizer: cognitoJwt
-    # ⚡ Canary Deployment Configuration
-    deploymentSettings:
-      type: Canary10Percent5Minutes
-      alias: live
-      preTrafficHook: preTrafficHook
-      postTrafficHook: postTrafficHook
-      alarms:
-        - CanaryErrorAlarm
-        - CanaryLatencyAlarm
   
   getAppointment:
     handler: backend/src/handlers/appointments/get.main
@@ -356,15 +313,6 @@ functions:
           path: /appointments/{id}
           method: get
           authorizer: cognitoJwt
-    # ⚡ Canary Deployment Configuration
-    deploymentSettings:
-      type: Canary10Percent5Minutes
-      alias: live
-      preTrafficHook: preTrafficHook
-      postTrafficHook: postTrafficHook
-      alarms:
-        - CanaryErrorAlarm
-        - CanaryLatencyAlarm
   
   createAppointment:
     handler: backend/src/handlers/appointments/create.main
@@ -373,15 +321,6 @@ functions:
           path: /appointments
           method: post
           authorizer: cognitoJwt
-    # ⚡ Canary Deployment Configuration
-    deploymentSettings:
-      type: Canary10Percent5Minutes
-      alias: live
-      preTrafficHook: preTrafficHook
-      postTrafficHook: postTrafficHook
-      alarms:
-        - CanaryErrorAlarm
-        - CanaryLatencyAlarm
   
   updateAppointment:
     handler: backend/src/handlers/appointments/update.main
@@ -407,15 +346,6 @@ functions:
           path: /patients
           method: get
           authorizer: cognitoJwt
-    # ⚡ Canary Deployment Configuration
-    deploymentSettings:
-      type: Canary10Percent5Minutes
-      alias: live
-      preTrafficHook: preTrafficHook
-      postTrafficHook: postTrafficHook
-      alarms:
-        - CanaryErrorAlarm
-        - CanaryLatencyAlarm
   
   getPatient:
     handler: backend/src/handlers/patients/get.main
@@ -466,6 +396,65 @@ functions:
           method: delete
           authorizer: cognitoJwt
 
+  # ========== 🚀 CANARY DEPLOYMENT (Feature Flags) ==========
+  # APIs para controlar despliegues graduales
+  
+  listFeatureFlags:
+    handler: backend/src/handlers/deployment/canary.listFeatureFlags
+    events:
+      - httpApi:
+          path: /canary/flags
+          method: get
+          authorizer: cognitoJwt
+  
+  getFeatureFlag:
+    handler: backend/src/handlers/deployment/canary.getFeatureFlag
+    events:
+      - httpApi:
+          path: /canary/flags/{flagName}
+          method: get
+          authorizer: cognitoJwt
+  
+  upsertFeatureFlag:
+    handler: backend/src/handlers/deployment/canary.upsertFeatureFlag
+    events:
+      - httpApi:
+          path: /canary/flags
+          method: post
+          authorizer: cognitoJwt
+  
+  updateRollout:
+    handler: backend/src/handlers/deployment/canary.updateRollout
+    events:
+      - httpApi:
+          path: /canary/flags/{flagName}/rollout
+          method: patch
+          authorizer: cognitoJwt
+  
+  rollbackFeature:
+    handler: backend/src/handlers/deployment/canary.rollbackFeature
+    events:
+      - httpApi:
+          path: /canary/flags/{flagName}/rollback
+          method: post
+          authorizer: cognitoJwt
+  
+  evaluateFlag:
+    handler: backend/src/handlers/deployment/canary.evaluateFlag
+    events:
+      - httpApi:
+          path: /canary/evaluate
+          method: get
+          # Sin auth - para que frontend pueda evaluar features
+  
+  deleteFeatureFlag:
+    handler: backend/src/handlers/deployment/canary.deleteFeatureFlag
+    events:
+      - httpApi:
+          path: /canary/flags/{flagName}
+          method: delete
+          authorizer: cognitoJwt
+
   # ========== SETTINGS ==========
   getClientSettings:
     handler: backend/src/handlers/settings/client-get.main
@@ -474,15 +463,6 @@ functions:
           path: /settings/client
           method: get
           authorizer: cognitoJwt
-    # ⚡ Canary Deployment Configuration
-    deploymentSettings:
-      type: Canary10Percent5Minutes
-      alias: live
-      preTrafficHook: preTrafficHook
-      postTrafficHook: postTrafficHook
-      alarms:
-        - CanaryErrorAlarm
-        - CanaryLatencyAlarm
   
   updateClientSettings:
     handler: backend/src/handlers/settings/client-put.main
@@ -618,39 +598,19 @@ functions:
           path: /analytics/dashboard
           method: get
           authorizer: cognitoJwt
-    # ⚡ Canary Deployment Configuration
-    deploymentSettings:
-      type: Canary10Percent5Minutes
-      alias: live
-      preTrafficHook: preTrafficHook
-      postTrafficHook: postTrafficHook
-      alarms:
-        - CanaryErrorAlarm
-        - CanaryLatencyAlarm
-    # ⚡ Canary Deployment Configuration
-    deploymentSettings:
-      type: Canary10Percent5Minutes
-      alias: live
-      preTrafficHook: preTrafficHook
-      postTrafficHook: postTrafficHook
-      alarms:
-        - CanaryErrorAlarm
-        - CanaryLatencyAlarm
 
-  # ========== DEPLOYMENT HOOKS (CANARY) ==========
-  preTrafficHook:
-    handler: backend/src/handlers/deployment/pre-traffic-hook.main
-    timeout: 30
-    environment:
-      AWS_REGION: ${self:provider.region}
-    # NO tiene events HTTP, solo se ejecuta por CodeDeploy
+  # ========== DEPLOYMENT HOOKS (CANARY) - TEMPORALMENTE DESHABILITADO ==========
+  # preTrafficHook:
+  #   handler: backend/src/handlers/deployment/pre-traffic-hook.main
+  #   timeout: 30
+  #   environment:
+  #     AWS_REGION: ${self:provider.region}
   
-  postTrafficHook:
-    handler: backend/src/handlers/deployment/post-traffic-hook.main
-    timeout: 30
-    environment:
-      AWS_REGION: ${self:provider.region}
-    # NO tiene events HTTP, solo se ejecuta por CodeDeploy
+  # postTrafficHook:
+  #   handler: backend/src/handlers/deployment/post-traffic-hook.main
+  #   timeout: 30
+  #   environment:
+  #     AWS_REGION: ${self:provider.region}
 
 resources:
   Resources:
@@ -1288,23 +1248,42 @@ resources:
           - Key: Name
             Value: ${self:service}-flow-logs-${sls:stage}
 
-    # ==================== CANARY DEPLOYMENT MONITORING ====================
-    # SNS Topic para alertas de Canary Deployment
-    CanaryAlertTopic:
+    # ==================== CANARY DEPLOYMENT (FEATURE FLAGS) ====================
+    # Implementación de Canary usando Feature Flags en DynamoDB
+    # Esta estrategia permite despliegues graduales controlando el % de usuarios
+    # que ven nuevas funcionalidades
+    
+    # Tabla para Feature Flags y Canary configuration
+    FeatureFlagsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-${sls:stage}-feature-flags
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: flagName
+            AttributeType: S
+        KeySchema:
+          - AttributeName: flagName
+            KeyType: HASH
+        Tags:
+          - Key: Environment
+            Value: ${sls:stage}
+          - Key: Purpose
+            Value: CanaryDeployment
+
+    # SNS Topic para alertas de deployment
+    DeploymentAlertTopic:
       Type: AWS::SNS::Topic
       Properties:
-        TopicName: ${self:service}-${sls:stage}-canary-alerts
-        DisplayName: SmartBoxing Canary Deployment Alerts
-        Subscriptions:
-          - Endpoint: milan.munoz@udd.cl
-            Protocol: email
-    
-    # CloudWatch Alarm: Error Rate > 5%
-    CanaryErrorAlarm:
+        TopicName: ${self:service}-${sls:stage}-deployment-alerts
+        DisplayName: SmartBoxing Deployment Alerts
+
+    # CloudWatch Alarm: Error Rate > 5 errores en 2 minutos
+    ApiErrorAlarm:
       Type: AWS::CloudWatch::Alarm
       Properties:
-        AlarmName: ${self:service}-${sls:stage}-canary-errors
-        AlarmDescription: Canary deployment error rate is too high
+        AlarmName: ${self:service}-${sls:stage}-api-error-rate
+        AlarmDescription: "API Error rate too high (>5 errors in 2 min)"
         MetricName: Errors
         Namespace: AWS/Lambda
         Statistic: Sum
@@ -1313,51 +1292,31 @@ resources:
         Threshold: 5
         ComparisonOperator: GreaterThanThreshold
         TreatMissingData: notBreaching
-        ActionsEnabled: true
         AlarmActions:
-          - !Ref CanaryAlertTopic
+          - !Ref DeploymentAlertTopic
         Dimensions:
           - Name: FunctionName
-            Value: ${self:service}-${sls:stage}-listBoxes
-    
-    # CloudWatch Alarm: Latency p99 > 2000ms
-    CanaryLatencyAlarm:
+            Value: ${self:service}-${sls:stage}-health
+
+    # CloudWatch Alarm: Latencia p99 > 3000ms
+    ApiLatencyAlarm:
       Type: AWS::CloudWatch::Alarm
       Properties:
-        AlarmName: ${self:service}-${sls:stage}-canary-latency
-        AlarmDescription: Canary deployment latency is too high
+        AlarmName: ${self:service}-${sls:stage}-api-latency
+        AlarmDescription: "API Latency too high (p99 > 3000ms)"
         MetricName: Duration
         Namespace: AWS/Lambda
         ExtendedStatistic: p99
         Period: 60
         EvaluationPeriods: 2
-        Threshold: 2000
+        Threshold: 3000
         ComparisonOperator: GreaterThanThreshold
         TreatMissingData: notBreaching
-        ActionsEnabled: true
         AlarmActions:
-          - !Ref CanaryAlertTopic
+          - !Ref DeploymentAlertTopic
         Dimensions:
           - Name: FunctionName
-            Value: ${self:service}-${sls:stage}-listBoxes
-    
-    # CloudWatch Alarm: Throttle Rate > 1%
-    CanaryThrottleAlarm:
-      Type: AWS::CloudWatch::Alarm
-      Properties:
-        AlarmName: ${self:service}-${sls:stage}-canary-throttles
-        AlarmDescription: Canary deployment throttle rate is too high
-        MetricName: Throttles
-        Namespace: AWS/Lambda
-        Statistic: Sum
-        Period: 60
-        EvaluationPeriods: 2
-        Threshold: 5
-        ComparisonOperator: GreaterThanThreshold
-        TreatMissingData: notBreaching
-        ActionsEnabled: true
-        AlarmActions:
-          - !Ref CanaryAlertTopic
+            Value: ${self:service}-${sls:stage}-health
 
   # ════════════════════════════════════════════════════════════════
   # OUTPUTS
@@ -1487,3 +1446,19 @@ resources:
       Value: !Ref VPCFlowLogsGroup
       Export:
         Name: ${self:service}-FlowLogs-${sls:stage}
+
+    # ════════════════════════════════════════════════════════════════
+    # 🚀 Canary Deployment & Feature Flags Outputs
+    # ════════════════════════════════════════════════════════════════
+    FeatureFlagsTableName:
+      Description: DynamoDB Table for Feature Flags (Canary Control)
+      Value: !Ref FeatureFlagsTable
+      Export:
+        Name: ${self:service}-${sls:stage}-FeatureFlags
+
+    DeploymentAlertTopicArn:
+      Description: SNS Topic ARN for Deployment Alerts
+      Value: !Ref DeploymentAlertTopic
+      Export:
+        Name: ${self:service}-${sls:stage}-DeploymentAlerts
+
