@@ -106,6 +106,22 @@
   color: var(--primary-color);
 }
 
+/* Admin link special styling */
+.sidebar li.admin-link {
+  margin-top: 1rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-secondary);
+}
+
+.sidebar li.admin-link a {
+  color: var(--secondary-color);
+}
+
+.sidebar li.admin-link.active a {
+  background-color: rgba(var(--secondary-color-rgb, 234, 179, 8), 0.1);
+  color: var(--secondary-color);
+}
+
 /* --- REGLAS PARA MÓVILES --- */
 @media (max-width: 768px) {
   .sidebar {

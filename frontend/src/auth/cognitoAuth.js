@@ -17,7 +17,7 @@ const userPool = new CognitoUserPool(poolData);
  * Sign up a new user
  * @param {string} email
  * @param {string} password
- * @param {object} attributes - Additional attributes like name, phone, etc.
+ * @param {object} attributes - Additional attributes like name, tenantId, tenantName
  * @returns {Promise}
  */
 export const signUp = (email, password, attributes = {}) => {
@@ -27,11 +27,31 @@ export const signUp = (email, password, attributes = {}) => {
     ];
 
     // Add additional attributes
-    Object.keys(attributes).forEach((key) => {
+    const { name, tenantId, tenantName } = attributes;
+    
+    if (name) {
       attributeList.push(
-        new CognitoUserAttribute({ Name: key, Value: attributes[key] })
+        new CognitoUserAttribute({ Name: 'name', Value: name })
       );
-    });
+    }
+    
+    // Custom attributes need 'custom:' prefix
+    if (tenantId) {
+      attributeList.push(
+        new CognitoUserAttribute({ Name: 'custom:tenantId', Value: tenantId })
+      );
+    }
+    
+    if (tenantName) {
+      attributeList.push(
+        new CognitoUserAttribute({ Name: 'custom:tenantName', Value: tenantName })
+      );
+    }
+    
+    // Default role is staff for self-registered users
+    attributeList.push(
+      new CognitoUserAttribute({ Name: 'custom:role', Value: 'staff' })
+    );
 
     userPool.signUp(email, password, attributeList, null, (err, result) => {
       if (err) {

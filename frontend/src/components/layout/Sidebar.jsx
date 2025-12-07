@@ -2,7 +2,8 @@
 import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './Sidebar.css';
-import { FaTh, FaCalendarAlt, FaUsers, FaTimes, FaCog, FaChartBar } from 'react-icons/fa';
+import { FaTh, FaCalendarAlt, FaUsers, FaTimes, FaCog, FaChartBar, FaUserShield } from 'react-icons/fa';
+import { useAuthContext } from '../../auth/AuthContext.js';
 
 const mainNavItems = [
   { id: 'dashboard', label: 'Dashboard', icon: <FaChartBar />, path: '/dashboard' },
@@ -14,6 +15,7 @@ const mainNavItems = [
 
 function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
+  const { isTenantAdmin } = useAuthContext();
 
   // Close mobile nav on any navigation
   useEffect(() => {
@@ -70,6 +72,16 @@ function Sidebar({ isOpen, onClose }) {
           </Link>
         </li>
       ))}
+      
+      {/* Admin link - only visible for tenant_admin and super_admin */}
+      {isTenantAdmin() && (
+        <li className={location.pathname.startsWith('/admin') ? 'active admin-link' : 'admin-link'}>
+          <Link to="/admin/users" onClick={handleLinkClick}>
+            <FaUserShield />
+            <span className="nav-label">Panel Admin</span>
+          </Link>
+        </li>
+      )}
     </ul>
   );
   

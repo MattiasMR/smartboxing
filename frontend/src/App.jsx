@@ -3,7 +3,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './auth/AuthProvider.jsx';
 import { useAuth } from './auth/useAuth.js';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
+import AdminRoute from './components/AdminRoute.jsx';
 import MainLayout from './components/layout/MainLayout.jsx';
+import AdminLayout from './components/layout/AdminLayout.jsx';
 import { useTheme } from './hooks/useTheme.js';
 import { useEffect } from 'react';
 
@@ -24,6 +26,12 @@ import AppointmentForm from './pages/AppointmentForm.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Settings from './pages/Settings.jsx';
 import SeedPage from './pages/SeedPage.jsx';
+
+// Admin pages
+import TenantsList from './pages/admin/TenantsList.jsx';
+import TenantForm from './pages/admin/TenantForm.jsx';
+import UsersList from './pages/admin/UsersList.jsx';
+import UserForm from './pages/admin/UserForm.jsx';
 
 const qc = new QueryClient();
 
@@ -75,6 +83,19 @@ function AppContent() {
 
           <Route path="/settings" element={<Settings />} />
           <Route path="/seed" element={<SeedPage />} />
+        </Route>
+
+        {/* Admin routes - require tenant_admin or super_admin */}
+        <Route element={<AdminRoute><AdminLayout /></AdminRoute>}>
+          {/* Tenants - super_admin only */}
+          <Route path="/admin/tenants" element={<AdminRoute requireSuperAdmin><TenantsList /></AdminRoute>} />
+          <Route path="/admin/tenants/new" element={<AdminRoute requireSuperAdmin><TenantForm /></AdminRoute>} />
+          <Route path="/admin/tenants/:id/edit" element={<AdminRoute requireSuperAdmin><TenantForm /></AdminRoute>} />
+          
+          {/* Users - tenant_admin or super_admin */}
+          <Route path="/admin/users" element={<UsersList />} />
+          <Route path="/admin/users/new" element={<UserForm />} />
+          <Route path="/admin/users/:id/edit" element={<UserForm />} />
         </Route>
 
         {/* Ruta no encontrada: redirige a root (que mostrará Landing o Dashboard) */}

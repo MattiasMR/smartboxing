@@ -1,18 +1,41 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { signUp, confirmSignUp } from '../auth/cognitoAuth';
+import { listPublicTenants } from '../api/admin.js';
 import './AuthPages.css';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState('signup'); // 'signup' or 'confirm'
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [selectedTenant, setSelectedTenant] = useState('');
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  
+  // Load available tenants
+  const [tenants, setTenants] = useState([]);
+  const [loadingTenants, setLoadingTenants] = useState(true);
+  
+  useEffect(() => {
+    loadTenants();
+  }, []);
+  
+  const loadTenants = async () => {
+    try {
+      const data = await listPublicTenants();
+      setTenants(data.tenants || []);
+    } catch (err) {
+      console.error('Error loading tenants:', err);
+      // Don't show error - tenants are optional
+    } finally {
+      setLoadingTenants(false);
+    }
+  };
 
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -32,7 +55,14 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      await signUp(email, password);
+      // Find selected tenant info
+      const tenant = tenants.find(t => t.id === selectedTenant);
+      
+      await signUp(email, password, {
+        name,
+        tenantId: selectedTenant || undefined,
+        tenantName: tenant?.name || undefined,
+      });
       setSuccess('¡Cuenta creada! Revisa tu email para el código de verificación.');
       setStep('confirm');
     } catch (err) {
@@ -112,6 +142,20 @@ export default function RegisterPage() {
         {step === 'signup' ? (
           <form onSubmit={handleSignUp} className="auth-form">
             <div className="form-group">
+              <label htmlFor="name">Nombre Completo</label>
+              <input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Dr. Juan Pérez"
+                required
+                autoComplete="name"
+                disabled={loading}
+              />
+            </div>
+
+            <div className="form-group">
               <label htmlFor="email">Email</label>
               <input
                 id="email"
@@ -124,6 +168,29 @@ export default function RegisterPage() {
                 disabled={loading}
               />
             </div>
+
+            {tenants.length > 0 && (
+              <div className="form-group">
+                <label htmlFor="tenant">Hospital / Institución</label>
+                <select
+                  id="tenant"
+                  value={selectedTenant}
+                  onChange={(e) => setSelectedTenant(e.target.value)}
+                  disabled={loading || loadingTenants}
+                  className="auth-select"
+                >
+                  <option value="">Selecciona tu hospital...</option>
+                  {tenants.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+                <small className="form-hint">
+                  Selecciona el hospital donde trabajas
+                </small>
+              </div>
+            )}
 
             <div className="form-group">
               <label htmlFor="password">Contraseña</label>

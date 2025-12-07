@@ -20,6 +20,23 @@ function parseJwt(token) {
   }
 }
 
+import { ROLES } from './AuthContext.js';
+
+// Extract user info from JWT payload including custom attributes
+function extractUserFromPayload(payload) {
+  if (!payload) return null;
+  
+  return {
+    email: payload.email || 'Usuario',
+    name: payload.name || payload.email || 'Usuario',
+    sub: payload.sub,
+    // Custom attributes from Cognito
+    role: payload['custom:role'] || ROLES.STAFF,
+    tenantId: payload['custom:tenantId'] || null,
+    tenantName: payload['custom:tenantName'] || null,
+  };
+}
+
 export function AuthProvider({ children }) {
   const [auth, setAuth] = useState(() => {
     const access_token = localStorage.getItem('access_token');
@@ -28,11 +45,7 @@ export function AuthProvider({ children }) {
     let user = null;
     if (id_token) {
       const payload = parseJwt(id_token);
-      user = {
-        email: payload?.email || 'Usuario',
-        name: payload?.name || payload?.email || 'Usuario',
-        sub: payload?.sub,
-      };
+      user = extractUserFromPayload(payload);
     }
     
     return { 
@@ -71,11 +84,7 @@ export function AuthProvider({ children }) {
     let user = null;
     if (id_token) {
       const payload = parseJwt(id_token);
-      user = {
-        email: payload?.email || 'Usuario',
-        name: payload?.name || payload?.email || 'Usuario',
-        sub: payload?.sub,
-      };
+      user = extractUserFromPayload(payload);
       console.log('[AuthProvider] User extracted:', user);
     }
     

@@ -115,6 +115,18 @@ provider:
             - lambda:InvokeFunction
           Resource:
             - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${self:service}-*"
+        # Cognito admin permissions for user management
+        - Effect: Allow
+          Action:
+            - cognito-idp:AdminCreateUser
+            - cognito-idp:AdminUpdateUserAttributes
+            - cognito-idp:AdminDeleteUser
+            - cognito-idp:AdminGetUser
+            - cognito-idp:AdminDisableUser
+            - cognito-idp:AdminEnableUser
+            - cognito-idp:ListUsers
+          Resource:
+            - !Sub "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/*"
   
   # 🔒 VPC Configuration - DESHABILITADO (performance issues)
   # TODO: Investigar Hyperplane ENI setup time en producción
@@ -145,6 +157,9 @@ provider:
     T_PATIENTS: ${self:service}-Patients-${sls:stage}
     T_CLIENT_SETTINGS: ${self:service}-ClientSettings-${sls:stage}
     T_USER_SETTINGS: ${self:service}-UserSettings-${sls:stage}
+    # Multi-tenant tables
+    T_TENANTS: ${self:service}-Tenants-${sls:stage}
+    T_TENANT_USERS: ${self:service}-TenantUsers-${sls:stage}
     # Cognito
     USER_POOL_ID: !Ref CognitoUserPool
     USER_POOL_CLIENT_ID: !Ref CognitoUserPoolClient
@@ -413,6 +428,97 @@ functions:
           method: put
           authorizer: cognitoJwt
 
+  # ========== ADMIN - TENANTS ==========
+  listTenants:
+    handler: backend/src/handlers/admin/tenants/list.main
+    events:
+      - httpApi:
+          path: /admin/tenants
+          method: get
+          authorizer: cognitoJwt
+  
+  getTenant:
+    handler: backend/src/handlers/admin/tenants/get.main
+    events:
+      - httpApi:
+          path: /admin/tenants/{id}
+          method: get
+          authorizer: cognitoJwt
+  
+  createTenant:
+    handler: backend/src/handlers/admin/tenants/create.main
+    events:
+      - httpApi:
+          path: /admin/tenants
+          method: post
+          authorizer: cognitoJwt
+  
+  updateTenant:
+    handler: backend/src/handlers/admin/tenants/update.main
+    events:
+      - httpApi:
+          path: /admin/tenants/{id}
+          method: put
+          authorizer: cognitoJwt
+  
+  deleteTenant:
+    handler: backend/src/handlers/admin/tenants/delete.main
+    events:
+      - httpApi:
+          path: /admin/tenants/{id}
+          method: delete
+          authorizer: cognitoJwt
+  
+  # Public endpoint for registration - list available tenants
+  listTenantsPublic:
+    handler: backend/src/handlers/admin/tenants/list-public.main
+    events:
+      - httpApi:
+          path: /tenants
+          method: get
+          # NO authorizer - public endpoint
+
+  # ========== ADMIN - USERS ==========
+  listAdminUsers:
+    handler: backend/src/handlers/admin/users/list.main
+    events:
+      - httpApi:
+          path: /admin/users
+          method: get
+          authorizer: cognitoJwt
+  
+  getAdminUser:
+    handler: backend/src/handlers/admin/users/get.main
+    events:
+      - httpApi:
+          path: /admin/users/{id}
+          method: get
+          authorizer: cognitoJwt
+  
+  createAdminUser:
+    handler: backend/src/handlers/admin/users/create.main
+    events:
+      - httpApi:
+          path: /admin/users
+          method: post
+          authorizer: cognitoJwt
+  
+  updateAdminUser:
+    handler: backend/src/handlers/admin/users/update.main
+    events:
+      - httpApi:
+          path: /admin/users/{id}
+          method: put
+          authorizer: cognitoJwt
+  
+  deleteAdminUser:
+    handler: backend/src/handlers/admin/users/delete.main
+    events:
+      - httpApi:
+          path: /admin/users/{id}
+          method: delete
+          authorizer: cognitoJwt
+
   # ========== ANALYTICS ==========
   getDashboard:
     handler: backend/src/handlers/analytics/dashboard.main
@@ -441,6 +547,12 @@ resources:
             Required: false
             Mutable: true
           - Name: tenantId
+            AttributeDataType: String
+            Mutable: true
+          - Name: tenantName
+            AttributeDataType: String
+            Mutable: true
+          - Name: role
             AttributeDataType: String
             Mutable: true
         Policies:
@@ -612,6 +724,59 @@ resources:
             KeyType: HASH
           - AttributeName: userSub
             KeyType: RANGE
+        Tags:
+          - Key: Environment
+            Value: ${sls:stage}
+
+    # ==================== MULTI-TENANT TABLES ====================
+    TenantsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.T_TENANTS}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: slug
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: BySlug
+            KeySchema:
+              - AttributeName: slug
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
+        Tags:
+          - Key: Environment
+            Value: ${sls:stage}
+
+    TenantUsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.T_TENANT_USERS}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: cognitoSub
+            AttributeType: S
+          - AttributeName: tenantId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: cognitoSub
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: ByTenant
+            KeySchema:
+              - AttributeName: tenantId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
         Tags:
           - Key: Environment
             Value: ${sls:stage}
