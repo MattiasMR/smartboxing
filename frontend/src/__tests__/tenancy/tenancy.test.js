@@ -1,8 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthCtx } from '../../auth/AuthContext.js';
+import { describe, it, expect, vi } from 'vitest';
 
 // Mock the tenancy API
 vi.mock('../../api/tenancy.js', () => ({
@@ -311,7 +307,7 @@ describe('Routing Logic', () => {
     it('should block tenant routes without tenantId', () => {
       const user = { role: 'tenant_admin', tenantId: null };
       const requireTenant = true;
-      const path = '/dashboard';
+      // Testing route: /dashboard
 
       const canAccess = !requireTenant || !!user.tenantId;
 
