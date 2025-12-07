@@ -41,6 +41,7 @@
     "@aws-sdk/client-cloudformation": "^3.682.0",
     "@aws-sdk/client-lambda": "^3.927.0",
     "serverless": "^4.4.7",
+    "serverless-plugin-canary-deployments": "^0.8.0",
     "serverless-s3-sync": "^3.2.0",
     "serverless-scriptable-plugin": "^1.2.0"
   }
