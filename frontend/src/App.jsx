@@ -33,6 +33,9 @@ import TenantForm from './pages/admin/TenantForm.jsx';
 import UsersList from './pages/admin/UsersList.jsx';
 import UserForm from './pages/admin/UserForm.jsx';
 
+// Analytics pages
+import AIAgent from './pages/analytics/AIAgent.jsx';
+
 // Tenancy pages
 import MyTenancies from './pages/tenancy/MyTenancies.jsx';
 import RequestTenancy from './pages/tenancy/RequestTenancy.jsx';
@@ -105,6 +108,9 @@ function AppContent() {
 
           <Route path="/settings" element={<Settings />} />
           <Route path="/seed" element={<SeedPage />} />
+          
+          {/* AI Agent - requires tenant_admin */}
+          <Route path="/ai-agent" element={<AIAgent />} />
         </Route>
         
         {/* Account routes - no requieren tenant */}

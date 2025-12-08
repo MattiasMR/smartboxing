@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './Sidebar.css';
-import { FaTh, FaCalendarAlt, FaUsers, FaTimes, FaCog, FaChartBar, FaUserShield, FaBuilding } from 'react-icons/fa';
+import { FaTh, FaCalendarAlt, FaUsers, FaTimes, FaCog, FaChartBar, FaUserShield, FaBuilding, FaRobot } from 'react-icons/fa';
 import { useAuthContext } from '../../auth/AuthContext.js';
 
 // Items que requieren una tenencia activa
@@ -67,6 +67,17 @@ function Sidebar({ isOpen, onClose }) {
 
   const renderMainMenu = () => (
      <ul>
+      {/* AI Agent - Highlighted for tenant_admin with active tenancy */}
+      {isTenantAdmin() && hasTenancy && (
+        <li className={`ai-agent-link ${location.pathname === '/ai-agent' ? 'active' : ''}`}>
+          <Link to="/ai-agent" onClick={handleLinkClick}>
+            <FaRobot />
+            <span className="nav-label ai-highlight">Agente IA</span>
+            <span className="ai-badge">✨</span>
+          </Link>
+        </li>
+      )}
+      
       {/* Panel Admin - first for super_admin, or visible for tenant_admin */}
       {(isSuperAdmin() || isTenantAdmin()) && (
         <li className={location.pathname.startsWith('/admin') ? 'active admin-link' : 'admin-link'}>

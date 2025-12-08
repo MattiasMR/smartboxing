@@ -15,3 +15,14 @@ export const getDashboardMetrics = async (params = {}) => {
   const response = await api.get(url);
   return response.data;
 };
+
+/**
+ * Genera un reporte ejecutivo con IA
+ * Requiere rol tenant_admin y tenencia activa
+ * 
+ * @returns {Promise} AI-generated report with summary and data points
+ */
+export const generateAIReport = async () => {
+  const response = await api.post('/analytics/ai-report');
+  return response.data;
+};

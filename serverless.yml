@@ -655,6 +655,17 @@ functions:
           method: get
           authorizer: cognitoJwt
 
+  generateAIReport:
+    handler: backend/src/handlers/analytics/ai-report.main
+    timeout: 30
+    environment:
+      OPENAI_API_KEY: ${env:OPENAI_API_KEY, ''}
+    events:
+      - httpApi:
+          path: /analytics/ai-report
+          method: post
+          authorizer: cognitoJwt
+
   # ========== DEPLOYMENT HOOKS (CANARY) - TEMPORALMENTE DESHABILITADO ==========
   # preTrafficHook:
   #   handler: backend/src/handlers/deployment/pre-traffic-hook.main
