@@ -78,12 +78,12 @@ function Sidebar({ isOpen, onClose }) {
         </li>
       )}
       
-      {/* Panel Admin - first for super_admin, or visible for tenant_admin */}
-      {(isSuperAdmin() || isTenantAdmin()) && (
+      {/* Panel Admin - first for super_admin, or visible for tenant_admin WITH active tenancy */}
+      {(isSuperAdmin() || (isTenantAdmin() && hasTenancy)) && (
         <li className={location.pathname.startsWith('/admin') ? 'active admin-link' : 'admin-link'}>
           <Link to={isSuperAdmin() ? "/admin/tenants" : "/admin/users"} onClick={handleLinkClick}>
             <FaUserShield />
-            <span className="nav-label">Panel Admin</span>
+            <span className="nav-label">{isSuperAdmin() ? 'Panel Admin' : 'Gestionar Usuarios'}</span>
           </Link>
         </li>
       )}

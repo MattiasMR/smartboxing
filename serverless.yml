@@ -743,11 +743,11 @@ resources:
           - COGNITO
         AllowedOAuthFlowsUserPoolClient: true
 
-    CognitoUserPoolDomain:
-      Type: AWS::Cognito::UserPoolDomain
-      Properties:
-        Domain: ${self:service}-${sls:stage}
-        UserPoolId: !Ref CognitoUserPool
+    # CognitoUserPoolDomain:
+    #   Type: AWS::Cognito::UserPoolDomain
+    #   Properties:
+    #     Domain: ${self:service}-${sls:stage}
+    #     UserPoolId: !Ref CognitoUserPool
 
     # ==================== DYNAMODB TABLES ====================
     BoxesTable:
@@ -1589,11 +1589,11 @@ resources:
       Export:
         Name: ${self:service}-${sls:stage}-UserPoolClientId
 
-    CognitoDomain:
-      Description: Dominio de Cognito para login
-      Value: !Sub "https://${CognitoUserPoolDomain}.auth.${AWS::Region}.amazoncognito.com"
-      Export:
-        Name: ${self:service}-${sls:stage}-CognitoDomain
+    # CognitoDomain:
+    #   Description: Dominio de Cognito para login
+    #   Value: !Sub "https://${CognitoUserPoolDomain}.auth.${AWS::Region}.amazoncognito.com"
+    #   Export:
+    #     Name: ${self:service}-${sls:stage}-CognitoDomain
 
     # Frontend
     FrontendBucketName:
