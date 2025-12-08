@@ -51,7 +51,7 @@ function log(msg, color = 'reset') {
 function printHeader() {
   console.log('');
   log('╔════════════════════════════════════════════════════════════╗', 'cyan');
-  log('║        SmartBoxing - Canary Deployment Manager          ║', 'cyan');
+  log('║        SmartBoxing - Canary Deployment Manager             ║', 'cyan');
   log('╚════════════════════════════════════════════════════════════╝', 'cyan');
   console.log('');
   log(`  Stage: ${STAGE}`, 'dim');

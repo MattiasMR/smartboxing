@@ -117,6 +117,7 @@ export const main = handler(async (event) => {
   }));
   
   // Add user to TenantUsers as tenant_admin
+  // Key: cognitoSub (PK) + tenantId (SK) - allows multi-tenant membership
   await doc.send(new PutCommand({
     TableName: T_TENANT_USERS,
     Item: {
