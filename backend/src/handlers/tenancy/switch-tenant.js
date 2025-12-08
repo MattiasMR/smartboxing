@@ -68,9 +68,11 @@ export const main = handler(async (event) => {
   const tenant = tenantResult.Item;
   
   // Update Cognito user attributes
+  // Use user.sub as Username since that's how Cognito identifies users
+  // (email might not always be the username in all Cognito configurations)
   await cognito.send(new AdminUpdateUserAttributesCommand({
     UserPoolId: USER_POOL_ID,
-    Username: user.email,
+    Username: user.sub,
     UserAttributes: [
       { Name: 'custom:tenantId', Value: tenantId },
       { Name: 'custom:tenantName', Value: tenant.name },

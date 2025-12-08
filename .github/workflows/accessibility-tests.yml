@@ -128,15 +128,29 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - name: 🌐 Setup Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
       - name: 📦 Install Pa11y
-        run: npm install -g pa11y pa11y-ci
+        run: |
+          # Skip Puppeteer's bundled Chrome download since we use system Chrome
+          export PUPPETEER_SKIP_DOWNLOAD=true
+          npm install -g pa11y pa11y-ci
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: true
 
       - name: 🔍 Run Pa11y Scan
         run: |
+          # Use system Chrome from setup-chrome action
+          export PUPPETEER_EXECUTABLE_PATH=$(which chrome || which chromium || which google-chrome || echo "/usr/bin/google-chrome")
           pa11y --standard WCAG2AA \
                 --reporter json \
                 https://smartboxing.dev > pa11y-report.json 2>&1 || echo '{"results": "scan completed with warnings"}' > pa11y-report.json
         continue-on-error: true
+        env:
+          PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome
 
       - name: 📤 Upload Pa11y Report
         uses: actions/upload-artifact@v4
