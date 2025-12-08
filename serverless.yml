@@ -1364,6 +1364,35 @@ resources:
                 Bool:
                   aws:SecureTransport: false
 
+    # Cognito Identity Provider Endpoint (Interface - Necesario para Lambdas en VPC)
+    CognitoIdpEndpoint:
+      Type: AWS::EC2::VPCEndpoint
+      Properties:
+        VpcId: !Ref VPC
+        ServiceName: com.amazonaws.${self:provider.region}.cognito-idp
+        VpcEndpointType: Interface
+        SubnetIds:
+          - !Ref PrivateSubnetA
+          - !Ref PrivateSubnetB
+        SecurityGroupIds:
+          - !Ref VPCEndpointSecurityGroup
+        PrivateDnsEnabled: true
+
+    # Security Group for VPC Interface Endpoints
+    VPCEndpointSecurityGroup:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupDescription: Security group for VPC Interface Endpoints
+        VpcId: !Ref VPC
+        SecurityGroupIngress:
+          - IpProtocol: tcp
+            FromPort: 443
+            ToPort: 443
+            SourceSecurityGroupId: !Ref LambdaSecurityGroup
+        Tags:
+          - Key: Name
+            Value: ${self:service}-${sls:stage}-vpc-endpoint-sg
+
     # ────────────────────────────────────────────────────────────────
     # 7. VPC FLOW LOGS (Auditoría de tráfico)
     # ────────────────────────────────────────────────────────────────
