@@ -30,6 +30,12 @@ export const main = handler(async (event) => {
   const body = parseBody(event);
   const { tenantId } = body;
   
+  console.log('Switch Tenant Request:', { 
+    sub: user.sub, 
+    tenantId, 
+    table: T_TENANT_USERS 
+  });
+
   if (!tenantId) {
     const error = new Error('tenantId is required');
     error.statusCode = 400;

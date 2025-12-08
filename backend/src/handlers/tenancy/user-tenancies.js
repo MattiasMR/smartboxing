@@ -25,11 +25,15 @@ export const main = handler(async (event) => {
   const memberships = await doc.send(new QueryCommand({
     TableName: T_TENANT_USERS,
     KeyConditionExpression: 'cognitoSub = :userId',
-    FilterExpression: '#role = :adminRole',
-    ExpressionAttributeNames: { '#role': 'role' },
+    FilterExpression: '#role = :adminRole AND #status = :activeStatus',
+    ExpressionAttributeNames: { 
+      '#role': 'role',
+      '#status': 'status'
+    },
     ExpressionAttributeValues: {
       ':userId': user.sub,
       ':adminRole': 'tenant_admin',
+      ':activeStatus': 'active',
     },
   }));
   
