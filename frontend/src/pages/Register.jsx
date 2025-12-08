@@ -87,6 +87,9 @@ export default function RegisterPage() {
   return (
     <div className="auth-page">
       <div className="auth-container">
+        <Link to="/" className="auth-back">
+          <span>←</span> Volver
+        </Link>
         <div className="auth-header">
           <Link to="/" className="auth-logo">
             <div className="logo-icon">📦</div>

@@ -1,7 +1,27 @@
+:root {
+  --terms-bg: linear-gradient(180deg, #f8fbff 0%, #eef2ff 100%);
+  --terms-card: #ffffff;
+  --terms-text: #0f172a;
+  --terms-muted: #475569;
+  --terms-border: rgba(15, 23, 42, 0.08);
+  --terms-accent: #2563eb;
+  --terms-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="dark"] :root {
+  --terms-bg: linear-gradient(180deg, #0f172a 0%, #0b1221 100%);
+  --terms-card: #0b162c;
+  --terms-text: #e5e7eb;
+  --terms-muted: #cbd5e1;
+  --terms-border: rgba(255, 255, 255, 0.06);
+  --terms-accent: #60a5fa;
+  --terms-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
 .terms-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #0f172a 0%, #0b1221 100%);
-  color: #e5e7eb;
+  background: var(--terms-bg);
+  color: var(--terms-text);
   padding: 48px 20px 64px;
   overflow-y: auto;
 }
@@ -20,8 +40,8 @@
   display: inline-block;
   padding: 6px 12px;
   border-radius: 999px;
-  background: rgba(59, 130, 246, 0.15);
-  color: #93c5fd;
+  background: rgba(37, 99, 235, 0.15);
+  color: var(--terms-accent);
   font-weight: 700;
   font-size: 12px;
   letter-spacing: 0.5px;
@@ -29,14 +49,14 @@
 
 .terms-hero h1 {
   margin: 10px 0;
-  color: #f8fafc;
+  color: var(--terms-text);
   font-size: 32px;
 }
 
 .terms-subtitle {
   margin: 0;
   max-width: 680px;
-  color: #cbd5e1;
+  color: var(--terms-muted);
   line-height: 1.5;
 }
 
@@ -59,15 +79,15 @@
 }
 
 .btn-terms-primary {
-  background: #3b82f6;
-  color: #0b1221;
+  background: var(--terms-accent);
+  color: var(--terms-bg);
   box-shadow: 0 10px 30px rgba(59, 130, 246, 0.35);
 }
 
 .btn-terms-secondary {
   background: transparent;
-  color: #e2e8f0;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--terms-text);
+  border: 1px solid var(--terms-border);
 }
 
 .btn-terms-primary:hover,
@@ -84,18 +104,18 @@
 }
 
 .terms-card {
-  background: #0b162c;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--terms-card);
+  border: 1px solid var(--terms-border);
   border-radius: 14px;
   padding: 18px;
-  color: #cbd5e1;
+  color: var(--terms-muted);
   line-height: 1.6;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--terms-shadow);
 }
 
 .terms-card h2 {
   margin: 0 0 8px;
-  color: #f8fafc;
+  color: var(--terms-text);
   font-size: 18px;
 }
 

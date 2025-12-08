@@ -7,7 +7,13 @@ export default function LandingPage() {
   const { user } = useAuth();
 
   const handleScrollTop = (event) => {
-    event.preventDefault();
+    if (event?.preventDefault) event.preventDefault();
+    const hero = document.getElementById('hero-tag');
+    if (hero) {
+      const y = hero.getBoundingClientRect().top + window.pageYOffset - 120;
+      window.scrollTo({ top: y < 0 ? 0 : y, behavior: 'smooth' });
+      return;
+    }
     const scrollElement = document.scrollingElement || document.documentElement;
     if (scrollElement?.scrollTo) {
       scrollElement.scrollTo({ top: 0, behavior: 'smooth' });
@@ -15,7 +21,6 @@ export default function LandingPage() {
       scrollElement.scrollTop = 0;
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    document.body.scrollTop = 0;
   };
 
   const handleGetStarted = () => {
@@ -31,7 +36,7 @@ export default function LandingPage() {
       {/* Navigation */}
       <nav className="landing-nav">
         <div className="nav-container">
-          <a href="#top" className="nav-logo" onClick={handleScrollTop}>
+          <a className="nav-logo" href="#inicio">
             <div className="nav-logo-icon">📦</div>
             <span>SmartBoxing</span>
           </a>
@@ -71,11 +76,11 @@ export default function LandingPage() {
       <section id="inicio" className="hero">
         <div className="hero-container">
           <div className="hero-content">
-            <div className="hero-badge">
+            <div className="hero-badge" id="hero-tag">
               <span className="badge-icon">✨</span>
               Gestión de Espacios Inteligente
             </div>
-            <h1 className="hero-title">
+            <h1 className="hero-title" id="hero-title">
               Gestiona tus <span className="hero-highlight">Espacios Físicos</span>
               <br />
               de forma simple y eficiente

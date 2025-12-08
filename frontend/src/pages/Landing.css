@@ -22,6 +22,13 @@
   --landing-shadow: 0 25px 45px -15px rgba(2, 6, 23, 0.85);
 }
 
+[data-theme="dark"] .nav-logo-icon,
+[data-theme="dark"] .btn-nav-primary,
+[data-theme="dark"] .btn-hero-primary,
+[data-theme="dark"] .pricing-card-featured {
+  box-shadow: 0 15px 35px rgba(34, 211, 238, 0.35);
+}
+
 
 .landing-page {
   min-height: 100vh;
@@ -31,8 +38,8 @@
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
-
 .landing-nav {
   position: sticky;
   top: 0;
@@ -63,6 +70,7 @@
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--landing-text);
+  cursor: pointer;
 }
 
 .nav-logo-icon {
@@ -123,6 +131,7 @@
 /* Hero */
 .hero {
   padding: 4rem 1.5rem 2rem;
+  scroll-margin-top: 140px;
 }
 
 .hero-container {
