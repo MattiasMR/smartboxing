@@ -3,7 +3,7 @@
  * Allows tenant_admin to switch between tenants they manage
  */
 
-import { QueryCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand } from '@aws-sdk/lib-dynamodb';
 import { 
   CognitoIdentityProviderClient, 
   AdminUpdateUserAttributesCommand 
@@ -36,22 +36,20 @@ export const main = handler(async (event) => {
     throw error;
   }
   
-  // Query all memberships for this user, then filter for the requested tenant
+  // Get user's tenant membership using GetCommand
   // TenantUsers table has cognitoSub as PK only (no sort key)
-  const membershipsResult = await doc.send(new QueryCommand({
+  // Each user has ONE record that contains their tenantId
+  const membershipResult = await doc.send(new GetCommand({
     TableName: T_TENANT_USERS,
-    KeyConditionExpression: 'cognitoSub = :userId',
-    ExpressionAttributeValues: {
-      ':userId': user.sub,
+    Key: {
+      cognitoSub: user.sub,
     },
   }));
   
-  // Find the membership for the requested tenant
-  const membership = (membershipsResult.Items || []).find(
-    item => item.tenantId === tenantId
-  );
+  const membership = membershipResult.Item;
   
-  if (!membership) {
+  // Check if user has access to the requested tenant
+  if (!membership || membership.tenantId !== tenantId) {
     const error = new Error('No tienes acceso a esta tenencia');
     error.statusCode = 403;
     throw error;
