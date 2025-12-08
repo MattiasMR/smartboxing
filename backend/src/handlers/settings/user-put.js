@@ -6,7 +6,9 @@ import { getOptionalTenantId } from '../../lib/auth.js';
 
 export const main = handler(async (event) => {
   const claims = event.requestContext?.authorizer?.jwt?.claims ?? {};
-  const tenantId = getOptionalTenantId(event);
+  const rawTenantId = getOptionalTenantId(event);
+  // Use 'global' as fallback for users without active tenant
+  const tenantId = rawTenantId || 'global';
   const userSub = claims['sub'];
 
   if (!userSub) {
