@@ -1344,6 +1344,8 @@ resources:
                   aws:SecureTransport: false
 
     # Cognito Identity Provider Endpoint (Interface - Necesario para Lambdas en VPC)
+    # NOTA: Cognito IDP no soporta us-east-1a, solo us-east-1b, 1c, 1d
+    # Por eso solo usamos PrivateSubnetB (que está en us-east-1b)
     CognitoIdpEndpoint:
       Type: AWS::EC2::VPCEndpoint
       Properties:
@@ -1351,7 +1353,6 @@ resources:
         ServiceName: com.amazonaws.${self:provider.region}.cognito-idp
         VpcEndpointType: Interface
         SubnetIds:
-          - !Ref PrivateSubnetA
           - !Ref PrivateSubnetB
         SecurityGroupIds:
           - !Ref VPCEndpointSecurityGroup
