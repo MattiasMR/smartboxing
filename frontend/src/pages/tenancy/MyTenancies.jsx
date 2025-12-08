@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getUserTenancies, listTenancyRequests, switchTenant } from '../../api/tenancy.js';
 import { useAuthContext } from '../../auth/AuthContext.js';
+import { forceRefreshSession } from '../../auth/cognitoAuth.js';
 import './TenancyPages.css';
 
 export default function MyTenancies() {
@@ -52,6 +53,15 @@ export default function MyTenancies() {
           tenantName: tenancy?.tenantName || data.tenant?.name || '',
           role: tenancy?.role || data.role || 'tenant_admin',
         });
+      }
+
+      // Force token refresh to get new claims (tenantId, role) from Cognito
+      try {
+        console.log('Refreshing session to get new tenant claims...');
+        await forceRefreshSession();
+        console.log('Session refreshed successfully');
+      } catch (e) {
+        console.error('Failed to refresh session after tenant switch:', e);
       }
       
       queryClient.invalidateQueries();

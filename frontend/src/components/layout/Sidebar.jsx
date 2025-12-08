@@ -9,7 +9,6 @@ import { useAuthContext } from '../../auth/AuthContext.js';
 const tenantNavItems = [
   { id: 'dashboard', label: 'Dashboard', icon: <FaChartBar />, path: '/dashboard' },
   { id: 'boxes', label: 'Boxes', icon: <FaTh />, path: '/boxes' },
-  { id: 'staff', label: 'Staff', icon: <FaUsers />, path: '/staff' },
   { id: 'appointments', label: 'Citas', icon: <FaCalendarAlt />, path: '/appointments' },
 ];
 
@@ -80,9 +79,9 @@ function Sidebar({ isOpen, onClose }) {
       
       {/* Panel Admin - first for super_admin, or visible for tenant_admin WITH active tenancy */}
       {(isSuperAdmin() || (isTenantAdmin() && hasTenancy)) && (
-        <li className={location.pathname.startsWith('/admin') ? 'active admin-link' : 'admin-link'}>
-          <Link to={isSuperAdmin() ? "/admin/tenants" : "/admin/users"} onClick={handleLinkClick}>
-            <FaUserShield />
+        <li className={(location.pathname.startsWith('/admin') || location.pathname === '/staff') ? 'active admin-link' : 'admin-link'}>
+          <Link to={isSuperAdmin() ? "/admin/tenants" : "/staff"} onClick={handleLinkClick}>
+            {isSuperAdmin() ? <FaUserShield /> : <FaUsers />}
             <span className="nav-label">{isSuperAdmin() ? 'Panel Admin' : 'Gestionar Usuarios'}</span>
           </Link>
         </li>
@@ -118,6 +117,14 @@ function Sidebar({ isOpen, onClose }) {
               </Link>
             </li>
           ))}
+          
+          {/* Exit Tenancy Option */}
+          <li className="exit-tenancy-link">
+            <Link to="/account/tenancies" onClick={handleLinkClick} style={{ color: 'var(--text-secondary)', borderTop: '1px solid var(--border-color)', marginTop: '10px', paddingTop: '10px' }}>
+              <FaBuilding />
+              <span className="nav-label">Salir de Tenencia</span>
+            </Link>
+          </li>
         </>
       )}
     </ul>
