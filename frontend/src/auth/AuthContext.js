@@ -27,7 +27,7 @@ export function useAuthContext() {
     throw new Error('useAuthContext must be used within AuthProvider');
   }
   
-  const { user } = context;
+  const { user, switchTenantLocally, clearActiveTenant } = context;
   
   // Helper functions for role checks
   const hasRole = (requiredRole) => {
@@ -52,5 +52,8 @@ export function useAuthContext() {
     tenantId: user?.tenantId,
     tenantName: user?.tenantName,
     role: user?.role,
+    // Tenant switching
+    switchTenantLocally,
+    clearActiveTenant,
   };
 }

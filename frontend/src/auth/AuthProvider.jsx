@@ -24,17 +24,34 @@ function parseJwt(token) {
 import { ROLES } from './AuthContext.js';
 
 // Extract user info from JWT payload including custom attributes
+// Also checks localStorage for tenant override (needed after switch before token refresh)
+// Note: tenantId === 'system' means super_admin with no active tenant
 function extractUserFromPayload(payload) {
   if (!payload) return null;
+  
+  // Check if there's a local tenant override (set after switching tenants)
+  const localTenantId = localStorage.getItem('active_tenant_id');
+  const localTenantName = localStorage.getItem('active_tenant_name');
+  const localRole = localStorage.getItem('active_tenant_role');
+  
+  // Get tenant from token or local override
+  let tenantId = localTenantId || payload['custom:tenantId'] || null;
+  let tenantName = localTenantName || payload['custom:tenantName'] || null;
+  
+  // 'system' tenant means super_admin without active tenant selection
+  if (tenantId === 'system') {
+    tenantId = null;
+    tenantName = null;
+  }
   
   return {
     email: payload.email || 'Usuario',
     name: payload.name || payload.email || 'Usuario',
     sub: payload.sub,
-    // Custom attributes from Cognito
-    role: payload['custom:role'] || ROLES.STAFF,
-    tenantId: payload['custom:tenantId'] || null,
-    tenantName: payload['custom:tenantName'] || null,
+    // Custom attributes from Cognito, with local override for tenant
+    role: localRole || payload['custom:role'] || ROLES.STAFF,
+    tenantId,
+    tenantName,
   };
 }
 
@@ -67,6 +84,10 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('id_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('expires_at');
+    // Clear tenant override on logout
+    localStorage.removeItem('active_tenant_id');
+    localStorage.removeItem('active_tenant_name');
+    localStorage.removeItem('active_tenant_role');
     setAuth({ isAuth: false, user: null, appName: 'SmartBoxing' });
   };
 
@@ -160,6 +181,66 @@ export function AuthProvider({ children }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Solo al montar, auth.isAuth se evalúa en el momento del mount
 
+  /**
+   * Switch tenant locally - updates state immediately without waiting for Cognito
+   * This is called after the backend API confirms the switch
+   * @param {Object} tenantInfo - { tenantId, tenantName, role }
+   */
+  const switchTenantLocally = useCallback((tenantInfo) => {
+    const { tenantId, tenantName, role } = tenantInfo;
+    
+    console.log('[AuthProvider] switchTenantLocally:', tenantInfo);
+    
+    // Store in localStorage for persistence
+    if (tenantId) {
+      localStorage.setItem('active_tenant_id', tenantId);
+      localStorage.setItem('active_tenant_name', tenantName || '');
+      localStorage.setItem('active_tenant_role', role || 'tenant_admin');
+    } else {
+      localStorage.removeItem('active_tenant_id');
+      localStorage.removeItem('active_tenant_name');
+      localStorage.removeItem('active_tenant_role');
+    }
+    
+    // Update auth state immediately
+    setAuth(prev => ({
+      ...prev,
+      user: prev.user ? {
+        ...prev.user,
+        tenantId: tenantId || null,
+        tenantName: tenantName || null,
+        role: role || prev.user.role,
+      } : null,
+    }));
+  }, []);
+
+  /**
+   * Clear tenant selection - used to go back to "My Tenancies" view
+   */
+  const clearActiveTenant = useCallback(() => {
+    console.log('[AuthProvider] clearActiveTenant');
+    localStorage.removeItem('active_tenant_id');
+    localStorage.removeItem('active_tenant_name');
+    localStorage.removeItem('active_tenant_role');
+    
+    // Re-read user from token without local override
+    const id_token = localStorage.getItem('id_token');
+    if (id_token) {
+      const payload = parseJwt(id_token);
+      if (payload) {
+        const user = {
+          email: payload.email || 'Usuario',
+          name: payload.name || payload.email || 'Usuario',
+          sub: payload.sub,
+          role: payload['custom:role'] || ROLES.STAFF,
+          tenantId: null, // Force null
+          tenantName: null,
+        };
+        setAuth(prev => ({ ...prev, user }));
+      }
+    }
+  }, []);
+
   return (
     <AuthCtx.Provider value={{ 
       auth, 
@@ -167,6 +248,8 @@ export function AuthProvider({ children }) {
       logout, 
       login, 
       refreshUser,
+      switchTenantLocally,
+      clearActiveTenant,
       loading,
       user: auth.user, 
       appName: auth.appName, 

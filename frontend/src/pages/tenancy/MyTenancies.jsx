@@ -7,14 +7,14 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getUserTenancies, listTenancyRequests, switchTenant } from '../../api/tenancy.js';
-import { useAuth } from '../../auth/useAuth.js';
+import { useAuthContext } from '../../auth/AuthContext.js';
 import './TenancyPages.css';
 
 export default function MyTenancies() {
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user, refreshUser } = useAuth();
+  const { user, switchTenantLocally } = useAuthContext();
   const [successMessage, setSuccessMessage] = useState(location.state?.message || null);
   const [switchingTenantId, setSwitchingTenantId] = useState(null);
 
@@ -41,16 +41,25 @@ export default function MyTenancies() {
   // Switch tenant mutation - navigates to dashboard after switch
   const switchMutation = useMutation({
     mutationFn: switchTenant,
-    onSuccess: async () => {
-      // Refresh user data to get new tenant info
-      if (refreshUser) {
-        await refreshUser();
+    onSuccess: async (data, tenantId) => {
+      // Get tenant info from our local data
+      const tenancy = tenancies.find(t => t.tenantId === tenantId);
+      
+      // Update local state immediately (don't wait for Cognito token refresh)
+      if (switchTenantLocally) {
+        switchTenantLocally({
+          tenantId: tenantId,
+          tenantName: tenancy?.tenantName || data.tenant?.name || '',
+          role: tenancy?.role || data.role || 'tenant_admin',
+        });
       }
+      
       queryClient.invalidateQueries();
       // Navigate to dashboard after successful switch
       navigate('/dashboard');
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Error switching tenant:', error);
       setSwitchingTenantId(null);
     },
   });
