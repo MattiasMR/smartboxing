@@ -37,6 +37,7 @@ import UserForm from './pages/admin/UserForm.jsx';
 import MyTenancies from './pages/tenancy/MyTenancies.jsx';
 import RequestTenancy from './pages/tenancy/RequestTenancy.jsx';
 import TenancyRequestsList from './pages/tenancy/TenancyRequestsList.jsx';
+import AboutPage from './pages/About.jsx';
 
 const qc = new QueryClient();
 
@@ -83,6 +84,7 @@ function AppContent() {
         
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/about" element={<AboutPage />} />
 
         {/* Rutas protegidas con Layout - requieren tenant activo */}
         <Route element={<ProtectedRoute requireTenant><MainLayout /></ProtectedRoute>}>

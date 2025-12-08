@@ -275,9 +275,9 @@ export default function LandingPage() {
                 <li>✓ Capacitación incluida</li>
                 <li>✓ Integraciones custom</li>
               </ul>
-              <a href="mailto:sales@smartboxing.com" className="btn-pricing">
+              <Link to="/about" className="btn-pricing">
                 Contactar Ventas
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -318,10 +318,10 @@ export default function LandingPage() {
             </div>
             <div className="footer-column">
               <h4>Compañía</h4>
-              <a href="#">Sobre Nosotros</a>
-              <a href="#">Blog</a>
-              <a href="#">Contacto</a>
-              <a href="#">Carreras</a>
+              <Link to="/about">Sobre Nosotros</Link>
+              <Link to="/about">Blog</Link>
+              <Link to="/about">Contacto</Link>
+              <Link to="/about">Carreras</Link>
             </div>
             <div className="footer-column">
               <h4>Legal</h4>
