@@ -13,6 +13,8 @@ import { useEffect } from 'react';
 import LandingPage from './pages/Landing.jsx';
 import LoginPage from './pages/Login.jsx';
 import RegisterPage from './pages/Register.jsx';
+import TermsPage from './pages/Terms.jsx';
+import AboutPage from './pages/About.jsx';
 
 import BoxesList from './pages/BoxesList.jsx';
 import BoxForm from './pages/BoxForm.jsx';
@@ -40,7 +42,6 @@ import AIAgent from './pages/analytics/AIAgent.jsx';
 import MyTenancies from './pages/tenancy/MyTenancies.jsx';
 import RequestTenancy from './pages/tenancy/RequestTenancy.jsx';
 import TenancyRequestsList from './pages/tenancy/TenancyRequestsList.jsx';
-import AboutPage from './pages/About.jsx';
 
 const qc = new QueryClient();
 
@@ -88,6 +89,7 @@ function AppContent() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/terms" element={<TermsPage />} />
 
         {/* Rutas protegidas con Layout - requieren tenant activo */}
         <Route element={<ProtectedRoute requireTenant><MainLayout /></ProtectedRoute>}>

@@ -190,8 +190,8 @@ export default function RegisterPage() {
 
             <p className="form-terms">
               Al crear una cuenta, aceptas nuestros{' '}
-              <a href="#" className="link-secondary">Términos de Servicio</a> y{' '}
-              <a href="#" className="link-secondary">Política de Privacidad</a>.
+              <Link to="/terms" className="link-secondary">Términos de Servicio</Link> y{' '}
+              <Link to="/terms" className="link-secondary">Política de Privacidad</Link>.
             </p>
           </form>
         ) : (

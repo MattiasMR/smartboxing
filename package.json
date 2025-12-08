@@ -38,7 +38,7 @@
   "author": "MattiasMR",
   "license": "MIT",
   "devDependencies": {
-    "@aws-sdk/client-cloudformation": "^3.682.0",
+    "@aws-sdk/client-cloudformation": "^3.947.0",
     "@aws-sdk/client-lambda": "^3.927.0",
     "serverless": "^4.4.7",
     "serverless-plugin-canary-deployments": "^0.8.0",
@@ -46,7 +46,9 @@
     "serverless-scriptable-plugin": "^1.2.0"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.946.0",
-    "@aws-sdk/lib-dynamodb": "^3.946.0"
+    "@aws-sdk/client-cognito-identity-provider": "^3.947.0",
+    "@aws-sdk/client-dynamodb": "^3.947.0",
+    "@aws-sdk/credential-providers": "^3.947.0",
+    "@aws-sdk/lib-dynamodb": "^3.947.0"
   }
 }

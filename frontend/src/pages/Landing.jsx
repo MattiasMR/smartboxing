@@ -313,8 +313,6 @@ export default function LandingPage() {
               <h4>Producto</h4>
               <a href="#features">Características</a>
               <a href="#pricing">Precios</a>
-              <a href="#">Integraciones</a>
-              <a href="#">Roadmap</a>
             </div>
             <div className="footer-column">
               <h4>Compañía</h4>
@@ -325,10 +323,10 @@ export default function LandingPage() {
             </div>
             <div className="footer-column">
               <h4>Legal</h4>
-              <a href="#">Privacidad</a>
-              <a href="#">Términos</a>
-              <a href="#">Seguridad</a>
-              <a href="#">GDPR</a>
+              <Link to="/terms">Privacidad</Link>
+              <Link to="/terms">Términos</Link>
+              <Link to="/terms">Seguridad</Link>
+              <Link to="/terms">GDPR</Link>
             </div>
           </div>
         </div>

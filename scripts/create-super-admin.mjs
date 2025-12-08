@@ -24,12 +24,15 @@ import {
   DynamoDBDocumentClient, 
   PutCommand 
 } from '@aws-sdk/lib-dynamodb';
+import { fromIni } from '@aws-sdk/credential-providers';
 import { randomUUID } from 'crypto';
 
 // Configuration
-const REGION = process.env.AWS_REGION || 'us-east-1';
-const STAGE = process.env.STAGE || 'prod';
+const REGION = (process.env.AWS_REGION || 'us-east-1').trim();
+// Default to dev unless explicitly overridden
+const STAGE = process.env.STAGE || 'dev';
 const SERVICE_NAME = 'smartboxing';
+const PROFILE = process.env.AWS_PROFILE;
 
 // Table names follow the serverless.yml pattern
 const T_TENANT_USERS = `${SERVICE_NAME}-TenantUsers-${STAGE}`;
@@ -48,8 +51,8 @@ const passwordIndex = args.indexOf('--password');
 const tempPassword = passwordIndex > -1 ? args[passwordIndex + 1] : null;
 
 // Initialize clients
-const cognito = new CognitoIdentityProviderClient({ region: REGION });
-const dynamodb = DynamoDBDocumentClient.from(new DynamoDBClient({ region: REGION }));
+// Explicit credential provider so profile works in Node
+const credentialsProvider = PROFILE ? fromIni({ profile: PROFILE }) : undefined;
 
 async function getUserPoolId() {
   // Get from CloudFormation outputs or environment
@@ -84,6 +87,14 @@ async function main() {
   console.log(`   Stage: ${STAGE}\n`);
   
   try {
+    const creds = credentialsProvider ? await credentialsProvider() : undefined;
+    if (creds) {
+      console.log(`   Using profile: ${PROFILE} (key: ${creds.accessKeyId})\n`);
+    }
+
+    const cognito = new CognitoIdentityProviderClient({ region: REGION, credentials: creds || credentialsProvider });
+    const dynamodb = DynamoDBDocumentClient.from(new DynamoDBClient({ region: REGION, credentials: creds || credentialsProvider }));
+
     const userPoolId = await getUserPoolId();
     console.log(`   User Pool: ${userPoolId}\n`);
     
@@ -183,7 +194,10 @@ async function main() {
       console.log('🔑 User can login with the provided password.\n');
     }
     
-    console.log('🌐 Login at: https://smartboxing.dev/login\n');
+    const loginUrl = STAGE === 'prod'
+      ? 'https://dcs2jw5epa29y.cloudfront.net/login'
+      : 'https://d3mydfxpimeym.cloudfront.net/login';
+    console.log(`🌐 Login at: ${loginUrl}\n`);
     
   } catch (error) {
     console.error('\n❌ Error:', error.message);
