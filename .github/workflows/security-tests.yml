@@ -69,7 +69,7 @@ jobs:
       - name: 🔍 OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.14.0
         with:
-          target: 'https://dge2h61tdyb0m.cloudfront.net'
+          target: 'https://smartboxing.dev'
           rules_file_name: '.zap/rules.tsv'
           cmd_options: '-a'
           fail_action: false

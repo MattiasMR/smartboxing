@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { loadAndApplySettings } from '../api/settings.js';
 import { AuthCtx } from './AuthContext.js';
-import { getSession, forceRefreshSession } from './cognitoAuth.js';
+import { forceRefreshSession } from './cognitoAuth.js';
 
 // Función para decodificar JWT y obtener payload (sin verificar firma)
 function parseJwt(token) {
