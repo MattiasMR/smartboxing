@@ -38,7 +38,7 @@ async function detectStage(client) {
     return smartboxingStacks[0].StackName.replace('smartboxing-', '');
   } catch (error) {
     console.warn('⚠️  Error detectando stage:', error.message);
-    return 'prod'; // Default a prod
+    return 'prod'; // Default a prod ya que es el stack principal
   }
 }
 
@@ -86,9 +86,9 @@ async function generateEnv() {
     const cognitoDomain = getOutput('CognitoDomain');
     const cloudFrontUrl = getOutput('CloudFrontUrl');
     
-    // Use custom domain for dev stage, CloudFront for prod
+    // Use custom domain for prod stage, CloudFront for others
     let frontendUrl;
-    if (STAGE === 'dev') {
+    if (STAGE === 'prod') {
       frontendUrl = 'https://smartboxing.dev';
     } else {
       frontendUrl = cloudFrontUrl || getOutput('FrontendUrl');
