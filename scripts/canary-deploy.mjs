@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * 🚀 SmartBoxing - Canary Deployment CLI
+ * SmartBoxing - Canary Deployment CLI
  * 
  * Este script permite gestionar despliegues Canary usando Feature Flags.
  * 
@@ -51,7 +51,7 @@ function log(msg, color = 'reset') {
 function printHeader() {
   console.log('');
   log('╔════════════════════════════════════════════════════════════╗', 'cyan');
-  log('║        🚀 SmartBoxing - Canary Deployment Manager          ║', 'cyan');
+  log('║        SmartBoxing - Canary Deployment Manager             ║', 'cyan');
   log('╚════════════════════════════════════════════════════════════╝', 'cyan');
   console.log('');
   log(`  Stage: ${STAGE}`, 'dim');
@@ -90,7 +90,7 @@ function printHelp() {
 }
 
 async function getStatus() {
-  log('📋 Estado de Feature Flags', 'yellow');
+  log('Estado de Feature Flags', 'yellow');
   log('────────────────────────────────────────', 'dim');
   
   try {
@@ -109,7 +109,7 @@ async function getStatus() {
       const pctBar = getProgressBar(flag.rolloutPercentage || 0);
       
       console.log('');
-      log(`  📌 ${flag.flagName}`, 'green');
+      log(`     ${flag.flagName}`, 'green');
       log(`     ${flag.description || '(sin descripción)'}`, 'dim');
       log(`     Estado: ${status}`);
       log(`     Rollout: ${pctBar} ${flag.rolloutPercentage || 0}%`);
@@ -135,7 +135,7 @@ function getProgressBar(percentage) {
 }
 
 async function createFlag(name, description = '') {
-  log(`\n📝 Creando feature flag: ${name}`, 'yellow');
+  log(`\n  Creando feature flag: ${name}`, 'yellow');
   
   const item = {
     flagName: name,
@@ -154,8 +154,8 @@ async function createFlag(name, description = '') {
     Item: item
   }));
   
-  log(`   ✅ Feature flag '${name}' creado con rollout 0%`, 'green');
-  log(`   📌 Usa "rollout ${name} 10" para empezar el Canary deployment`, 'dim');
+  log(`   Feature flag '${name}' creado con rollout 0%`, 'green');
+  log(`   Usa "rollout ${name} 10" para empezar el Canary deployment`, 'dim');
 }
 
 async function updateRollout(name, percentage) {
@@ -176,7 +176,7 @@ async function updateRollout(name, percentage) {
   }));
   
   if (!result.Attributes) {
-    log(`   ❌ Feature flag '${name}' no encontrado`, 'red');
+    log(`    Feature flag '${name}' no encontrado`, 'red');
     return;
   }
   
@@ -184,14 +184,14 @@ async function updateRollout(name, percentage) {
   log(`   ${bar} ${pct}%`, 'green');
   
   if (pct === 100) {
-    log(`   🎉 ¡Full rollout completado!`, 'green');
+    log(`    ¡Full rollout completado!`, 'green');
   } else if (pct > 0) {
-    log(`   ⏳ Canary deployment activo - monitoreando...`, 'yellow');
+    log(`    Canary deployment activo - monitoreando...`, 'yellow');
   }
 }
 
 async function rollback(name) {
-  log(`\n🔙 Rollback de '${name}'`, 'red');
+  log(`\n Rollback de '${name}'`, 'red');
   
   const result = await doc.send(new UpdateCommand({
     TableName: FEATURE_FLAGS_TABLE,
@@ -207,25 +207,29 @@ async function rollback(name) {
   }));
   
   if (!result.Attributes) {
-    log(`   ❌ Feature flag '${name}' no encontrado`, 'red');
+    log(`    Feature flag '${name}' no encontrado`, 'red');
     return;
   }
   
-  log(`   ✅ Rollback completado - feature deshabilitada (0%)`, 'yellow');
-  log(`   📌 Los usuarios ahora verán la versión anterior`, 'dim');
+  log(`    Rollback completado - feature deshabilitada (0%)`, 'yellow');
+  log(`    Los usuarios ahora verán la versión anterior`, 'dim');
 }
 
+/**
+ * Hash function (djb2) - DEBE coincidir exactamente con backend
+ */
 function simpleHash(str) {
-  let hash = 0;
+  let hash = 5381;
   for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash) + str.charCodeAt(i);
-    hash = hash & hash;
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) + hash) + char; // hash * 33 + char
+    hash = hash & hash; // Convert to 32-bit integer
   }
   return Math.abs(hash);
 }
 
 async function evaluate(name, userId = 'demo-user') {
-  log(`\n🔍 Evaluando '${name}' para usuario '${userId}'`, 'yellow');
+  log(`\n Evaluando '${name}' para usuario '${userId}'`, 'yellow');
   
   const result = await doc.send(new GetCommand({
     TableName: FEATURE_FLAGS_TABLE,
@@ -233,14 +237,14 @@ async function evaluate(name, userId = 'demo-user') {
   }));
   
   if (!result.Item) {
-    log(`   ❌ Feature flag '${name}' no encontrado`, 'red');
+    log(`    Feature flag '${name}' no encontrado`, 'red');
     return;
   }
   
   const flag = result.Item;
   
   if (!flag.enabled) {
-    log(`   ❌ Feature deshabilitada`, 'dim');
+    log(`    Feature deshabilitada`, 'dim');
     return;
   }
   
@@ -251,40 +255,40 @@ async function evaluate(name, userId = 'demo-user') {
   
   log(`   Rollout actual: ${percentage}%`);
   log(`   Hash del usuario: ${bucket}`, 'dim');
-  log(`   Resultado: ${enabled ? '✅ VE LA NUEVA FEATURE' : '❌ VE LA VERSIÓN ANTERIOR'}`, enabled ? 'green' : 'yellow');
+  log(`   Resultado: ${enabled ? ' SI VE LA NUEVA FEATURE' : ' NO VE LA VERSIÓN ANTERIOR'}`, enabled ? 'green' : 'yellow');
 }
 
 async function runDemo() {
-  log('\n🎬 DEMOSTRACIÓN DE CANARY DEPLOYMENT', 'magenta');
+  log('\n DEMOSTRACIÓN DE CANARY DEPLOYMENT', 'magenta');
   log('────────────────────────────────────────', 'dim');
   
   const demoFlag = 'demo-feature-' + Date.now();
   
   // Paso 1: Crear feature flag
-  log('\n📌 PASO 1: Crear Feature Flag', 'cyan');
+  log('\n PASO 1: Crear Feature Flag', 'cyan');
   await createFlag(demoFlag, 'Feature de demostración para Canary');
   await sleep(1000);
   
   // Paso 2: Canary 10%
-  log('\n📌 PASO 2: Iniciar Canary (10%)', 'cyan');
+  log('\n PASO 2: Iniciar Canary (10%)', 'cyan');
   log('   En producción, aquí monitorearíamos errores y latencia...', 'dim');
   await updateRollout(demoFlag, 10);
   await sleep(1000);
   
   // Evaluar algunos usuarios
-  log('\n📌 PASO 3: Verificar qué usuarios ven la feature', 'cyan');
+  log('\n PASO 3: Verificar qué usuarios ven la feature', 'cyan');
   for (let i = 1; i <= 5; i++) {
     await evaluate(demoFlag, `user-${i}`);
   }
   await sleep(1000);
   
   // Paso 4: Incrementar a 50%
-  log('\n📌 PASO 4: Incrementar rollout (50%)', 'cyan');
+  log('\n PASO 4: Incrementar rollout (50%)', 'cyan');
   await updateRollout(demoFlag, 50);
   await sleep(1000);
   
   // Evaluar de nuevo
-  log('\n📌 PASO 5: Verificar con más usuarios', 'cyan');
+  log('\n PASO 5: Verificar con más usuarios', 'cyan');
   for (let i = 1; i <= 5; i++) {
     await evaluate(demoFlag, `user-${i}`);
   }
@@ -292,15 +296,15 @@ async function runDemo() {
   
   // Paso 6: Simular error y rollback
   log('\n📌 PASO 6: ¡Detectamos un problema! Rollback...', 'cyan');
-  log('   ⚠️  Simulando: CloudWatch Alarm detecta errores > threshold', 'yellow');
+  log('     Simulando: CloudWatch Alarm detecta errores > threshold', 'yellow');
   await rollback(demoFlag);
   await sleep(1000);
   
   // Estado final
-  log('\n📌 RESULTADO FINAL:', 'cyan');
+  log('\n RESULTADO FINAL:', 'cyan');
   await getStatus();
   
-  log('\n✅ Demo completada', 'green');
+  log('\n Demo completada', 'green');
   log('   El Canary deployment protege a los usuarios de errores en producción', 'dim');
   log('   Solo un pequeño % ve la nueva versión, minimizando el impacto', 'dim');
 }

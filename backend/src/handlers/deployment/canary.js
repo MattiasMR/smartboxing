@@ -1,5 +1,5 @@
 /**
- * 🚀 Canary Deployment Handler
+ * Canary Deployment Handler
  * 
  * Implementa Canary Deployments usando Feature Flags en DynamoDB.
  * Permite desplegar gradualmente nuevas funcionalidades a un porcentaje de usuarios.
@@ -241,20 +241,20 @@ export const rollbackFeature = handler(async (event) => {
   }
 
   return {
-    message: `🔙 Feature '${flagName}' rolled back (0%, disabled)`,
+    message: `Feature '${flagName}' rolled back (0%, disabled)`,
     flag: result.Attributes
   };
 }, 'rollbackFeature');
 
 /**
- * Hash simple para consistencia en la evaluación
+ * Usa el algoritmo djb2 para mejor distribución
  */
 function simpleHash(str) {
-  let hash = 0;
+  let hash = 5381;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
+    hash = ((hash << 5) + hash) + char; // hash * 33 + char
+    hash = hash & hash; // Convert to 32-bit integer
   }
   return Math.abs(hash);
 }
@@ -298,7 +298,8 @@ export const evaluateFlag = handler(async (event) => {
     }
   }
 
-  const percentage = flag.rolloutPercentage || 0;
+  // Validar y normalizar percentage
+  const percentage = Math.min(100, Math.max(0, flag.rolloutPercentage || 0));
   
   if (percentage >= 100) {
     return { enabled: true, reason: 'full_rollout' };
