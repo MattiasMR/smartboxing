@@ -919,11 +919,15 @@ resources:
         KeySchema:
           - AttributeName: cognitoSub
             KeyType: HASH
+          - AttributeName: tenantId
+            KeyType: RANGE
         GlobalSecondaryIndexes:
           - IndexName: ByTenant
             KeySchema:
               - AttributeName: tenantId
                 KeyType: HASH
+              - AttributeName: cognitoSub
+                KeyType: RANGE
             Projection:
               ProjectionType: ALL
         PointInTimeRecoverySpecification:

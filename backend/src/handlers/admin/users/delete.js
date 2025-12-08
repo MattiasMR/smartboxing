@@ -26,26 +26,23 @@ export const main = handler(async (event) => {
     throw error;
   }
   
-  // Get existing user
+  // Get existing user using composite key (cognitoSub + tenantId)
+  // Admin can only delete users in their own tenant
   const existing = await doc.send(new GetCommand({
     TableName: T_TENANT_USERS,
-    Key: { cognitoSub: id },
+    Key: { 
+      cognitoSub: id,
+      tenantId: admin.tenantId,
+    },
   }));
   
   if (!existing.Item) {
-    const error = new Error('User not found');
+    const error = new Error('User not found in this tenant');
     error.statusCode = 404;
     throw error;
   }
   
   const tenantUser = existing.Item;
-  
-  // Check access: tenant admin can only delete users in their tenant
-  if (admin.role !== ROLES.SUPER_ADMIN && admin.tenantId !== tenantUser.tenantId) {
-    const error = new Error('Forbidden: Cannot delete users from another tenant');
-    error.statusCode = 403;
-    throw error;
-  }
   
   // Cannot delete yourself
   if (tenantUser.cognitoSub === admin.sub) {
@@ -67,10 +64,13 @@ export const main = handler(async (event) => {
     }
   }
   
-  // Delete from TenantUsers table
+  // Delete from TenantUsers table using composite key
   await doc.send(new DeleteCommand({
     TableName: T_TENANT_USERS,
-    Key: { cognitoSub: id },
+    Key: { 
+      cognitoSub: id,
+      tenantId: admin.tenantId,
+    },
   }));
   
   // Decrement tenant user count

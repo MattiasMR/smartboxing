@@ -38,26 +38,23 @@ export const main = handler(async (event) => {
     throw error;
   }
   
-  // Get existing user
+  // Get existing user using composite key (cognitoSub + tenantId)
+  // Admin can only update users in their own tenant
   const existing = await doc.send(new GetCommand({
     TableName: T_TENANT_USERS,
-    Key: { cognitoSub: id },
+    Key: { 
+      cognitoSub: id,
+      tenantId: admin.tenantId,
+    },
   }));
   
   if (!existing.Item) {
-    const error = new Error('User not found');
+    const error = new Error('User not found in this tenant');
     error.statusCode = 404;
     throw error;
   }
   
   const tenantUser = existing.Item;
-  
-  // Check access: tenant admin can only update users in their tenant
-  if (admin.role !== ROLES.SUPER_ADMIN && admin.tenantId !== tenantUser.tenantId) {
-    const error = new Error('Forbidden: Cannot update users from another tenant');
-    error.statusCode = 403;
-    throw error;
-  }
   
   const body = parseBody(event);
   const data = UpdateUserSchema.parse(body);
@@ -124,7 +121,10 @@ export const main = handler(async (event) => {
   
   const result = await doc.send(new UpdateCommand({
     TableName: T_TENANT_USERS,
-    Key: { cognitoSub: id },
+    Key: { 
+      cognitoSub: id,
+      tenantId: admin.tenantId,
+    },
     UpdateExpression: `SET ${updateParts.join(', ')}`,
     ExpressionAttributeNames: expressionNames,
     ExpressionAttributeValues: expressionValues,

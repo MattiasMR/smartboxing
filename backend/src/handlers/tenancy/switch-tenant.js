@@ -36,20 +36,20 @@ export const main = handler(async (event) => {
     throw error;
   }
   
-  // Get user's tenant membership using GetCommand
-  // TenantUsers table has cognitoSub as PK only (no sort key)
-  // Each user has ONE record that contains their tenantId
+  // Get user's tenant membership using GetCommand with composite key
+  // TenantUsers table has cognitoSub (PK) + tenantId (SK)
   const membershipResult = await doc.send(new GetCommand({
     TableName: T_TENANT_USERS,
     Key: {
       cognitoSub: user.sub,
+      tenantId: tenantId,
     },
   }));
   
   const membership = membershipResult.Item;
   
   // Check if user has access to the requested tenant
-  if (!membership || membership.tenantId !== tenantId) {
+  if (!membership) {
     const error = new Error('No tienes acceso a esta tenencia');
     error.statusCode = 403;
     throw error;

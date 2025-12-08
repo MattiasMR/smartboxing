@@ -25,26 +25,23 @@ export const main = handler(async (event) => {
     throw error;
   }
   
-  // Get user from TenantUsers
+  // Get user from TenantUsers using composite key (cognitoSub + tenantId)
+  // Admin can only see users in their own tenant
   const result = await doc.send(new GetCommand({
     TableName: T_TENANT_USERS,
-    Key: { cognitoSub: id },
+    Key: { 
+      cognitoSub: id,
+      tenantId: admin.tenantId,
+    },
   }));
   
   if (!result.Item) {
-    const error = new Error('User not found');
+    const error = new Error('User not found in this tenant');
     error.statusCode = 404;
     throw error;
   }
   
   const tenantUser = result.Item;
-  
-  // Check access: tenant admin can only see users in their tenant
-  if (admin.role !== ROLES.SUPER_ADMIN && admin.tenantId !== tenantUser.tenantId) {
-    const error = new Error('Forbidden: Cannot view users from another tenant');
-    error.statusCode = 403;
-    throw error;
-  }
   
   // Optionally enrich with Cognito info
   try {
