@@ -155,6 +155,47 @@ export const signOut = () => {
 };
 
 /**
+ * Force refresh the session to get updated tokens with new custom attributes
+ * This is needed after backend changes user attributes (like tenantId)
+ * @returns {Promise<{accessToken, idToken, refreshToken}>}
+ */
+export const forceRefreshSession = () => {
+  return new Promise((resolve, reject) => {
+    const cognitoUser = userPool.getCurrentUser();
+
+    if (!cognitoUser) {
+      reject(new Error('No current user'));
+      return;
+    }
+
+    // First get current session to get the refresh token
+    cognitoUser.getSession((err, session) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+
+      const refreshToken = session.getRefreshToken();
+      
+      // Force refresh using the refresh token
+      cognitoUser.refreshSession(refreshToken, (refreshErr, newSession) => {
+        if (refreshErr) {
+          console.error('Error refreshing session:', refreshErr);
+          reject(refreshErr);
+          return;
+        }
+
+        resolve({
+          accessToken: newSession.getAccessToken().getJwtToken(),
+          idToken: newSession.getIdToken().getJwtToken(),
+          refreshToken: newSession.getRefreshToken().getToken(),
+        });
+      });
+    });
+  });
+};
+
+/**
  * Get current authenticated user
  * @returns {Promise<CognitoUser>}
  */

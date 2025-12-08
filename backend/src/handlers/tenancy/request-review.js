@@ -132,23 +132,9 @@ export const main = handler(async (event) => {
     },
   }));
   
-  // Update user's Cognito attributes to reflect new tenant
-  // Note: If user already has a tenant, this will update to the new one
-  // In a more complex system, you'd handle multiple tenants differently
-  try {
-    await cognito.send(new AdminUpdateUserAttributesCommand({
-      UserPoolId: USER_POOL_ID,
-      Username: request.requesterEmail,
-      UserAttributes: [
-        { Name: 'custom:role', Value: 'tenant_admin' },
-        { Name: 'custom:tenantId', Value: tenantId },
-        { Name: 'custom:tenantName', Value: request.hospitalName },
-      ],
-    }));
-  } catch (cognitoError) {
-    console.error('Error updating Cognito user:', cognitoError);
-    // Don't fail the whole operation if Cognito update fails
-  }
+  // NOTE: We do NOT update Cognito attributes here anymore
+  // The user must explicitly select a tenancy from "Mis Tenencias" page
+  // This allows proper multi-tenant support where user chooses which tenant to work with
   
   // Update request status to approved
   await doc.send(new UpdateCommand({

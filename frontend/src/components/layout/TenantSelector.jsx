@@ -52,9 +52,15 @@ export default function TenantSelector() {
   const currentTenantId = user?.tenantId;
   const currentTenantName = user?.tenantName;
 
-  // Don't show if user has no tenancies or only one
+  // Don't show selector at all if user has no active tenantId
+  // User must explicitly select a tenancy from "Mis Tenencias" page first
+  if (!currentTenantId) {
+    return null;
+  }
+
+  // Don't show dropdown if user has only one tenancy
   if (isLoading || tenancies.length <= 1) {
-    // Still show current tenant name if available
+    // Show current tenant name as static display
     if (currentTenantName) {
       return (
         <div className="tenant-selector-static">

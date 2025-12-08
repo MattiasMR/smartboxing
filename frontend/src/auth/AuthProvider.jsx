@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { loadAndApplySettings } from '../api/settings.js';
 import { AuthCtx } from './AuthContext.js';
-import { getSession } from './cognitoAuth.js';
+import { getSession, forceRefreshSession } from './cognitoAuth.js';
 
 // Función para decodificar JWT y obtener payload (sin verificar firma)
 function parseJwt(token) {
@@ -109,15 +109,17 @@ export function AuthProvider({ children }) {
   };
 
   /**
-   * Refresh user data by getting a new session from Cognito
+   * Refresh user data by forcing a new session from Cognito
    * This is needed after switching tenants to get updated claims
+   * Uses forceRefreshSession to get fresh tokens with updated custom attributes
    */
   const refreshUser = useCallback(async () => {
-    console.log('[AuthProvider] refreshUser() called');
+    console.log('[AuthProvider] refreshUser() called - forcing token refresh');
     setLoading(true);
     
     try {
-      const session = await getSession();
+      // Force refresh to get new tokens with updated custom attributes
+      const session = await forceRefreshSession();
       
       if (session && session.idToken) {
         localStorage.setItem('access_token', session.accessToken);
