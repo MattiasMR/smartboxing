@@ -6,23 +6,6 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const handleScrollTop = (event) => {
-    if (event?.preventDefault) event.preventDefault();
-    const hero = document.getElementById('hero-tag');
-    if (hero) {
-      const y = hero.getBoundingClientRect().top + window.pageYOffset - 120;
-      window.scrollTo({ top: y < 0 ? 0 : y, behavior: 'smooth' });
-      return;
-    }
-    const scrollElement = document.scrollingElement || document.documentElement;
-    if (scrollElement?.scrollTo) {
-      scrollElement.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      scrollElement.scrollTop = 0;
-    }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   const handleGetStarted = () => {
     if (user) {
       navigate('/dashboard');
