@@ -162,6 +162,7 @@ jobs:
           AWS_LAMBDA_ROLE: ${{ secrets.AWS_LAMBDA_ROLE }}
           AWS_REGION: ${{ env.AWS_REGION }}
           STAGE: prod
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       
       - name: 📊 Deployment Summary
         run: |
@@ -244,6 +245,7 @@ jobs:
           AWS_LAMBDA_ROLE: ${{ secrets.AWS_LAMBDA_ROLE }}
           AWS_REGION: ${{ env.AWS_REGION }}
           STAGE: prod
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       
       - name: 📊 Monitor Canary Deployment
         run: |
