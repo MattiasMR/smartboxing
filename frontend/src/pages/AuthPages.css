@@ -41,7 +41,7 @@
   align-items: center;
   justify-content: center;
   background: var(--auth-bg);
-  padding: 3rem 1.5rem calc(120px + var(--safe-bottom));
+  padding: calc(10rem + env(safe-area-inset-top, 0px)) 1.5rem calc(120px + var(--safe-bottom));
   overflow-y: auto;
 }
 
@@ -408,7 +408,7 @@
 /* Responsive */
 @media (max-width: 640px) {
   .auth-page {
-    padding: 1rem 1rem calc(96px + var(--safe-bottom));
+    padding: calc(9rem + env(safe-area-inset-top, 0px)) 1rem calc(96px + var(--safe-bottom));
     min-height: 100vh;
     align-items: flex-start;
     overflow-y: auto;

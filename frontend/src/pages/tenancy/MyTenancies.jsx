@@ -197,21 +197,12 @@ export default function MyTenancies() {
       <section className="tenancy-section">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 className="tenancy-section-title">Mis Solicitudes</h2>
-          {/* Hide request button for Super Admin */}
-          {user?.role !== 'super_admin' && (
-            <Link to="/account/request-tenancy" className="tenancy-btn tenancy-btn-primary">
-              + Nueva Solicitud
-            </Link>
-          )}
         </div>
 
         {requests.length === 0 ? (
           <div className="tenancy-card">
             <p className="tenancy-no-requests">
               No tienes solicitudes de registro. 
-              {user?.role !== 'super_admin' && (
-                <Link to="/account/request-tenancy"> Solicitar una tenencia</Link>
-              )}
             </p>
           </div>
         ) : (
