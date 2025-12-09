@@ -16,9 +16,10 @@ export const getClientSettings = async () => {
         accentColor: '#f59e0b',
         darkMode: false,
       },
+      vocabulary: {},
       texts: {
         appName: 'SmartBoxing',
-          welcomeMessage: 'Bienvenido al sistema de gestión de boxes y staff',
+        welcomeMessage: 'Bienvenido al sistema de gestión de boxes y staff',
       },
     };
   }
@@ -95,13 +96,34 @@ export const applyTheme = (theme, options = {}) => {
   if (!theme) return;
   
   const root = document.documentElement;
-  const { preserveMode = false } = options;
+  const { preserveMode = false, tenantId: explicitTenantId } = options;
+
+  // Resolver tenant activo para scoping de logo
+  const activeTenantId = explicitTenantId
+    || localStorage.getItem('active_tenant_id')
+    || null;
+  const logoStorageKey = activeTenantId ? `app-logo-${activeTenantId}` : 'app-logo';
   
-  // Aplicar logo si existe
+  // Aplicar logo si existe (scoped por tenant) o limpiar si no hay logo
   if (theme.logoUrl) {
     const safeLogoUrl = sanitizeLogoUrl(theme.logoUrl);
-    localStorage.setItem('app-logo', safeLogoUrl);
-    window.dispatchEvent(new CustomEvent('logoChanged', { detail: safeLogoUrl }));
+    try {
+      localStorage.setItem(logoStorageKey, safeLogoUrl);
+      // limpiar clave genérica para evitar leaks entre tenants
+      if (logoStorageKey !== 'app-logo') {
+        localStorage.removeItem('app-logo');
+      }
+    } catch (e) {
+      console.warn('No se pudo guardar el logo en localStorage:', e);
+    }
+    window.dispatchEvent(new CustomEvent('logoChanged', { detail: { url: safeLogoUrl, tenantKey: logoStorageKey } }));
+  } else {
+    try {
+      localStorage.removeItem(logoStorageKey);
+    } catch (e) {
+      console.warn('No se pudo eliminar el logo en localStorage:', e);
+    }
+    window.dispatchEvent(new CustomEvent('logoChanged', { detail: { url: '', tenantKey: logoStorageKey } }));
   }
   
   // Aplicar colores principales
@@ -167,6 +189,23 @@ export const applyTheme = (theme, options = {}) => {
       root.style.setProperty('--hover-bg', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${isDark ? 0.15 : 0.08})`);
     }
   }
+};
+
+// ========== VOCABULARIO ==========
+
+export const applyVocabulary = (vocab = {}, options = {}) => {
+  const activeTenantId = options.tenantId || localStorage.getItem('active_tenant_id') || null;
+  const vocabStorageKey = activeTenantId ? `vocab-${activeTenantId}` : 'vocab-default';
+  try {
+    localStorage.setItem(vocabStorageKey, JSON.stringify(vocab));
+    // limpiar vocab genérico si estamos usando clave específica
+    if (vocabStorageKey !== 'vocab-default') {
+      localStorage.removeItem('vocab-default');
+    }
+  } catch (e) {
+    console.warn('No se pudo guardar el vocabulario en localStorage:', e);
+  }
+  window.dispatchEvent(new CustomEvent('vocabularyChanged', { detail: { vocab, vocabKey: vocabStorageKey } }));
 };
 
 /**

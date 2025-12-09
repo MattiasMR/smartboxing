@@ -3,9 +3,15 @@ import { useQuery } from '@tanstack/react-query';
 import { getDashboardMetrics } from '../api/analytics';
 import MetricCard from '../components/dashboard/MetricCard';
 import ChartCard from '../components/dashboard/ChartCard';
+import { useVocabulary, formatPlural } from '../hooks/useVocabulary';
 import './Dashboard.css';
 
 const Dashboard = () => {
+  const vocab = useVocabulary();
+  const resourceLabel = formatPlural(vocab.resource);
+  const reservationLabel = formatPlural(vocab.reservation);
+  const staffLabel = formatPlural(vocab.staff);
+  const customerLabel = formatPlural(vocab.customer);
   const defaultRange = {
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0],
@@ -59,7 +65,7 @@ const Dashboard = () => {
     );
   }
 
-  // Preparar datos para gráfico de estados de citas
+  // Preparar datos para gráfico de estados de Reservas
   const appointmentStatusData = Object.entries(metrics?.appointments?.byStatus || {}).map(
     ([status, count]) => ({
       name: statusLabels[status] || status,
@@ -125,7 +131,7 @@ const Dashboard = () => {
       {/* Métricas principales */}
       <div className="dashboard__metrics-grid">
         <MetricCard
-          title="Total Citas"
+          title={`Total ${reservationLabel}`}
           value={metrics?.summary?.totalAppointments || 0}
           subtitle={`${metrics?.appointments?.completed || 0} completadas`}
           icon="📅"
@@ -133,7 +139,7 @@ const Dashboard = () => {
         />
 
         <MetricCard
-          title="Recursos agendables activos"
+          title={`${resourceLabel} activos`}
           value={metrics?.summary?.activeBoxes || 0}
           subtitle={`${metrics?.boxes?.occupancyRate || 0}% ocupación`}
           icon="🏥"
@@ -141,7 +147,7 @@ const Dashboard = () => {
         />
 
         <MetricCard
-          title="Staff Activo"
+          title={`${staffLabel} activos`}
           value={metrics?.summary?.activeStaff ?? metrics?.summary?.activeDoctors ?? 0}
           subtitle={`${Object.keys(staffMetrics?.bySpecialty || {}).length} cargos activos`}
           icon="👥"
@@ -160,7 +166,7 @@ const Dashboard = () => {
       {/* Métricas secundarias */}
       <div className="dashboard__secondary-metrics">
         <MetricCard
-          title="Clientes Registrados"
+          title={`${customerLabel} registrados`}
           value={metrics?.summary?.totalPatients || 0}
           subtitle={`${metrics?.patients?.active || 0} activos`}
           icon="👥"
@@ -168,7 +174,7 @@ const Dashboard = () => {
         />
 
         <MetricCard
-          title="Citas Programadas"
+          title={`${reservationLabel} programadas`}
           value={metrics?.appointments?.scheduled || 0}
           subtitle="Pendientes de atención"
           icon="🕐"
@@ -176,7 +182,7 @@ const Dashboard = () => {
         />
 
         <MetricCard
-          title="Citas Completadas"
+          title={`${reservationLabel} completadas`}
           value={metrics?.appointments?.completed || 0}
           subtitle="En este período"
           icon="✅"
@@ -184,7 +190,7 @@ const Dashboard = () => {
         />
 
         <MetricCard
-          title="Recursos agendables disponibles"
+          title={`${resourceLabel} disponibles`}
           value={metrics?.boxes?.available || 0}
           subtitle={`${metrics?.boxes?.occupied || 0} ocupados`}
           icon="🟢"
@@ -195,7 +201,7 @@ const Dashboard = () => {
       {/* Gráficos */}
       <div className="dashboard__charts">
         <ChartCard
-          title="Citas por Día"
+          title="Reservas por Día"
           type="bar"
           data={metrics?.appointments?.dailyData || []}
           xKey="date"
@@ -204,7 +210,7 @@ const Dashboard = () => {
         />
 
         <ChartCard
-          title="Distribución de Estados"
+          title="Distribución de estados"
           type="pie"
           data={appointmentStatusData}
           xKey="name"
@@ -247,6 +253,7 @@ const statusLabels = {
 };
 
 export default Dashboard;
+
 
 
 

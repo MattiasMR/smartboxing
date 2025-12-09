@@ -70,7 +70,7 @@ export default function SeedPage() {
       boxes: '📦 Recursos agendables',
       staff: '👥 Staff',
       doctors: '👥 Staff',
-      appointments: '📅 Citas'
+      appointments: '📅 Reservas'
     };
     
     return `${stepNames[step] || step}: ${current}/${total}`;
@@ -82,7 +82,7 @@ export default function SeedPage() {
         <h1>🌱 Poblar Base de Datos</h1>
         <p className="seed-description">
           Crea datos de prueba realistas usando Faker.js. Los IDs serán correlativos 
-          <code>001</code>, <code>002</code>, etc. para recursos agendables, staff y citas.
+          <code>001</code>, <code>002</code>, etc. para recursos agendables, staff y Reservas.
         </p>
 
         <div className="seed-config">
@@ -113,7 +113,7 @@ export default function SeedPage() {
               />
             </div>
             <div className="config-item">
-              <label htmlFor="numAppointments">Citas:</label>
+              <label htmlFor="numAppointments">Reservas:</label>
               <input
                 id="numAppointments"
                 type="number"
@@ -188,7 +188,7 @@ export default function SeedPage() {
             )}
             {results.appointments && (
               <div className="result-section">
-                <h4>📅 Citas</h4>
+                <h4>📅 Reservas</h4>
                 <p>
                   ✓ Creadas: {results.appointments.success || results.appointments.deleted || 0}
                   {(results.appointments.failed > 0) && <span> | ✗ Fallidos: {results.appointments.failed}</span>}
@@ -204,11 +204,12 @@ export default function SeedPage() {
             <li><strong>Poblar BD (API):</strong> Crea registros uno por uno usando los endpoints normales. Más lento pero con progreso detallado.</li>
             <li><strong>Recursos agendables:</strong> Se crean con IDs correlativos (001, 002, ...)</li>
             <li><strong>Staff:</strong> Nombres realistas en español con roles o cargos</li>
-            <li><strong>Citas:</strong> Fechas entre -7 días y +14 días, horarios 8:00-18:00</li>
-            <li><strong>Limpiar BD:</strong> Borra todos los registros (citas → staff → recursos agendables)</li>
+            <li><strong>Reservas:</strong> Fechas entre -7 días y +14 días, horarios 8:00-18:00</li>
+            <li><strong>Limpiar BD:</strong> Borra todos los registros (Reservas → staff → recursos agendables)</li>
           </ul>
         </div>
       </div>
     </div>
   );
 }
+

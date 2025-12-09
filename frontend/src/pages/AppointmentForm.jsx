@@ -9,6 +9,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { FaSave, FaTimes, FaSpinner } from 'react-icons/fa';
 import './Forms.css';
 import { nextSequentialId } from '../utils/idHelpers.js';
+import { useVocabulary, formatPlural } from '../hooks/useVocabulary.js';
 
 const statusOptions = ['scheduled', 'confirmed', 'completed', 'cancelled', 'no-show'];
 const statusLabels = {
@@ -39,203 +40,104 @@ const toIso = (dtLocal) => {
 const fromIsoToLocal = (iso) => {
   if (!iso) return '';
   const d = new Date(iso);
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const tzOffset = d.getTimezoneOffset() * 60000;
+  const local = new Date(d.getTime() - tzOffset);
+  return local.toISOString().slice(0, 16);
 };
 
 export default function AppointmentForm() {
-  const { id: idParam } = useParams();
-  const id = idParam ? decodeURIComponent(idParam) : null;
-  const isEdit = !!id;
+  const vocab = useVocabulary();
+  const resourceLabel = formatPlural(vocab.resource);
+  const reservationLabel = formatPlural(vocab.reservation);
+  const staffLabel = formatPlural(vocab.staff);
+  const customerLabel = formatPlural(vocab.customer);
+
   const nav = useNavigate();
+  const { id } = useParams();
+  const isEdit = !!id;
   const qc = useQueryClient();
 
-  const { register, handleSubmit, setValue, setError, clearErrors, formState: { errors } } = useForm({
+  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm({
     resolver: zodResolver(ApptSchema),
-    defaultValues: { id: '', idBox: '', idStaff: '', status: 'scheduled', startAt: '', endAt: '' }
+    defaultValues: {
+      id: '',
+      idBox: '',
+      idStaff: '',
+      status: 'scheduled',
+      startAt: '',
+      endAt: ''
+    }
   });
 
-  // Fetch client settings for schedule validation
+  const { data: boxes = [] } = useQuery({ queryKey: ['boxes'], queryFn: async () => (await api.get('/boxes')).data.items });
+  const { data: staff = [] } = useQuery({ queryKey: ['staff'], queryFn: async () => (await api.get('/staff')).data.items });
+
+  const { isLoading: loadingAppt } = useQuery({
+    queryKey: ['appointments', id],
+    queryFn: async () => {
+      const { data } = await api.get(`/appointments/${encodeURIComponent(id)}`);
+      const appt = {
+        ...data,
+        startAt: fromIsoToLocal(data.startAt),
+        endAt: fromIsoToLocal(data.endAt),
+      };
+      reset(appt); return appt;
+    },
+    enabled: isEdit,
+    retry: 1,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+
   const { data: clientSettings } = useQuery({
-    queryKey: ['settings', 'client'],
+    queryKey: ['client-settings'],
     queryFn: getClientSettings,
     staleTime: 5 * 60 * 1000
   });
 
-  const validateSchedule = (data) => {
-    if (!clientSettings?.schedule) return true;
-
-    const start = new Date(data.startAt);
-    const end = new Date(data.endAt);
-    const day = start.getDay(); // 0 = Sunday, 1 = Monday, etc.
-
-    // Check work days
-    if (clientSettings.schedule.workDays && !clientSettings.schedule.workDays.includes(day)) {
-      setError('startAt', { 
-        type: 'manual', 
-        message: 'La organización no atiende este día de la semana' 
-      });
-      return false;
-    }
-
-    // Check work hours
-    const startTime = clientSettings.schedule.startTime || '08:00';
-    const endTime = clientSettings.schedule.endTime || '20:00';
-    
-    const [startHour, startMin] = startTime.split(':').map(Number);
-    const [endHour, endMin] = endTime.split(':').map(Number);
-
-    const apptStartMinutes = start.getHours() * 60 + start.getMinutes();
-    const apptEndMinutes = end.getHours() * 60 + end.getMinutes();
-    
-    const workStartMinutes = startHour * 60 + startMin;
-    const workEndMinutes = endHour * 60 + endMin;
-
-    if (apptStartMinutes < workStartMinutes || apptEndMinutes > workEndMinutes) {
-      setError('startAt', { 
-        type: 'manual', 
-        message: `Las citas deben estar entre ${startTime} y ${endTime}` 
-      });
-      return false;
-    }
-
-    return true;
-  };
-
-  const { isLoading: loadingAppt } = useQuery({
-    queryKey: ['appointment', id],
-    queryFn: async () => {
-      const { data } = await api.get(`/appointments/${encodeURIComponent(id)}`);
-      setValue('id', data.id);
-      setValue('idBox', data.idBox);
-      setValue('idStaff', data.idStaff ?? data.idDoctor ?? '');
-      setValue('status', data.status || 'scheduled');
-      setValue('startAt', fromIsoToLocal(data.startAt));
-      setValue('endAt', fromIsoToLocal(data.endAt));
-      return data;
+  const mutation = useMutation({
+    mutationFn: async (values) => {
+      const payload = {
+        ...values,
+        startAt: toIso(values.startAt),
+        endAt: toIso(values.endAt),
+      };
+      if (isEdit) {
+        return api.put(`/appointments/${encodeURIComponent(id)}`, { appointment: payload });
+      }
+      return api.post('/appointments', { appointment: payload });
     },
-    enabled: isEdit,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    staleTime: 5 * 60 * 1000
+    onSuccess: () => {
+      qc.invalidateQueries(['appointments']);
+      nav('/appointments');
+    }
   });
 
-  const { data: boxes = [], isLoading: loadingBoxes } = useQuery({
-    queryKey: ['boxes'],
-    queryFn: async () => (await api.get('/boxes')).data.items,
-    staleTime: 60 * 1000
-  });
+  const isSubmitting = mutation.isPending;
+  const disableSubmit = isSubmitting;
 
-  const { data: staff = [], isLoading: loadingStaff } = useQuery({
-    queryKey: ['staff'],
-    queryFn: async () => (await api.get('/staff')).data.items,
-    staleTime: 60 * 1000
-  });
-
-  const { data: appointments = [], isLoading: loadingAppointmentList } = useQuery({
-    queryKey: ['appointments', 'all'],
-    queryFn: async () => (await api.get('/appointments')).data.items,
-    staleTime: 30 * 1000
-  });
-
-  const autoId = useMemo(() => (
-    !isEdit && appointments ? nextSequentialId(appointments) : null
-  ), [appointments, isEdit]);
+  const autoId = useMemo(() => {
+    if (isEdit || !clientSettings) return null;
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+  }, [isEdit, clientSettings]);
 
   useEffect(() => {
     if (!isEdit && autoId) {
-      setValue('id', autoId, { shouldValidate: true });
+      reset((prev) => ({ ...prev, id: autoId }));
     }
-  }, [autoId, isEdit, setValue]);
+  }, [autoId, isEdit, reset]);
 
-  const detectConflicts = (values) => {
-    let conflict = false;
-    let boxConflictReported = false;
-    let staffConflictReported = false;
-    const start = new Date(values.startAt);
-    const end = new Date(values.endAt);
-
-    for (const current of appointments || []) {
-      if (!current.startAt || !current.endAt) continue;
-      if (isEdit && current.id === id) continue;
-
-      const currentStart = new Date(current.startAt);
-      const currentEnd = new Date(current.endAt);
-      const overlaps = start < currentEnd && end > currentStart;
-      if (!overlaps) continue;
-
-      if (!boxConflictReported && current.idBox === values.idBox) {
-        setError('idBox', {
-          type: 'manual',
-          message: `El recurso agendable ${values.idBox} ya está asignado en ese horario.`
-        });
-        boxConflictReported = true;
-        conflict = true;
-      }
-
-      const staffId = current.idStaff ?? current.idDoctor;
-      if (!staffConflictReported && staffId === values.idStaff) {
-        setError('idStaff', {
-          type: 'manual',
-          message: `El staff ${values.idStaff} ya tiene una cita en ese horario.`
-        });
-        staffConflictReported = true;
-        conflict = true;
-      }
-    }
-
-    return conflict;
-  };
-
-  const createMut = useMutation({
-    mutationFn: async (values) => {
-      const payload = { ...values, startAt: toIso(values.startAt), endAt: toIso(values.endAt) };
-      return api.post('/appointments', { appointment: payload });
-    },
-    onSuccess: () => { qc.invalidateQueries(['appointments']); nav('/appointments'); }
-  });
-
-  const updateMut = useMutation({
-    mutationFn: async (values) => {
-      const payload = { ...values, startAt: toIso(values.startAt), endAt: toIso(values.endAt) };
-      return api.put(`/appointments/${encodeURIComponent(id)}`, { patch: payload });
-    },
-    onSuccess: () => { qc.invalidateQueries(['appointments']); nav('/appointments'); }
-  });
-
-  const onSubmit = (values) => {
-    clearErrors(['idBox', 'idStaff', 'startAt']);
-
-    if (!isEdit && !values.id) {
-      setError('id', { type: 'manual', message: 'No pudimos generar un ID automático. Recarga e intenta nuevamente.' });
-      return;
-    }
-
-    // Validate working hours
-    if (!validateSchedule(values)) {
-      return;
-    }
-
-    if (detectConflicts(values)) {
-      return;
-    }
-
-    if (isEdit) {
-      updateMut.mutate(values);
-      return;
-    }
-
-    createMut.mutate(values);
-  };
-  const isSubmitting = createMut.isPending || updateMut.isPending;
-  const isFormLoading = loadingAppt || loadingBoxes || loadingStaff || loadingAppointmentList;
-  const disableSubmit = isSubmitting || loadingBoxes || loadingStaff || loadingAppointmentList || (!isEdit && !autoId);
-
-  if (isFormLoading) {
+  if (loadingAppt) {
     return (
-      <div className="loading-container">
-        <FaSpinner className="spinner" />
-        <p>Cargando...</p>
+      <div className="form-page">
+        <div className="form-container">
+          <div className="form-loading">
+            <FaSpinner className="spinner" />
+            <p>Cargando {reservationLabel.toLowerCase()}...</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -244,63 +146,58 @@ export default function AppointmentForm() {
     <div className="form-page">
       <div className="form-container">
         <div className="form-header">
-          <h1 className="form-title">{isEdit ? 'Editar Cita' : 'Nueva Cita'}</h1>
+          <h1 className="form-title">{isEdit ? `Editar ${reservationLabel}` : `Nueva ${reservationLabel}`}</h1>
           <p className="form-subtitle">
-            {isEdit ? 'Modifica los datos de la cita' : 'Programa una nueva asignación de staff'}
+            {isEdit
+              ? `Actualiza los datos de la ${reservationLabel.toLowerCase()}`
+              : `Completa los datos para crear una ${reservationLabel.toLowerCase()}`}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="form">
+        <form onSubmit={handleSubmit((values) => mutation.mutate(values))} className="form">
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="appt-id" className="form-label">
-                ID de la Cita <span className="required">*</span>
+                ID de {reservationLabel} <span className="required">*</span>
               </label>
-              <input 
+              <input
                 id="appt-id"
-                {...register('id')} 
-                readOnly
+                {...register('id')}
                 className={`form-input ${errors.id ? 'error' : ''}`}
-                placeholder="Auto"
-                title="El ID se genera automáticamente"
+                placeholder="Ej: 0001"
+                readOnly={!!autoId || isEdit}
               />
-              <span className="form-hint">Los IDs se asignan automáticamente y no se pueden editar.</span>
               {errors.id && <span className="error-message">{errors.id.message}</span>}
             </div>
 
             <div className="form-group">
-              <label htmlFor="appt-status" className="form-label">
-                Estado <span className="required">*</span>
-              </label>
+              <label htmlFor="appt-status" className="form-label">Estado</label>
               <select
                 id="appt-status"
                 {...register('status')}
-                className={`form-select ${errors.status ? 'error' : ''}`}
+                className="form-select"
               >
-                {statusOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {statusLabels[option]}
-                  </option>
+                {statusOptions.map((opt) => (
+                  <option key={opt} value={opt}>{statusLabels[opt]}</option>
                 ))}
               </select>
-              {errors.status && <span className="error-message">{errors.status.message}</span>}
             </div>
           </div>
 
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="appt-box" className="form-label">
-                Recurso agendable <span className="required">*</span>
+                {vocab.resource} <span className="required">*</span>
               </label>
               <select
                 id="appt-box"
                 {...register('idBox')}
                 className={`form-select ${errors.idBox ? 'error' : ''}`}
               >
-                <option value="">Selecciona un recurso agendable</option>
+                <option value="">Selecciona {vocab.resource.toLowerCase()}</option>
                 {boxes.map((box) => (
                   <option key={box.id} value={box.id}>
-                    {`Recurso agendable ${box.id} - ${box.nombre || 'Sin nombre'}${box.pasillo ? ` · Referencia ${box.pasillo}` : ''}`}
+                    {box.nombre || `${vocab.resource} ${box.id}`}
                   </option>
                 ))}
               </select>
@@ -309,17 +206,17 @@ export default function AppointmentForm() {
 
             <div className="form-group">
               <label htmlFor="appt-staff" className="form-label">
-                Staff asignado <span className="required">*</span>
+                {vocab.staff} <span className="required">*</span>
               </label>
               <select
                 id="appt-staff"
                 {...register('idStaff')}
                 className={`form-select ${errors.idStaff ? 'error' : ''}`}
               >
-                <option value="">Selecciona un miembro del staff</option>
+                <option value="">Selecciona {vocab.staff.toLowerCase()}</option>
                 {staff.map((member) => (
                   <option key={member.id} value={member.id}>
-                    {`${member.nombre || 'Sin nombre'} - ID ${member.id}${member.especialidad ? ` · ${member.especialidad}` : ''}`}
+                    {member.nombre || `${vocab.staff} ${member.id}`}
                   </option>
                 ))}
               </select>
@@ -330,11 +227,11 @@ export default function AppointmentForm() {
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="appt-start" className="form-label">
-                Fecha y Hora de Inicio <span className="required">*</span>
+                Inicio <span className="required">*</span>
               </label>
-              <input 
+              <input
                 id="appt-start"
-                type="datetime-local" 
+                type="datetime-local"
                 {...register('startAt')}
                 className={`form-input ${errors.startAt ? 'error' : ''}`}
               />
@@ -343,11 +240,11 @@ export default function AppointmentForm() {
 
             <div className="form-group">
               <label htmlFor="appt-end" className="form-label">
-                Fecha y Hora de Término <span className="required">*</span>
+                Fin <span className="required">*</span>
               </label>
-              <input 
+              <input
                 id="appt-end"
-                type="datetime-local" 
+                type="datetime-local"
                 {...register('endAt')}
                 className={`form-input ${errors.endAt ? 'error' : ''}`}
               />
@@ -363,7 +260,7 @@ export default function AppointmentForm() {
               {isSubmitting ? (
                 <><FaSpinner className="spinner-small" /> Guardando...</>
               ) : (
-                <><FaSave /> {isEdit ? 'Guardar Cambios' : 'Crear Cita'}</>
+                <><FaSave /> Guardar {reservationLabel.toLowerCase()}</>
               )}
             </button>
           </div>
@@ -372,11 +269,3 @@ export default function AppointmentForm() {
     </div>
   );
 }
-
-
-
-
-
-
-
-

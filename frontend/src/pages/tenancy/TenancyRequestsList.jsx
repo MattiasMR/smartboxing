@@ -249,7 +249,7 @@ export default function TenancyRequestsList() {
                 <ul>
                   <li>Se creará la tenencia "{selectedRequest.hospitalName}"</li>
                   <li>El usuario {selectedRequest.requesterEmail} será asignado como administrador</li>
-                  <li>Podrá comenzar a gestionar recursos agendables, staff y citas</li>
+                  <li>Podrá comenzar a gestionar recursos agendables, staff y reservas</li>
                 </ul>
               </div>
             ) : (

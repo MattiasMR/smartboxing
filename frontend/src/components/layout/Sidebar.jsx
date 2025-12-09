@@ -6,23 +6,23 @@ import { FaTh, FaCalendarAlt, FaUsers, FaTimes, FaCog, FaChartBar, FaUserShield,
 import { useAuthContext } from '../../auth/AuthContext.js';
 import { switchTenant } from '../../api/tenancy.js';
 import { forceRefreshSession } from '../../auth/cognitoAuth.js';
-
-// Items que requieren una tenencia activa
-const tenantNavItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: <FaChartBar />, path: '/dashboard' },
-  { id: 'boxes', label: 'Recursos agendables', icon: <FaTh />, path: '/boxes' },
-  { id: 'staff', label: 'Staff', icon: <FaUsers />, path: '/staff' },
-  { id: 'appointments', label: 'Citas', icon: <FaCalendarAlt />, path: '/appointments' },
-];
+import { useVocabulary, formatPlural } from '../../hooks/useVocabulary.js';
 
 function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
   const { user, isTenantAdmin, isSuperAdmin, tenantId, clearActiveTenant } = useAuthContext();
+  const vocab = useVocabulary();
   
   // Determinar si el usuario tiene una tenencia activa
   const hasTenancy = !!tenantId;
   const isStaff = user?.role === 'staff';
   const isSuper = isSuperAdmin();
+  const tenantNavItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: <FaChartBar />, path: '/dashboard' },
+    { id: 'boxes', label: formatPlural(vocab.resource), icon: <FaTh />, path: '/boxes' },
+    { id: 'staff', label: vocab.staff, icon: <FaUsers />, path: '/staff' },
+    { id: 'appointments', label: formatPlural(vocab.reservation), icon: <FaCalendarAlt />, path: '/appointments' },
+  ];
 
   // Close mobile nav on any navigation
   useEffect(() => {
@@ -211,3 +211,4 @@ function Sidebar({ isOpen, onClose }) {
   );
 }
 export default Sidebar;
+

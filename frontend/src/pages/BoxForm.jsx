@@ -8,6 +8,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { FaSave, FaTimes, FaSpinner } from 'react-icons/fa';
 import './Forms.css';
 import { nextSequentialId } from '../utils/idHelpers.js';
+import { useVocabulary } from '../hooks/useVocabulary.js';
 
 const BoxSchema = z.object({
   id: z.string().min(1, 'El ID es requerido'),
@@ -23,8 +24,7 @@ export default function BoxForm() {
   const nav = useNavigate();
   const qc = useQueryClient();
   const [feedback, setFeedback] = useState(null);
-
-  console.log('[BoxForm] Mode:', isEdit ? 'EDIT' : 'CREATE', 'ID:', id);
+  const vocab = useVocabulary();
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
     resolver: zodResolver(BoxSchema),
@@ -34,19 +34,16 @@ export default function BoxForm() {
   const { isLoading: loadingBox } = useQuery({
     queryKey: ['box', id],
     queryFn: async () => {
-      console.log('[BoxForm] Fetching box data for ID:', id);
-      const startTime = Date.now();
       const { data } = await api.get(`/boxes/${encodeURIComponent(id)}`);
-      console.log('[BoxForm] Box data fetched in', Date.now() - startTime, 'ms');
       reset(data);
       return data;
     },
     enabled: isEdit,
-    retry: 1, // Solo 1 reintento en caso de error
+    retry: 1,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    cacheTime: 10 * 60 * 1000 // 10 minutos
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 10 * 60 * 1000
   });
 
   const { data: allBoxes = [] } = useQuery({
@@ -58,7 +55,7 @@ export default function BoxForm() {
 
   const autoId = useMemo(() => (
     !isEdit && allBoxes ? nextSequentialId(allBoxes) : null
-  ), [allBoxes, isEdit]);
+  ), [isEdit, allBoxes]);
 
   useEffect(() => {
     if (!isEdit && autoId) {
@@ -66,61 +63,36 @@ export default function BoxForm() {
     }
   }, [autoId, isEdit, setValue]);
 
-  const showFeedback = (type, message) => setFeedback({ type, message });
-  const clearFeedback = () => setFeedback(null);
-  const handleSuccessNavigation = () => {
-    setTimeout(() => nav('/boxes'), 900);
-  };
-  const getErrorMessage = (error, fallback) => (
-    error?.response?.data?.message || fallback
-  );
-
-  const createMut = useMutation({
-    mutationFn: async (values) => api.post('/boxes', { box: values }),
+  const mutation = useMutation({
+    mutationFn: async (values) => {
+      if (isEdit) {
+        return api.put(`/boxes/${encodeURIComponent(id)}`, { box: values });
+      }
+      return api.post('/boxes', { box: values });
+    },
     onSuccess: () => {
       qc.invalidateQueries(['boxes']);
-      showFeedback('success', '✅ Recurso agendable creado correctamente');
-      handleSuccessNavigation();
+      nav('/boxes');
     },
     onError: (error) => {
-      showFeedback('error', getErrorMessage(error, 'No pudimos crear el recurso agendable. Intenta nuevamente.'));
-    }
-  });
-
-  const updateMut = useMutation({
-    mutationFn: async (values) => api.put(`/boxes/${encodeURIComponent(id)}`, { patch: values }),
-    onSuccess: () => {
-      qc.invalidateQueries(['boxes']);
-      showFeedback('success', '✅ Cambios guardados');
-      handleSuccessNavigation();
-    },
-    onError: (error) => {
-      showFeedback('error', getErrorMessage(error, 'No pudimos guardar los cambios. Revisa los datos del recurso agendable.'));
+      setFeedback({ type: 'error', message: error.message || 'Error al guardar' });
     }
   });
 
   const onSubmit = (values) => {
-    clearFeedback();
-    if (!isEdit && !values.id) {
-      showFeedback('error', 'No pudimos generar un ID automático. Refresca e inténtalo nuevamente.');
-      return;
-    }
-
-    if (isEdit) {
-      updateMut.mutate(values);
-      return;
-    }
-
-    createMut.mutate(values);
+    setFeedback(null);
+    mutation.mutate(values);
   };
-  const isSubmitting = createMut.isPending || updateMut.isPending;
-  const disableSubmit = isSubmitting || (!isEdit && !autoId);
 
   if (loadingBox) {
     return (
-      <div className="loading-container">
-        <FaSpinner className="spinner" />
-        <p>Cargando recurso agendable...</p>
+      <div className="form-page">
+        <div className="form-container">
+          <div className="form-loading">
+            <FaSpinner className="spinner" />
+            <p>Cargando {vocab.resource.toLowerCase()}...</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -129,61 +101,28 @@ export default function BoxForm() {
     <div className="form-page">
       <div className="form-container">
         <div className="form-header">
-          <h1 className="form-title">{isEdit ? 'Editar recurso agendable' : 'Nuevo recurso agendable'}</h1>
+          <h1 className="form-title">{isEdit ? `Editar ${vocab.resource}` : `Nuevo ${vocab.resource}`}</h1>
           <p className="form-subtitle">
-            {isEdit ? 'Modifica los datos del recurso agendable' : 'Completa la información del nuevo recurso agendable'}
+            {isEdit ? `Modifica los datos del ${vocab.resource.toLowerCase()}` : `Completa la información del ${vocab.resource.toLowerCase()}`}
           </p>
         </div>
-
-        {feedback && (
-          <div className={`form-feedback form-feedback--${feedback.type}`}>
-            {feedback.message}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="form">
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="box-id" className="form-label">
-                ID del recurso agendable <span className="required">*</span>
+                ID del {vocab.resource} <span className="required">*</span>
               </label>
               <input 
                 id="box-id"
                 {...register('id')} 
-                readOnly
+                readOnly={!!autoId || isEdit}
                 className={`form-input ${errors.id ? 'error' : ''}`}
                 placeholder="Ej: 001"
                 title="El ID se asigna automáticamente"
               />
-              <span className="form-hint">El ID se genera automáticamente y no se puede cambiar.</span>
+              <span className="form-hint">El ID se genera automáticamente y no puede modificarse.</span>
               {errors.id && <span className="error-message">{errors.id.message}</span>}
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="box-name" className="form-label">
-                Nombre <span className="required">*</span>
-              </label>
-              <input 
-                id="box-name"
-                {...register('nombre')}
-                className={`form-input ${errors.nombre ? 'error' : ''}`}
-                placeholder="Ej: Consultorio 1"
-              />
-              {errors.nombre && <span className="error-message">{errors.nombre.message}</span>}
-            </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="box-pasillo" className="form-label">
-                Referencia
-              </label>
-              <input 
-                id="box-pasillo"
-                {...register('pasillo')}
-                className="form-input"
-                placeholder="Ej: Referencia A"
-              />
             </div>
 
             <div className="form-group">
@@ -202,15 +141,48 @@ export default function BoxForm() {
             </div>
           </div>
 
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="box-nombre" className="form-label">
+                Nombre del {vocab.resource} <span className="required">*</span>
+              </label>
+              <input 
+                id="box-nombre"
+                {...register('nombre')}
+                className={`form-input ${errors.nombre ? 'error' : ''}`}
+                placeholder={`Ej: ${vocab.resource} principal`}
+              />
+              {errors.nombre && <span className="error-message">{errors.nombre.message}</span>}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="box-pasillo" className="form-label">
+                {vocab.reference}
+              </label>
+              <input 
+                id="box-pasillo"
+                {...register('pasillo')}
+                className="form-input"
+                placeholder={`Ej: ${vocab.reference} 2B`}
+              />
+            </div>
+          </div>
+
+          {feedback?.type === 'error' && (
+            <div className="form-feedback error">
+              {feedback.message}
+            </div>
+          )}
+
           <div className="form-actions">
             <Link to="/boxes" className="btn-secondary">
               <FaTimes /> Cancelar
             </Link>
-            <button type="submit" className="btn-primary" disabled={disableSubmit}>
-              {isSubmitting ? (
+            <button type="submit" className="btn-primary" disabled={mutation.isPending}>
+              {mutation.isPending ? (
                 <><FaSpinner className="spinner-small" /> Guardando...</>
               ) : (
-                <><FaSave /> {isEdit ? 'Guardar Cambios' : 'Crear recurso agendable'}</>
+                <><FaSave /> Guardar</>
               )}
             </button>
           </div>

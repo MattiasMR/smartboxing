@@ -4,6 +4,7 @@ import { api } from '../api/client.js';
 import { Link } from 'react-router-dom';
 import { FaPlus, FaSpinner, FaSearch } from 'react-icons/fa';
 import BoxCard from '../components/boxes/BoxCard.jsx';
+import { useVocabulary, formatPlural } from '../hooks/useVocabulary.js';
 import './BoxesList.css';
 
 async function fetchBoxes() {
@@ -19,6 +20,10 @@ export default function BoxesList() {
   const qc = useQueryClient();
   const { data = [], isLoading } = useQuery({ queryKey: ['boxes'], queryFn: fetchBoxes });
   const [search, setSearch] = useState('');
+  const vocab = useVocabulary();
+  const resourceSingular = vocab.resource;
+  const resourcePlural = formatPlural(vocab.resource);
+  const referenceLabel = vocab.reference || 'Referencia';
   const mutation = useMutation({ 
     mutationFn: deleteBox, 
     onSuccess: () => qc.invalidateQueries(['boxes']) 
@@ -37,7 +42,7 @@ export default function BoxesList() {
   }, [data, search]);
 
   const handleDelete = (id) => {
-    if (window.confirm('¿Estás seguro de eliminar este recurso agendable?')) {
+    if (window.confirm(`¿Estás seguro de eliminar este ${resourceSingular.toLowerCase()}?`)) {
       mutation.mutate(id);
     }
   };
@@ -46,7 +51,7 @@ export default function BoxesList() {
     return (
       <div className="loading-container">
         <FaSpinner className="spinner" />
-        <p>Cargando recursos agendables...</p>
+        <p>Cargando {resourcePlural.toLowerCase()}...</p>
       </div>
     );
   }
@@ -55,19 +60,19 @@ export default function BoxesList() {
     <div className="boxes-list-page">
       <div className="page-header">
         <div className="page-header-content">
-          <h1 className="page-title">Recursos agendables</h1>
-          <p className="page-subtitle">Gestiona tus recursos agendables y sus referencias</p>
+          <h1 className="page-title">{resourcePlural}</h1>
+          <p className="page-subtitle">Gestiona tus {resourcePlural.toLowerCase()} y sus {formatPlural(referenceLabel).toLowerCase()}</p>
         </div>
         <Link to="/boxes/new" className="btn-primary">
-          <FaPlus /> Nuevo recurso agendable
+          <FaPlus /> Nuevo {resourceSingular.toLowerCase()}
         </Link>
       </div>
 
       {data.length === 0 ? (
         <div className="empty-state">
-          <p>No hay recursos agendables registrados</p>
+          <p>No hay {resourcePlural.toLowerCase()} registrados</p>
           <Link to="/boxes/new" className="btn-primary">
-            <FaPlus /> Crear primer recurso agendable
+            <FaPlus /> Crear primer {resourceSingular.toLowerCase()}
           </Link>
         </div>
       ) : (
@@ -77,7 +82,7 @@ export default function BoxesList() {
               <FaSearch />
               <input
                 type="search"
-                placeholder="Buscar por ID, nombre o referencia"
+                placeholder={`Buscar por ID, nombre o ${referenceLabel.toLowerCase()}`}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="search-input"
@@ -87,7 +92,7 @@ export default function BoxesList() {
 
           {filteredBoxes.length === 0 ? (
             <div className="empty-state">
-              <p>No encontramos recursos agendables que coincidan con {search}.</p>
+              <p>No encontramos {resourcePlural.toLowerCase()} que coincidan con {search}.</p>
             </div>
           ) : (
             <div className="boxes-grid">

@@ -4,6 +4,7 @@ import { api } from '../api/client.js';
 import { Link } from 'react-router-dom';
 import { FaPlus, FaSpinner, FaEdit, FaCalendarAlt, FaFilter } from 'react-icons/fa';
 import './AppointmentsList.css';
+import { useVocabulary, formatPlural } from '../hooks/useVocabulary.js';
 
 async function fetchAppointments({ from, to }) {
   const params = new URLSearchParams();
@@ -17,6 +18,12 @@ export default function AppointmentsList() {
   const [filters, setFilters] = useState({ from: '', to: '' });
   const [draftFrom, setDraftFrom] = useState('');
   const [draftTo, setDraftTo] = useState('');
+  const vocab = useVocabulary();
+  const resourceLabel = formatPlural(vocab.resource);
+  const reservationLabel = formatPlural(vocab.reservation);
+  const staffLabel = formatPlural(vocab.staff);
+  const referenceLabel = vocab.reference || 'Referencia';
+  const roleLabel = vocab.role || 'Cargo';
   const { data = [], isLoading, refetch } = useQuery({
     queryKey: ['appointments', filters],
     queryFn: () => fetchAppointments(filters)
@@ -67,10 +74,10 @@ export default function AppointmentsList() {
 
     return (
       <div className="box-cell">
-        <span className="box-cell__name">{box.nombre || `Recurso agendable ${box.id}`}</span>
+        <span className="box-cell__name">{box.nombre || `${vocab.resource} ${box.id}`}</span>
         <span className="box-cell__meta">
           ID {box.id}
-          {box.pasillo ? ` · Referencia ${box.pasillo}` : ''}
+          {box.pasillo ? ` · ${referenceLabel} ${box.pasillo}` : ''}
         </span>
       </div>
     );
@@ -87,7 +94,7 @@ export default function AppointmentsList() {
         <span className="staff-cell__name">{staffMember.nombre}</span>
         <span className="staff-cell__meta">
           ID {staffMember.id}
-          {staffMember.especialidad ? ` · ${staffMember.especialidad}` : ''}
+          {staffMember.especialidad ? ` · ${roleLabel} ${staffMember.especialidad}` : ''}
         </span>
       </div>
     );
@@ -97,7 +104,7 @@ export default function AppointmentsList() {
     return (
       <div className="loading-container">
         <FaSpinner className="spinner" />
-        <p>Cargando citas...</p>
+        <p>Cargando {reservationLabel.toLowerCase()}...</p>
       </div>
     );
   }
@@ -107,12 +114,12 @@ export default function AppointmentsList() {
       <div className="page-header">
         <div className="page-header-content">
           <h1 className="page-title">
-            <FaCalendarAlt /> Asignaciones de Staff
+            <FaCalendarAlt /> Asignaciones de {staffLabel}
           </h1>
-          <p className="page-subtitle">Gestiona las citas de tu organización asignando staff a recursos agendables</p>
+          <p className="page-subtitle">Gestiona las reservas de tu organización asignando staff a recursos agendables</p>
         </div>
         <Link to="/appointments/new" className="btn-primary">
-          <FaPlus /> Nueva Cita
+          <FaPlus /> Nueva {reservationLabel.slice(0,1).toUpperCase() + reservationLabel.slice(1).toLowerCase()}
         </Link>
       </div>
 
@@ -159,9 +166,9 @@ export default function AppointmentsList() {
       {data.length === 0 ? (
         <div className="empty-state">
           <FaCalendarAlt className="empty-icon" />
-          <p>No hay citas registradas</p>
+          <p>No hay {reservationLabel.toLowerCase()} registradas</p>
           <Link to="/appointments/new" className="btn-primary">
-            <FaPlus /> Crear primera cita
+            <FaPlus /> Crear primera {reservationLabel.toLowerCase()}
           </Link>
         </div>
       ) : (
@@ -170,8 +177,8 @@ export default function AppointmentsList() {
             <thead>
               <tr>
                 <th>Fecha y Hora</th>
-                <th>Recurso agendable</th>
-                <th>Staff</th>
+                <th>{vocab.resource}</th>
+                <th>{staffLabel}</th>
                 <th>Estado</th>
                 <th>Duración</th>
                 <th>Acciones</th>
@@ -197,7 +204,7 @@ export default function AppointmentsList() {
                     <Link 
                       to={`/appointments/${encodeURIComponent(appointment.id)}/edit`}
                       className="btn-table-edit"
-                      title="Editar cita"
+                      title="Editar reserva"
                     >
                       <FaEdit /> Editar
                     </Link>
@@ -211,3 +218,4 @@ export default function AppointmentsList() {
     </div>
   );
 }
+

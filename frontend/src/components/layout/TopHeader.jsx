@@ -14,9 +14,17 @@ function TopHeader({ onMenuClick, isOpen }) {
   const [institutionName, setInstitutionName] = useState(() => {
     return localStorage.getItem('institution-name') || '';
   });
-  const [logoUrl, setLogoUrl] = useState(() => {
-    return localStorage.getItem('app-logo') || '';
-  });
+  const getTenantKey = () => {
+    return localStorage.getItem('active_tenant_id') || (user?.tenantId ?? null);
+  };
+
+  const getStoredLogo = () => {
+    const key = getTenantKey();
+    const storageKey = key ? `app-logo-${key}` : 'app-logo';
+    return localStorage.getItem(storageKey) || '';
+  };
+
+  const [logoUrl, setLogoUrl] = useState(() => getStoredLogo());
   const { logout, user } = useAuth();
 
   useEffect(() => {
@@ -34,7 +42,18 @@ function TopHeader({ onMenuClick, isOpen }) {
     };
 
     const handleLogoChange = (event) => {
-      setLogoUrl(event.detail);
+      const detail = event.detail;
+      // Si se incluye tenantKey en el evento, valida que corresponda al tenant activo
+      if (detail?.tenantKey) {
+        const activeKey = getTenantKey();
+        if (detail.tenantKey !== `app-logo-${activeKey}` && detail.tenantKey !== 'app-logo') {
+          return;
+        }
+        setLogoUrl(detail.url || '');
+        return;
+      }
+      // Fallback: leer desde storage para el tenant actual
+      setLogoUrl(getStoredLogo());
     };
     
     window.addEventListener('appNameChanged', handleAppNameChange);
@@ -46,7 +65,12 @@ function TopHeader({ onMenuClick, isOpen }) {
       window.removeEventListener('institutionNameChanged', handleInstitutionNameChange);
       window.removeEventListener('logoChanged', handleLogoChange);
     };
-  }, []);
+  }, [getTenantKey]);
+
+  // Actualizar logo cuando cambie el tenant activo/usuario
+  useEffect(() => {
+    setLogoUrl(getStoredLogo());
+  }, [user]);
 
   const formattedDate = now.toLocaleDateString('es-CL', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',

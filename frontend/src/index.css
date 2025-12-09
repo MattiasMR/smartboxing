@@ -33,6 +33,12 @@ body {
   color: var(--text-primary);
   padding-bottom: var(--safe-bottom);
   overflow-x: hidden;
+  overflow-y: scroll; /* Forzar scrollbar visible en todas las páginas */
+}
+
+html {
+  min-height: 100%;
+  overflow-y: scroll; /* Forzar scrollbar visible incluso sin overflow */
 }
 
 a {

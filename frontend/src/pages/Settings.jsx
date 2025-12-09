@@ -5,6 +5,7 @@ import {
   getUserSettings,
   updateUserSettings,
   applyTheme,
+  applyVocabulary,
   uploadLogo 
 } from '../api/settings';
 import { useAuthContext } from '../auth/AuthContext.js';
@@ -103,6 +104,14 @@ const DEFAULT_CLIENT_SETTINGS = {
     logoUrl: '',
     selectedThemeId: 'corporate',
   },
+  vocabulary: {
+    staff: 'Staff',
+    resource: 'Recurso agendable',
+    customer: 'Cliente',
+    reference: 'Referencia',
+    reservation: 'Reserva',
+    role: 'Cargo',
+  },
   texts: {
     appName: 'SmartBoxing',
     institutionName: 'Mi Institución de Salud',
@@ -172,7 +181,7 @@ export default function SettingsProfessionalNew() {
   const loadSettings = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       // Only fetch client settings if user has access (tenant admin) AND has a tenant context
       let client = {};
       if (isTenantAdminUser && hasTenant) {
@@ -190,13 +199,31 @@ export default function SettingsProfessionalNew() {
         ...(client.theme || {}),
         selectedThemeId: client.theme?.selectedThemeId,
       };
+      // fallback: vocab guardado en localStorage por tenencia si backend no lo devuelve
+      let storedVocabulary = {};
+      try {
+        const activeTenantId = user?.tenantId || localStorage.getItem('active_tenant_id') || null;
+        const vocabStorageKey = activeTenantId ? `vocab-${activeTenantId}` : 'vocab-default';
+        const raw = localStorage.getItem(vocabStorageKey);
+        if (raw) storedVocabulary = JSON.parse(raw);
+      } catch (e) {
+        console.warn('No se pudo leer vocabulario almacenado', e);
+      }
+      const mergedVocabulary = {
+        ...DEFAULT_CLIENT_SETTINGS.vocabulary,
+        ...storedVocabulary,
+        ...(client.vocabulary || {}),
+      };
 
       const detectedThemeId = detectThemePreset(mergedTheme);
       mergedTheme.selectedThemeId = detectedThemeId;
 
+      const fallbackInstitution = client.texts?.institutionName || user?.tenantName || localStorage.getItem('active_tenant_name') || DEFAULT_CLIENT_SETTINGS.texts.institutionName;
+
       const mergedClientSettings = {
         theme: mergedTheme,
-        texts: { ...DEFAULT_CLIENT_SETTINGS.texts, ...(client.texts || {}) },
+        vocabulary: mergedVocabulary,
+        texts: { ...DEFAULT_CLIENT_SETTINGS.texts, ...(client.texts || {}), institutionName: fallbackInstitution },
         schedule: { ...DEFAULT_CLIENT_SETTINGS.schedule, ...(client.schedule || {}) },
         operational: { ...DEFAULT_CLIENT_SETTINGS.operational, ...(client.operational || {}) },
         branding: { ...DEFAULT_CLIENT_SETTINGS.branding, ...(client.branding || {}) },
@@ -205,6 +232,7 @@ export default function SettingsProfessionalNew() {
       setClientSettings(mergedClientSettings);
       setSelectedThemeId(detectedThemeId);
       setPreviewLogo(mergedClientSettings.theme.logoUrl || '');
+      applyVocabulary(mergedVocabulary, { tenantId: user?.tenantId || localStorage.getItem('active_tenant_id') });
 
       // Merge user preferences
       if (userSettings.preferences) {
@@ -266,7 +294,7 @@ export default function SettingsProfessionalNew() {
       setClientSettings(updatedSettings);
 
       // Apply immediately so header updates without reload
-      applyTheme(updatedTheme, { preserveMode: true });
+      applyTheme(updatedTheme, { preserveMode: true, tenantId: user?.tenantId || localStorage.getItem('active_tenant_id') });
 
       // Persist automatically so logout/login keeps the logo
       await updateClientSettings(updatedSettings);
@@ -279,9 +307,36 @@ export default function SettingsProfessionalNew() {
         ...prev,
         theme: previousTheme,
       }));
-      applyTheme(previousTheme, { preserveMode: true });
+      applyTheme(previousTheme, { preserveMode: true, tenantId: user?.tenantId || localStorage.getItem('active_tenant_id') });
       setPreviewLogo(previousTheme.logoUrl || '');
       setSelectedThemeId(detectThemePreset(previousTheme));
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemoveLogo = async () => {
+    const previousTheme = { ...clientSettings.theme };
+    try {
+      setUploading(true);
+      const updatedTheme = { ...clientSettings.theme, logoUrl: '' };
+      const updatedSettings = { ...clientSettings, theme: updatedTheme };
+
+      setClientSettings(updatedSettings);
+      setPreviewLogo('');
+
+      applyTheme(updatedTheme, { preserveMode: true, tenantId: user?.tenantId || localStorage.getItem('active_tenant_id') });
+      await updateClientSettings(updatedSettings);
+      showMessage('success', 'Logo eliminado para esta tenencia');
+    } catch (error) {
+      console.error('Error removing logo:', error);
+      showMessage('error', 'No se pudo eliminar el logo');
+      setClientSettings(prev => ({
+        ...prev,
+        theme: previousTheme,
+      }));
+      setPreviewLogo(previousTheme.logoUrl || '');
+      applyTheme(previousTheme, { preserveMode: true, tenantId: user?.tenantId || localStorage.getItem('active_tenant_id') });
     } finally {
       setUploading(false);
     }
@@ -294,7 +349,8 @@ export default function SettingsProfessionalNew() {
       await updateClientSettings(clientSettings);
       
       // Apply theme immediately
-      applyTheme(clientSettings.theme, { preserveMode: true });
+      applyTheme(clientSettings.theme, { preserveMode: true, tenantId: user?.tenantId || localStorage.getItem('active_tenant_id') });
+      applyVocabulary(clientSettings.vocabulary, { tenantId: user?.tenantId || localStorage.getItem('active_tenant_id') });
       
       // Update app name
       if (clientSettings.texts.appName) {
@@ -312,7 +368,7 @@ export default function SettingsProfessionalNew() {
         }));
       }
 
-      showMessage('success', '✅ Configuración guardada exitosamente');
+      showMessage('success', '✔ Configuración guardada exitosamente');
     } catch (error) {
       console.error('Error saving settings:', error);
       showMessage('error', 'Error al guardar configuración');
@@ -333,7 +389,7 @@ export default function SettingsProfessionalNew() {
         document.documentElement.setAttribute('data-theme', 'light');
       }
 
-      showMessage('success', '✅ Preferencias guardadas exitosamente');
+      showMessage('success', '✔ Preferencias guardadas exitosamente');
     } catch (error) {
       console.error('Error saving preferences:', error);
       showMessage('error', 'Error al guardar preferencias');
@@ -429,7 +485,7 @@ export default function SettingsProfessionalNew() {
     <div className="settings-professional-page">
       {message.text && (
         <div className={`settings-toast settings-toast-${message.type}`}>
-          {message.type === 'success' ? '✅' : '❌'} {message.text}
+          {message.type === 'success' ? '✔' : '�?'} {message.text}
         </div>
       )}
 
@@ -437,7 +493,7 @@ export default function SettingsProfessionalNew() {
         {/* Sidebar Navigation */}
         <aside className="settings-sidebar">
           <div className="settings-sidebar-header">
-            <h2>⚙️ Configuración</h2>
+            <h2>Configuración</h2>
             <p>Personaliza tu plataforma</p>
           </div>
           
@@ -464,6 +520,15 @@ export default function SettingsProfessionalNew() {
                     >
                       <span className="settings-nav-icon">🎨</span>
                       <span>Identidad Visual</span>
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      className={`settings-nav-link ${activeSection === 'vocabulary' ? 'active' : ''}`}
+                      onClick={() => setActiveSection('vocabulary')}
+                    >
+                      <span className="settings-nav-icon">📚</span>
+                      <span>Vocabulario</span>
                     </button>
                   </li>
                   <li>
@@ -665,7 +730,100 @@ export default function SettingsProfessionalNew() {
             </>
           )}
 
-          {/* IDENTIDAD VISUAL */}
+          {/* IDENTIDAD VISUAL */}          {/* VOCABULARIO */}
+          {activeSection === 'vocabulary' && (
+            <>
+              <div className="settings-main-header">
+                <h1>Vocabulario</h1>
+                <p>Personaliza las palabras visibles en la plataforma para esta tenencia</p>
+              </div>
+
+              <div className="settings-card">
+                <div className="settings-card-header">
+                  <h2>Términos clave</h2>
+                  <p>Estas palabras se muestran solo de forma visual; no afectan la lógica ni las rutas</p>
+                </div>
+                <div className="settings-card-body">
+                  <div className="settings-form-group">
+                    <label className="settings-form-label" htmlFor="vocab-staff">Staff</label>
+                    <input
+                      id="vocab-staff"
+                      type="text"
+                      className="settings-input"
+                      value={clientSettings.vocabulary.staff}
+                      onChange={(e) => updateClientField('vocabulary', 'staff', e.target.value)}
+                      placeholder="Ej: Equipo"
+                    />
+                  </div>
+                  <div className="settings-form-group">
+                    <label className="settings-form-label" htmlFor="vocab-resource">Recurso agendable</label>
+                    <input
+                      id="vocab-resource"
+                      type="text"
+                      className="settings-input"
+                      value={clientSettings.vocabulary.resource}
+                      onChange={(e) => updateClientField('vocabulary', 'resource', e.target.value)}
+                      placeholder="Ej: Sala"
+                    />
+                  </div>
+                  <div className="settings-form-group">
+                    <label className="settings-form-label" htmlFor="vocab-customer">Cliente</label>
+                    <input
+                      id="vocab-customer"
+                      type="text"
+                      className="settings-input"
+                      value={clientSettings.vocabulary.customer}
+                      onChange={(e) => updateClientField('vocabulary', 'customer', e.target.value)}
+                      placeholder="Ej: Paciente"
+                    />
+                  </div>
+                  <div className="settings-form-group">
+                    <label className="settings-form-label" htmlFor="vocab-reference">Referencia</label>
+                    <input
+                      id="vocab-reference"
+                      type="text"
+                      className="settings-input"
+                      value={clientSettings.vocabulary.reference}
+                      onChange={(e) => updateClientField('vocabulary', 'reference', e.target.value)}
+                      placeholder="Ej: Pasillo"
+                    />
+                  </div>
+                  <div className="settings-form-group">
+                    <label className="settings-form-label" htmlFor="vocab-reservation">Reserva</label>
+                    <input
+                      id="vocab-reservation"
+                      type="text"
+                      className="settings-input"
+                      value={clientSettings.vocabulary.reservation}
+                      onChange={(e) => updateClientField('vocabulary', 'reservation', e.target.value)}
+                      placeholder="Ej: Cita"
+                    />
+                  </div>
+                  <div className="settings-form-group">
+                    <label className="settings-form-label" htmlFor="vocab-role">Cargo</label>
+                    <input
+                      id="vocab-role"
+                      type="text"
+                      className="settings-input"
+                      value={clientSettings.vocabulary.role}
+                      onChange={(e) => updateClientField('vocabulary', 'role', e.target.value)}
+                      placeholder="Ej: Especialidad"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="settings-actions">
+                <button
+                  onClick={handleSaveClientSettings}
+                  disabled={saving}
+                  className="settings-btn-primary"
+                >
+                  {saving ? 'Guardando...' : 'Guardar Cambios'}
+                </button>
+              </div>
+            </>
+          )}
           {activeSection === 'branding' && (
             <>
               <div className="settings-main-header">
@@ -693,16 +851,28 @@ export default function SettingsProfessionalNew() {
                         onChange={handleLogoUpload}
                         style={{ display: 'none' }}
                       />
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={uploading}
-                        className="settings-btn-secondary"
-                      >
-                        {uploading ? '⏳ Subiendo...' : previewLogo ? '🔄 Cambiar Logo' : '📤 Subir Logo'}
-                      </button>
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={uploading}
+                          className="settings-btn-secondary"
+                        >
+                          {uploading ? 'Subiendo...' : previewLogo ? 'Cambiar logo' : 'Subir logo'}
+                        </button>
+                        {previewLogo && (
+                          <button
+                            type="button"
+                            onClick={handleRemoveLogo}
+                            disabled={uploading}
+                            className="settings-btn-secondary danger"
+                          >
+                            Quitar logo
+                          </button>
+                        )}
+                      </div>
                       <p className="settings-form-description">
-                        Formatos aceptados: PNG, JPG, SVG. Tamaño máximo: 2MB.
+                        Formatos aceptados: PNG, JPG, SVG. Tamao mximo: 2MB.
                         <br />
                         Recomendado: 200x60px o proporciones similares.
                       </p>
@@ -833,12 +1003,12 @@ export default function SettingsProfessionalNew() {
             <>
               <div className="settings-main-header">
                 <h1>Configuración de Horarios</h1>
-                <p>Define los horarios de atención y configuración de citas</p>
+                <p>Define los horarios de agendamiento y configuración de reserva</p>
               </div>
 
               <div className="settings-card">
                 <div className="settings-card-header">
-                  <h2>Horario de Atención</h2>
+                  <h2>Horario de Agendamiento</h2>
                 </div>
                 <div className="settings-card-body">
                   <div className="settings-grid-2">
@@ -871,7 +1041,7 @@ export default function SettingsProfessionalNew() {
 
                   <div className="settings-form-group">
                     <label className="settings-form-label" htmlFor="slotDuration">
-                      Duración de Cita
+                      Duración de Reserva
                     </label>
                     <select
                       id="slotDuration"
@@ -887,8 +1057,8 @@ export default function SettingsProfessionalNew() {
                       <option value={90}>90 minutos</option>
                       <option value={120}>2 horas</option>
                     </select>
-                    <p className="settings-form-description">
-                      Tiempo por defecto para cada cita
+                      <p className="settings-form-description">
+                        Tiempo por defecto para cada reserva
                     </p>
                   </div>
 
@@ -939,7 +1109,7 @@ export default function SettingsProfessionalNew() {
 
               <div className="settings-card">
                 <div className="settings-card-header">
-                  <h2>Políticas de Citas</h2>
+                  <h2>Políticas de reservas</h2>
                 </div>
                 <div className="settings-card-body">
                   <div className="settings-form-group settings-checkbox-group">
@@ -950,9 +1120,9 @@ export default function SettingsProfessionalNew() {
                         onChange={(e) => updateClientField('operational', 'allowOverlapping', e.target.checked)}
                       />
                       <div>
-                        <span className="settings-checkbox-title">Permitir citas superpuestas</span>
+                        <span className="settings-checkbox-title">Permitir reservas superpuestas</span>
                         <p className="settings-checkbox-description">
-                          Permite agendar múltiples citas en el mismo horario para diferentes profesionales
+                          Permite agendar múltiples reservas en el mismo horario para diferentes profesionales
                         </p>
                       </div>
                     </label>
@@ -968,7 +1138,7 @@ export default function SettingsProfessionalNew() {
                       <div>
                         <span className="settings-checkbox-title">Requerir confirmación del cliente</span>
                         <p className="settings-checkbox-description">
-                          Los clientes deben confirmar su cita antes de la fecha programada
+                          Los clientes deben confirmar su reserva antes de la fecha programada
                         </p>
                       </div>
                     </label>
@@ -976,7 +1146,7 @@ export default function SettingsProfessionalNew() {
 
                   <div className="settings-form-group">
                     <label className="settings-form-label" htmlFor="maxAppointmentsPerDay">
-                      Máximo de citas por día
+                      Máximo de reservas por día
                     </label>
                     <input
                       id="maxAppointmentsPerDay"
@@ -988,7 +1158,7 @@ export default function SettingsProfessionalNew() {
                       onChange={(e) => updateClientField('operational', 'maxAppointmentsPerDay', Number(e.target.value))}
                     />
                     <p className="settings-form-description">
-                      Límite diario de citas que se pueden agendar
+                      Límite diario de reservas que se pueden agendar
                     </p>
                   </div>
 
@@ -1025,7 +1195,7 @@ export default function SettingsProfessionalNew() {
                       <div>
                         <span className="settings-checkbox-title">Enviar recordatorios automáticos</span>
                         <p className="settings-checkbox-description">
-                          Envía recordatorios por email a los clientes antes de su cita
+                          Envía recordatorios por email a los clientes antes de su reserva
                         </p>
                       </div>
                     </label>
@@ -1046,7 +1216,7 @@ export default function SettingsProfessionalNew() {
                         onChange={(e) => updateClientField('operational', 'reminderHoursBefore', Number(e.target.value))}
                       />
                       <p className="settings-form-description">
-                        Cuántas horas antes de la cita se enviará el recordatorio
+                        Cuántas horas antes de la reserva se enviará el recordatorio
                       </p>
                     </div>
                   )}
@@ -1088,9 +1258,9 @@ export default function SettingsProfessionalNew() {
                       value={userPreferences.theme}
                       onChange={(e) => updateUserField('theme', e.target.value)}
                     >
-                      <option value="light">🌞 Modo Claro</option>
-                      <option value="dark">🌙 Modo Oscuro</option>
-                      <option value="auto">⚡ Automático (según sistema)</option>
+                      <option value="light">Modo Claro</option>
+                      <option value="dark">Modo Oscuro</option>
+                      <option value="auto">Automático (según sistema)</option>
                     </select>
                   </div>
                 </div>
@@ -1151,4 +1321,13 @@ export default function SettingsProfessionalNew() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
 

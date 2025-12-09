@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { FaPlus, FaSpinner, FaSearch } from 'react-icons/fa';
 import DoctorCard from '../components/doctors/DoctorCard.jsx';
 import './DoctorsList.css';
+import { useVocabulary, formatPlural } from '../hooks/useVocabulary.js';
 
 const fetchStaff = async () => (await api.get('/staff')).data.items;
 const removeStaff = async (id) => api.delete(`/staff/${id}`);
@@ -13,6 +14,9 @@ export default function DoctorsList() {
   const qc = useQueryClient();
   const { data = [], isLoading } = useQuery({ queryKey: ['staff'], queryFn: fetchStaff });
   const [search, setSearch] = useState('');
+  const vocab = useVocabulary();
+  const staffLabel = formatPlural(vocab.staff);
+  const roleLabel = vocab.role || 'Cargo';
   const del = useMutation({ 
     mutationFn: removeStaff, 
     onSuccess: () => qc.invalidateQueries(['staff']) 
@@ -31,7 +35,7 @@ export default function DoctorsList() {
   }, [data, search]);
 
   const handleDelete = (id) => {
-    if (window.confirm('¿Estás seguro de eliminar este miembro del staff?')) {
+    if (window.confirm(`¿Estás seguro de eliminar este miembro del ${staffLabel.toLowerCase()}?`)) {
       del.mutate(id);
     }
   };
@@ -40,7 +44,7 @@ export default function DoctorsList() {
     return (
       <div className="loading-container">
         <FaSpinner className="spinner" />
-        <p>Cargando staff...</p>
+        <p>Cargando {staffLabel.toLowerCase()}...</p>
       </div>
     );
   }
@@ -49,17 +53,17 @@ export default function DoctorsList() {
     <div className="doctors-list-page">
       <div className="page-header">
         <div className="page-header-content">
-          <h1 className="page-title">Staff</h1>
+          <h1 className="page-title">{staffLabel}</h1>
           <p className="page-subtitle">Gestiona el equipo operativo de tu organización</p>
         </div>
         <Link to="/staff/new" className="btn-primary">
-          <FaPlus /> Nuevo Staff
+          <FaPlus /> Nuevo {vocab.staff}
         </Link>
       </div>
 
       {data.length === 0 ? (
         <div className="empty-state">
-          <p>No hay miembros de staff registrados</p>
+          <p>No hay miembros de {staffLabel.toLowerCase()} registrados</p>
           <Link to="/staff/new" className="btn-primary">
             <FaPlus /> Agregar primer miembro
           </Link>
@@ -71,7 +75,7 @@ export default function DoctorsList() {
               <FaSearch />
               <input
                 type="search"
-                placeholder="Buscar por ID, nombre o cargo"
+                placeholder={`Buscar por ID, nombre o ${roleLabel.toLowerCase()}`}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="search-input"
@@ -81,7 +85,7 @@ export default function DoctorsList() {
 
           {filteredStaff.length === 0 ? (
             <div className="empty-state">
-              <p>No encontramos miembros que coincidan con “{search}”.</p>
+              <p>No encontramos miembros que coincidan con {search}.</p>
             </div>
           ) : (
             <div className="doctors-grid">

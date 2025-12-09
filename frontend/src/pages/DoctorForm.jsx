@@ -8,6 +8,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { FaSave, FaTimes, FaSpinner } from 'react-icons/fa';
 import './Forms.css';
 import { nextSequentialId } from '../utils/idHelpers.js';
+import { useVocabulary, formatPlural } from '../hooks/useVocabulary.js';
 
 const DoctorSchema = z.object({
   id: z.string().min(1, 'El ID es requerido'),
@@ -22,6 +23,9 @@ export default function DoctorForm() {
   const isEdit = !!id;
   const nav = useNavigate();
   const qc = useQueryClient();
+  const vocab = useVocabulary();
+  const staffLabel = formatPlural(vocab.staff);
+  const roleLabel = vocab.role || 'Cargo';
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
     resolver: zodResolver(DoctorSchema),
@@ -35,7 +39,7 @@ export default function DoctorForm() {
       reset(data); return data;
     },
     enabled: isEdit,
-    retry: 1, // Solo 1 reintento
+    retry: 1,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     staleTime: 5 * 60 * 1000
@@ -80,14 +84,19 @@ export default function DoctorForm() {
 
     createMut.mutate(values);
   };
+
   const isSubmitting = createMut.isPending || updateMut.isPending;
-  const disableSubmit = isSubmitting || (!isEdit && !autoId);
+  const disableSubmit = isSubmitting;
 
   if (loadingDoctor) {
     return (
-      <div className="loading-container">
-        <FaSpinner className="spinner" />
-        <p>Cargando...</p>
+      <div className="form-page">
+        <div className="form-container">
+          <div className="form-loading">
+            <FaSpinner className="spinner" />
+            <p>Cargando {vocab.staff}...</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -96,9 +105,9 @@ export default function DoctorForm() {
     <div className="form-page">
       <div className="form-container">
         <div className="form-header">
-          <h1 className="form-title">{isEdit ? 'Editar Miembro del Staff' : 'Nuevo Miembro del Staff'}</h1>
+          <h1 className="form-title">{isEdit ? `Editar miembro del ${vocab.staff}` : `Nuevo miembro del ${vocab.staff}`}</h1>
           <p className="form-subtitle">
-            {isEdit ? 'Modifica los datos del staff' : 'Completa la información del nuevo miembro del staff'}
+            {isEdit ? `Modifica los datos del ${vocab.staff}` : `Completa la información del nuevo miembro del ${vocab.staff}`}
           </p>
         </div>
 
@@ -106,14 +115,14 @@ export default function DoctorForm() {
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="staff-id" className="form-label">
-                ID del Staff <span className="required">*</span>
+                ID del {vocab.staff} <span className="required">*</span>
               </label>
               <input 
                 id="staff-id"
                 {...register('id')} 
                 readOnly
                 className={`form-input ${errors.id ? 'error' : ''}`}
-                                placeholder="Ej: Coordinador clinico"
+                placeholder="Ej: 001"
                 title="El ID se asigna automáticamente"
               />
               <span className="form-hint">El ID se genera automáticamente y no puede modificarse.</span>
@@ -138,26 +147,26 @@ export default function DoctorForm() {
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="staff-nombre" className="form-label">
-                Nombre Completo <span className="required">*</span>
+                Nombre completo <span className="required">*</span>
               </label>
               <input 
                 id="staff-nombre"
                 {...register('nombre')}
                 className={`form-input ${errors.nombre ? 'error' : ''}`}
-                                placeholder="Ej: Coordinador clinico"
+                placeholder="Ej: Ana Pérez"
               />
               {errors.nombre && <span className="error-message">{errors.nombre.message}</span>}
             </div>
 
             <div className="form-group">
               <label htmlFor="staff-especialidad" className="form-label">
-                Cargo
+                {roleLabel}
               </label>
               <input 
                 id="staff-especialidad"
                 {...register('especialidad')}
                 className="form-input"
-                placeholder="Ej: Coordinador clinico"
+                placeholder="Ej: Coordinador clínico"
               />
             </div>
           </div>
@@ -170,7 +179,7 @@ export default function DoctorForm() {
               {isSubmitting ? (
                 <><FaSpinner className="spinner-small" /> Guardando...</>
               ) : (
-                <><FaSave /> {isEdit ? 'Guardar Cambios' : 'Crear Staff'}</>
+                <><FaSave /> Guardar</>
               )}
             </button>
           </div>
@@ -179,4 +188,3 @@ export default function DoctorForm() {
     </div>
   );
 }
-
