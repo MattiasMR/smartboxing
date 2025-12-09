@@ -22,6 +22,7 @@ function Sidebar({ isOpen, onClose }) {
   // Determinar si el usuario tiene una tenencia activa
   const hasTenancy = !!tenantId;
   const isStaff = user?.role === 'staff';
+  const isSuper = isSuperAdmin();
 
   // Close mobile nav on any navigation
   useEffect(() => {
