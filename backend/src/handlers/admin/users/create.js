@@ -25,6 +25,7 @@ const CreateUserSchema = z.object({
   name: z.string().min(2).max(100),
   role: z.enum(['tenant_admin', 'staff']),
   tenantId: z.string().uuid().optional(), // Required only if super_admin is creating
+  temporaryPassword: z.string().min(8).optional(),
 });
 
 export const main = handler(async (event) => {
@@ -69,7 +70,7 @@ export const main = handler(async (event) => {
   // Create user in Cognito
   let cognitoSub;
   try {
-    const createResult = await cognito.send(new AdminCreateUserCommand({
+    const params = {
       UserPoolId: USER_POOL_ID,
       Username: data.email,
       UserAttributes: [
@@ -81,7 +82,20 @@ export const main = handler(async (event) => {
         { Name: 'custom:role', Value: data.role },
       ],
       DesiredDeliveryMediums: ['EMAIL'],
-    }));
+    };
+
+    // If temporary password is provided, use it and suppress email (MessageAction: SUPPRESS)
+    // Or we can let Cognito send the email if we don't suppress.
+    // But usually if we set a temp password manually, we want to give it to the user manually.
+    // However, AdminCreateUser with TemporaryPassword WILL send the email with the password 
+    // UNLESS MessageAction is SUPPRESS.
+    // Let's assume we want to set it explicitly.
+    if (data.temporaryPassword) {
+      params.TemporaryPassword = data.temporaryPassword;
+      params.MessageAction = 'SUPPRESS'; // We will give the password to the user manually or via our own email system
+    }
+
+    const createResult = await cognito.send(new AdminCreateUserCommand(params));
     
     cognitoSub = createResult.User.Attributes.find(a => a.Name === 'sub')?.Value;
   } catch (e) {

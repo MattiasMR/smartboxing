@@ -81,7 +81,12 @@ async function generateEnv() {
     };
     
     const apiUrl = getOutput('ApiUrl');
-    const userPoolId = getOutput('UserPoolId');
+    // FORCE CORRECT USER POOL FOR PROD
+    let userPoolId = getOutput('UserPoolId');
+    if (STAGE === 'prod') {
+        console.log('⚠️  FORCING PROD USER POOL ID: us-east-1_mruFevzbO');
+        userPoolId = 'us-east-1_mruFevzbO';
+    }
     const userPoolClientId = getOutput('UserPoolClientId');
     const cognitoDomain = getOutput('CognitoDomain');
     const cloudFrontUrl = getOutput('CloudFrontUrl');

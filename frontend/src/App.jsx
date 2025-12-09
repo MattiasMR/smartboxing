@@ -13,6 +13,7 @@ import { useEffect } from 'react';
 import LandingPage from './pages/Landing.jsx';
 import LoginPage from './pages/Login.jsx';
 import RegisterPage from './pages/Register.jsx';
+import ForgotPasswordPage from './pages/ForgotPassword.jsx';
 import TermsPage from './pages/Terms.jsx';
 import AboutPage from './pages/About.jsx';
 
@@ -59,8 +60,8 @@ function RootRedirect() {
     return <LandingPage />;
   }
 
-  // Super admin sin tenencia activa → Panel Admin
-  if (user.role === 'super_admin' && !user.tenantId) {
+  // Super admin → Panel Admin (Siempre prioridad)
+  if (user.role === 'super_admin') {
     return <Navigate to="/admin/tenants" replace />;
   }
 
@@ -88,6 +89,7 @@ function AppContent() {
         
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/terms" element={<TermsPage />} />
 
@@ -113,6 +115,11 @@ function AppContent() {
           
           {/* AI Agent - requires tenant_admin */}
           <Route path="/ai-agent" element={<AIAgent />} />
+
+          {/* Users - tenant_admin (Moved here to use MainLayout) */}
+          <Route path="/admin/users" element={<UsersList />} />
+          <Route path="/admin/users/new" element={<UserForm />} />
+          <Route path="/admin/users/:id/edit" element={<UserForm />} />
         </Route>
         
         {/* Account routes - no requieren tenant */}
@@ -130,11 +137,12 @@ function AppContent() {
           
           {/* Tenancy Requests - super_admin only */}
           <Route path="/admin/tenancy-requests" element={<AdminRoute requireSuperAdmin><TenancyRequestsList /></AdminRoute>} />
-          
-          {/* Users - tenant_admin or super_admin */}
-          <Route path="/admin/users" element={<UsersList />} />
-          <Route path="/admin/users/new" element={<UserForm />} />
-          <Route path="/admin/users/:id/edit" element={<UserForm />} />
+
+          {/* Users - super_admin (uses AdminLayout) */}
+          <Route path="/admin/users-global" element={<AdminRoute requireSuperAdmin><UsersList /></AdminRoute>} />
+
+          {/* Settings for super_admin (inside AdminLayout) */}
+          <Route path="/admin/settings" element={<AdminRoute requireSuperAdmin><Settings /></AdminRoute>} />
         </Route>
 
         {/* Ruta no encontrada: redirige a root (que mostrará Landing o Dashboard) */}

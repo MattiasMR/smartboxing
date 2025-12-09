@@ -134,11 +134,46 @@ export const signIn = (email, password) => {
         console.error('Authentication error:', err);
         reject(err);
       },
-      newPasswordRequired: () => {
+      newPasswordRequired: (userAttributes, requiredAttributes) => {
         // Handle new password required
-        // userAttributes and requiredAttributes intentionally not used
         console.log('New password required');
-        reject(new Error('NEW_PASSWORD_REQUIRED'));
+        // Return a special object indicating this state, along with the user object needed to complete the challenge
+        resolve({
+          challengeName: 'NEW_PASSWORD_REQUIRED',
+          user: cognitoUser,
+          userAttributes,
+          requiredAttributes
+        });
+      },
+    });
+  });
+};
+
+/**
+ * Complete new password challenge
+ * @param {CognitoUser} cognitoUser 
+ * @param {string} newPassword 
+ * @param {object} attributes 
+ */
+export const completeNewPasswordChallenge = (cognitoUser, newPassword, attributes = {}) => {
+  return new Promise((resolve, reject) => {
+    cognitoUser.completeNewPasswordChallenge(newPassword, attributes, {
+      onSuccess: (result) => {
+        console.log('Password change success');
+        const accessToken = result.getAccessToken().getJwtToken();
+        const idToken = result.getIdToken().getJwtToken();
+        const refreshToken = result.getRefreshToken().getToken();
+
+        resolve({
+          accessToken,
+          idToken,
+          refreshToken,
+          user: cognitoUser,
+        });
+      },
+      onFailure: (err) => {
+        console.error('Password change error:', err);
+        reject(err);
       },
     });
   });

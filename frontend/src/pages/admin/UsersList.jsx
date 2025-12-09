@@ -31,7 +31,12 @@ export default function UsersList() {
   });
   
   const deleteMutation = useMutation({
-    mutationFn: deleteUser,
+    mutationFn: (id) => {
+      // Find the user to get their tenantId
+      const userToDelete = users.find(u => u.cognitoSub === id);
+      const tenantId = userToDelete?.tenantId || selectedTenant;
+      return deleteUser(id, tenantId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
       setDeleteConfirm(null);

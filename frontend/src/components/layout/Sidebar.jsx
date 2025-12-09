@@ -11,15 +11,22 @@ import { forceRefreshSession } from '../../auth/cognitoAuth.js';
 const tenantNavItems = [
   { id: 'dashboard', label: 'Dashboard', icon: <FaChartBar />, path: '/dashboard' },
   { id: 'boxes', label: 'Boxes', icon: <FaTh />, path: '/boxes' },
+  { id: 'staff', label: 'Staff', icon: <FaUsers />, path: '/staff' },
   { id: 'appointments', label: 'Citas', icon: <FaCalendarAlt />, path: '/appointments' },
 ];
 
 function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
-  const { isTenantAdmin, isSuperAdmin, tenantId, clearActiveTenant } = useAuthContext();
+  const { user, isTenantAdmin, isSuperAdmin, tenantId, clearActiveTenant } = useAuthContext();
+  
+  // If super admin, do not render sidebar at all (they use AdminLayout)
+  if (isSuperAdmin()) {
+    return null;
+  }
   
   // Determinar si el usuario tiene una tenencia activa
   const hasTenancy = !!tenantId;
+  const isStaff = user?.role === 'staff';
 
   // Close mobile nav on any navigation
   useEffect(() => {
@@ -90,89 +97,90 @@ function Sidebar({ isOpen, onClose }) {
     }
   };
 
-  const renderMainMenu = () => (
-     <ul>
-      {/* AI Agent - Highlighted for tenant_admin with active tenancy */}
-      {isTenantAdmin() && hasTenancy && (
-        <li className={`ai-agent-link ${location.pathname === '/ai-agent' ? 'active' : ''}`}>
-          <Link to="/ai-agent" onClick={handleLinkClick}>
-            <FaRobot />
-            <span className="nav-label ai-highlight">Agente IA</span>
-            <span className="ai-badge">✨</span>
-          </Link>
-        </li>
-      )}
-      
-      {/* Panel Admin - first for super_admin, or visible for tenant_admin WITH active tenancy */}
-      {(isSuperAdmin() || (isTenantAdmin() && hasTenancy)) && (
-        <li className={(location.pathname.startsWith('/admin') || location.pathname === '/staff') ? 'active admin-link' : 'admin-link'}>
-          <Link to={isSuperAdmin() ? "/admin/tenants" : "/staff"} onClick={handleLinkClick}>
-            {isSuperAdmin() ? <FaUserShield /> : <FaUsers />}
-            <span className="nav-label">{isSuperAdmin() ? 'Panel Admin' : 'Gestionar Usuarios'}</span>
-          </Link>
-        </li>
-      )}
-      
-      {/* My Tenancies - always visible */}
-      <li className={location.pathname.startsWith('/account/tenancies') ? 'active' : ''}>
-        <Link to="/account/tenancies" onClick={handleLinkClick}>
-          <FaBuilding />
-          <span className="nav-label">Mis Tenencias</span>
-        </Link>
-      </li>
-      
-      {/* Settings - always visible */}
-      <li className={location.pathname === '/settings' ? 'active' : ''}>
-        <Link to="/settings" onClick={handleLinkClick}>
-          <FaCog />
-          <span className="nav-label">Configuración</span>
-        </Link>
-      </li>
-      
-      {/* Tenant-specific items - only show if user has an active tenancy */}
-      {hasTenancy && (
-        <>
-          <li className="nav-divider">
-            <span className="nav-divider-text">Gestión de Tenencia</span>
-          </li>
-          {tenantNavItems.map(item => (
-            <li key={item.id} className={location.pathname === item.path ? 'active' : ''}>
-              <Link to={item.path} onClick={handleLinkClick}>
-                {item.icon}
-                <span className="nav-label">{item.label}</span>
-              </Link>
-            </li>
-          ))}
+  const renderMainMenu = () => {
+    // Super Admin: No sidebar at all in MainLayout, they use AdminLayout exclusively
+    if (isSuperAdmin()) {
+      return null;
+    }
 
-          {/* Exit Tenancy Option */}
-          <li className="exit-tenancy-link">
-            <button 
-              onClick={handleExitTenancy} 
-              className="nav-btn-link"
-              style={{ 
-                color: 'var(--text-secondary)', 
-                marginTop: '10px', 
-                paddingTop: '10px',
-                background: 'none',
-                border: 'none',
-                borderTop: '1px solid var(--border-color)',
-                width: '100%',
-                textAlign: 'left',
-                display: 'flex',
-                alignItems: 'center',
-                padding: '10px 15px',
-                cursor: 'pointer',
-                fontSize: '1rem'
-              }}
-            >
-              <FaBuilding style={{ marginRight: '10px' }} />
-              <span className="nav-label">Salir de Tenencia</span>
-            </button>
+    return (
+      <ul>
+        {/* AI Agent - Highlighted for tenant_admin with active tenancy */}
+        {isTenantAdmin() && hasTenancy && (
+          <li className={`ai-agent-link ${location.pathname === '/ai-agent' ? 'active' : ''}`}>
+            <Link to="/ai-agent" onClick={handleLinkClick}>
+              <FaRobot />
+              <span className="nav-label ai-highlight">Agente IA</span>
+              <span className="ai-badge">✨</span>
+            </Link>
           </li>
-        </>
-      )}
-    </ul>
-  );
+        )}
+        
+        {/* My Tenancies - for tenant_admin only (not staff, not super_admin) */}
+        {isTenantAdmin() && (
+          <li className={location.pathname.startsWith('/account/tenancies') ? 'active' : ''}>
+            <Link to="/account/tenancies" onClick={handleLinkClick}>
+              <FaBuilding />
+              <span className="nav-label">Mis Tenencias</span>
+            </Link>
+          </li>
+        )}
+        
+        {/* Settings - always visible for non-super-admin */}
+        <li className={location.pathname === '/settings' ? 'active' : ''}>
+          <Link to="/settings" onClick={handleLinkClick}>
+            <FaCog />
+            <span className="nav-label">Configuración</span>
+          </Link>
+        </li>
+        
+        {/* Tenant-specific items - show for staff AND tenant_admin with active tenancy */}
+        {hasTenancy && (
+          <>
+            <li className="nav-divider">
+              <span className="nav-divider-text">Gestión de Tenencia</span>
+            </li>
+            {tenantNavItems.map(item => (
+              <li key={item.id} className={location.pathname === item.path ? 'active' : ''}>
+                <Link to={item.path} onClick={handleLinkClick}>
+                  {item.icon}
+                  <span className="nav-label">{item.label}</span>
+                </Link>
+              </li>
+            ))}
+
+            {/* Exit Tenancy Option - Hide for pure staff */}
+            {!isStaff && (
+              <li className="exit-tenancy-link">
+                <button 
+                  onClick={handleExitTenancy} 
+                  className="nav-btn-link"
+                  style={{ 
+                    color: 'var(--text-secondary)', 
+                    marginTop: '10px', 
+                    paddingTop: '10px',
+                    background: 'none',
+                    border: 'none',
+                    borderTop: '1px solid var(--border-color)',
+                    width: '100%',
+                    textAlign: 'left',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '10px 15px',
+                    cursor: 'pointer',
+                    fontSize: '1rem'
+                  }}
+                >
+                  <FaBuilding style={{ marginRight: '10px' }} />
+                  <span className="nav-label">Salir de Tenencia</span>
+                </button>
+              </li>
+            )}
+          </>
+        )}
+      </ul>
+    );
+  };
   
   return (
     <>

@@ -33,8 +33,14 @@ export const main = handler(async (event) => {
   console.log('Switch Tenant Request:', { 
     sub: user.sub, 
     tenantId, 
-    table: T_TENANT_USERS 
+    table: T_TENANT_USERS,
+    userPoolId: USER_POOL_ID
   });
+
+  if (!T_TENANT_USERS || !USER_POOL_ID) {
+    console.error('Missing environment variables', { T_TENANT_USERS, USER_POOL_ID });
+    throw new Error('Configuration error: Missing environment variables');
+  }
 
   // Allow switching to "null" (leaving tenancy)
   if (tenantId === null) {

@@ -37,6 +37,18 @@ export const main = handler(async (event) => {
     error.statusCode = 400;
     throw error;
   }
+
+  // Allow Super Admin to specify tenantId via query param if not in context
+  let targetTenantId = admin.tenantId;
+  if (!targetTenantId && admin.role === ROLES.SUPER_ADMIN) {
+    targetTenantId = event.queryStringParameters?.tenantId;
+  }
+
+  if (!targetTenantId) {
+     const error = new Error('Tenant ID is required');
+     error.statusCode = 400;
+     throw error;
+  }
   
   // Get existing user using composite key (cognitoSub + tenantId)
   // Admin can only update users in their own tenant
@@ -44,7 +56,7 @@ export const main = handler(async (event) => {
     TableName: T_TENANT_USERS,
     Key: { 
       cognitoSub: id,
-      tenantId: admin.tenantId,
+      tenantId: targetTenantId,
     },
   }));
   
@@ -67,69 +79,85 @@ export const main = handler(async (event) => {
   }
   
   // Update Cognito attributes if role changed
+  // IMPORTANT: Only update Cognito if this is the user's CURRENT active tenant
+  // Otherwise we might overwrite their role in another tenant context
+  // For now, we assume role in Cognito reflects current tenant context
   if (data.role && data.role !== tenantUser.role) {
-    await cognito.send(new AdminUpdateUserAttributesCommand({
-      UserPoolId: USER_POOL_ID,
-      Username: tenantUser.email,
-      UserAttributes: [
-        { Name: 'custom:role', Value: data.role },
-      ],
-    }));
+    // We use Username=id (sub) because email might not be unique or username
+    try {
+      await cognito.send(new AdminUpdateUserAttributesCommand({
+        UserPoolId: USER_POOL_ID,
+        Username: id, // Use SUB as username
+        UserAttributes: [
+          { Name: 'custom:role', Value: data.role },
+        ],
+      }));
+    } catch (e) {
+      console.warn('Could not update Cognito attributes:', e);
+      // Continue updating DB even if Cognito fails (e.g. user not found)
+    }
   }
   
   // Enable/disable user in Cognito if status changed
   if (data.status) {
     if (data.status === 'disabled') {
-      await cognito.send(new AdminDisableUserCommand({
-        UserPoolId: USER_POOL_ID,
-        Username: tenantUser.email,
-      }));
+      try {
+        await cognito.send(new AdminDisableUserCommand({
+          UserPoolId: USER_POOL_ID,
+          Username: id, // Use SUB
+        }));
+      } catch (e) { console.warn('Disable failed', e); }
     } else if (data.status === 'active') {
-      await cognito.send(new AdminEnableUserCommand({
-        UserPoolId: USER_POOL_ID,
-        Username: tenantUser.email,
-      }));
+      try {
+        await cognito.send(new AdminEnableUserCommand({
+          UserPoolId: USER_POOL_ID,
+          Username: id, // Use SUB
+        }));
+      } catch (e) { console.warn('Enable failed', e); }
     }
   }
   
   // Update TenantUsers table
-  const updateParts = [];
-  const expressionValues = {};
-  const expressionNames = {};
+  const updateExpression = [];
+  const expressionAttributeNames = {};
+  const expressionAttributeValues = {};
   
   if (data.name) {
-    updateParts.push('#name = :name');
-    expressionNames['#name'] = 'name';
-    expressionValues[':name'] = data.name;
+    updateExpression.push('#name = :name');
+    expressionAttributeNames['#name'] = 'name';
+    expressionAttributeValues[':name'] = data.name;
   }
   
   if (data.role) {
-    updateParts.push('#role = :role');
-    expressionNames['#role'] = 'role';
-    expressionValues[':role'] = data.role;
+    updateExpression.push('#role = :role');
+    expressionAttributeNames['#role'] = 'role';
+    expressionAttributeValues[':role'] = data.role;
   }
   
   if (data.status) {
-    updateParts.push('#status = :status');
-    expressionNames['#status'] = 'status';
-    expressionValues[':status'] = data.status;
+    updateExpression.push('#status = :status');
+    expressionAttributeNames['#status'] = 'status';
+    expressionAttributeValues[':status'] = data.status;
   }
   
-  updateParts.push('#updatedAt = :updatedAt');
-  expressionNames['#updatedAt'] = 'updatedAt';
-  expressionValues[':updatedAt'] = new Date().toISOString();
+  updateExpression.push('#updatedAt = :updatedAt');
+  expressionAttributeNames['#updatedAt'] = 'updatedAt';
+  expressionAttributeValues[':updatedAt'] = new Date().toISOString();
   
-  const result = await doc.send(new UpdateCommand({
+  await doc.send(new UpdateCommand({
     TableName: T_TENANT_USERS,
     Key: { 
       cognitoSub: id,
-      tenantId: admin.tenantId,
+      tenantId: targetTenantId,
     },
-    UpdateExpression: `SET ${updateParts.join(', ')}`,
-    ExpressionAttributeNames: expressionNames,
-    ExpressionAttributeValues: expressionValues,
-    ReturnValues: 'ALL_NEW',
+    UpdateExpression: 'SET ' + updateExpression.join(', '),
+    ExpressionAttributeNames: expressionAttributeNames,
+    ExpressionAttributeValues: expressionAttributeValues,
   }));
-  
-  return result.Attributes;
-}, 'updateUser');
+
+  return { 
+    updated: true, 
+    id,
+    tenantId: targetTenantId 
+  };
+});

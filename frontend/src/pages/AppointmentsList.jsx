@@ -142,7 +142,10 @@ export default function AppointmentsList() {
             />
           </div>
           <button
-            onClick={() => setFilters({ from: draftFrom, to: draftTo })}
+            onClick={() => setFilters({ 
+              from: draftFrom ? new Date(draftFrom).toISOString() : '', 
+              to: draftTo ? new Date(draftTo).toISOString() : '' 
+            })}
             className="btn-filter"
           >
             <FaFilter /> Aplicar Filtros

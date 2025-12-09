@@ -25,12 +25,22 @@ export default function ProtectedRoute({ children, requireTenant = false }) {
     console.log('[ProtectedRoute] Not authenticated, redirecting to /login');
     return <Navigate to="/login" replace />;
   }
+
+  // Force Super Admin out of /account/tenancies
+  if (user?.role === 'super_admin' && location.pathname === '/account/tenancies') {
+    console.log('[ProtectedRoute] Super Admin on /account/tenancies, redirecting to /admin/tenants');
+    return <Navigate to="/admin/tenants" replace />;
+  }
   
   // Check if route requires tenant and user doesn't have one
   // Exception: allow access to /account/* routes without tenant
   const isAccountRoute = location.pathname.startsWith('/account');
   
   if (requireTenant && !user?.tenantId && !isAccountRoute) {
+    if (user?.role === 'super_admin') {
+      console.log('[ProtectedRoute] No tenant (Super Admin), redirecting to /admin/tenants');
+      return <Navigate to="/admin/tenants" replace />;
+    }
     console.log('[ProtectedRoute] No tenant, redirecting to /account/tenancies');
     return <Navigate to="/account/tenancies" replace />;
   }

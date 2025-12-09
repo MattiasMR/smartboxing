@@ -17,6 +17,7 @@ export default function RequestTenancy() {
     tenancyName: '',
     slug: '',
     description: '',
+    reason: '',
     contactEmail: user?.email || '',
     contactPhone: '',
     address: '',
@@ -27,7 +28,7 @@ export default function RequestTenancy() {
   // Check if user already has pending requests
   const { data: existingRequests } = useQuery({
     queryKey: ['tenancy', 'my-requests'],
-    queryFn: () => listTenancyRequests(),
+    queryFn: () => listTenancyRequests({ onlyMine: true }),
   });
 
   const pendingRequest = existingRequests?.requests?.find(r => r.status === 'pending');
@@ -84,6 +85,7 @@ export default function RequestTenancy() {
       hospitalName: formData.tenancyName.trim(), // Backend uses hospitalName
       slug: formData.slug,
       description: formData.description.trim() || undefined,
+      reason: formData.reason.trim() || undefined,
       contactEmail: formData.contactEmail.trim() || undefined,
       contactPhone: formData.contactPhone.trim() || undefined,
       address: formData.address.trim() || undefined,
@@ -178,6 +180,18 @@ export default function RequestTenancy() {
               value={formData.description}
               onChange={handleChange}
               placeholder="Breve descripción de tu organización y sus servicios..."
+              rows={3}
+            />
+          </div>
+
+          <div className="tenancy-form-group">
+            <label htmlFor="reason">Motivo de la solicitud</label>
+            <textarea
+              id="reason"
+              name="reason"
+              value={formData.reason}
+              onChange={handleChange}
+              placeholder="¿Por qué deseas registrar esta organización?"
               rows={3}
             />
           </div>

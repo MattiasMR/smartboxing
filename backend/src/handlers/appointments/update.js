@@ -9,7 +9,13 @@ export const main = handler(async (event) => {
   const id = decodeURIComponent(event.pathParameters?.id || '');
 
   const body = parseBody(event);
-  const patch = normalizeStaffFields(body.patch || {});
+  const rawPatch = normalizeStaffFields(body.patch || {});
+  
+  // Remove key fields that cannot be updated
+  delete rawPatch.id;
+  delete rawPatch.tenantId;
+  
+  const patch = rawPatch;
   if (!Object.keys(patch).length) throw new Error('No hay cambios');
 
   if (patch.status && !AppointmentStatus.options.includes(patch.status)) {

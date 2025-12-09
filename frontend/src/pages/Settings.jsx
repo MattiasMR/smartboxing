@@ -7,6 +7,7 @@ import {
   applyTheme,
   uploadLogo 
 } from '../api/settings';
+import { useAuthContext } from '../auth/AuthContext.js';
 import './Settings.css';
 
 // Temas predefinidos profesionales
@@ -155,13 +156,34 @@ export default function SettingsProfessionalNew() {
   const [previewLogo, setPreviewLogo] = useState('');
   const [selectedThemeId, setSelectedThemeId] = useState(() => detectThemePreset(DEFAULT_CLIENT_SETTINGS.theme));
 
+  const { user, isTenantAdmin, isSuperAdmin } = useAuthContext();
+  const isStaff = user?.role === 'staff';
+  const hasTenant = !!user?.tenantId;
+  const isSuperAdminUser = user?.role === 'super_admin';
+  const isTenantAdminUser = user?.role === 'tenant_admin';
+
+  // If user is staff or has no tenant (and not super admin), default to 'user' section on mount only
+  useEffect(() => {
+    if ((isStaff || !hasTenant) && !isSuperAdminUser) {
+      setActiveSection('user');
+    }
+  }, []); // Run only on mount
+
   const loadSettings = useCallback(async () => {
     try {
       setLoading(true);
-      const [client, user] = await Promise.all([
-        getClientSettings(),
-        getUserSettings(),
-      ]);
+      
+      // Only fetch client settings if user has access (tenant admin) AND has a tenant context
+      let client = {};
+      if (isTenantAdminUser && hasTenant) {
+        try {
+          client = await getClientSettings();
+        } catch (e) {
+          console.warn('Could not load client settings', e);
+        }
+      }
+
+      const userSettings = await getUserSettings();
 
       const mergedTheme = {
         ...DEFAULT_CLIENT_SETTINGS.theme,
@@ -185,8 +207,8 @@ export default function SettingsProfessionalNew() {
       setPreviewLogo(mergedClientSettings.theme.logoUrl || '');
 
       // Merge user preferences
-      if (user.preferences) {
-        setUserPreferences(prev => ({ ...prev, ...user.preferences }));
+      if (userSettings.preferences) {
+        setUserPreferences(prev => ({ ...prev, ...userSettings.preferences }));
       }
     } catch (error) {
       console.error('Error loading settings:', error);
@@ -194,9 +216,13 @@ export default function SettingsProfessionalNew() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isTenantAdminUser, hasTenant]);
 
   useEffect(() => {
+    // If super admin, default to user settings
+    if (isSuperAdminUser) {
+      setActiveSection('user');
+    }
     loadSettings();
   }, [loadSettings]);
 
@@ -416,47 +442,51 @@ export default function SettingsProfessionalNew() {
           </div>
           
           <nav className="settings-nav">
-            <div className="settings-nav-section">
-              <h3 className="settings-nav-section-title">Organización</h3>
-              <ul className="settings-nav-list">
-                <li>
-                  <button
-                    className={`settings-nav-link ${activeSection === 'general' ? 'active' : ''}`}
-                    onClick={() => setActiveSection('general')}
-                  >
-                    <span className="settings-nav-icon">🏢</span>
-                    <span>General</span>
-                  </button>
-                </li>
-                <li>
-                  <button
-                    className={`settings-nav-link ${activeSection === 'branding' ? 'active' : ''}`}
-                    onClick={() => setActiveSection('branding')}
-                  >
-                    <span className="settings-nav-icon">🎨</span>
-                    <span>Identidad Visual</span>
-                  </button>
-                </li>
-                <li>
-                  <button
-                    className={`settings-nav-link ${activeSection === 'schedule' ? 'active' : ''}`}
-                    onClick={() => setActiveSection('schedule')}
-                  >
-                    <span className="settings-nav-icon">📅</span>
-                    <span>Horarios</span>
-                  </button>
-                </li>
-                <li>
-                  <button
-                    className={`settings-nav-link ${activeSection === 'operational' ? 'active' : ''}`}
-                    onClick={() => setActiveSection('operational')}
-                  >
-                    <span className="settings-nav-icon">⚙️</span>
-                    <span>Operacional</span>
-                  </button>
-                </li>
-              </ul>
-            </div>
+            {/* Organization Settings - Only for Tenant Admin with active tenant */}
+            {/* Super Admin does not have organization settings unless they are inside a tenant context (which they are not in admin panel) */}
+            {(!isStaff && hasTenant && !isSuperAdminUser) && (
+              <div className="settings-nav-section">
+                <h3 className="settings-nav-section-title">Organización</h3>
+                <ul className="settings-nav-list">
+                  <li>
+                    <button
+                      className={`settings-nav-link ${activeSection === 'general' ? 'active' : ''}`}
+                      onClick={() => setActiveSection('general')}
+                    >
+                      <span className="settings-nav-icon">🏢</span>
+                      <span>General</span>
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      className={`settings-nav-link ${activeSection === 'branding' ? 'active' : ''}`}
+                      onClick={() => setActiveSection('branding')}
+                    >
+                      <span className="settings-nav-icon">🎨</span>
+                      <span>Identidad Visual</span>
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      className={`settings-nav-link ${activeSection === 'schedule' ? 'active' : ''}`}
+                      onClick={() => setActiveSection('schedule')}
+                    >
+                      <span className="settings-nav-icon">📅</span>
+                      <span>Horarios</span>
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      className={`settings-nav-link ${activeSection === 'operational' ? 'active' : ''}`}
+                      onClick={() => setActiveSection('operational')}
+                    >
+                      <span className="settings-nav-icon">⚙️</span>
+                      <span>Operacional</span>
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            )}
 
             <div className="settings-nav-section">
               <h3 className="settings-nav-section-title">Personal</h3>

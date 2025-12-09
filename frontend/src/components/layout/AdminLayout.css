@@ -113,7 +113,8 @@
   flex: 1;
   margin-left: 260px;
   padding: 2rem;
-  overflow-y: auto;
+  /* overflow-y: auto;  <-- REMOVED: This was causing double scrollbars or preventing scroll */
+  min-height: calc(100vh - 60px); /* Ensure it takes full height minus header */
 }
 
 /* Mobile Responsive */

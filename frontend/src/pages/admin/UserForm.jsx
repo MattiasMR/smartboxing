@@ -22,6 +22,7 @@ export default function UserForm() {
     role: 'staff',
     tenantId: currentTenantId || '',
     status: 'active',
+    temporaryPassword: '',
   });
   
   const [error, setError] = useState(null);
@@ -48,6 +49,7 @@ export default function UserForm() {
         role: existingUser.role || 'staff',
         tenantId: existingUser.tenantId || '',
         status: existingUser.status || 'active',
+        temporaryPassword: '',
       });
     }
   }, [existingUser]);
@@ -91,6 +93,7 @@ export default function UserForm() {
         email: formData.email,
         name: formData.name,
         role: formData.role,
+        temporaryPassword: formData.temporaryPassword,
         ...(isSuperAdmin() && { tenantId: formData.tenantId }),
       });
     }
@@ -123,12 +126,12 @@ export default function UserForm() {
       <div className="admin-page-header">
         <div>
           <h1 className="admin-page-title">
-            {isEditing ? '✏️ Editar Usuario' : '➕ Crear Usuario'}
+            {isEditing ? '✏️ Editar Usuario' : '➕ Crear Staff'}
           </h1>
           <p className="admin-page-subtitle">
             {isEditing 
               ? `Editando: ${existingUser?.email}` 
-              : 'Crea un nuevo usuario para la organización'}
+              : 'Crea un nuevo miembro del staff para la organización'}
           </p>
         </div>
       </div>
@@ -139,7 +142,7 @@ export default function UserForm() {
             <div className="admin-error-alert">{error}</div>
           )}
           
-          {!isEditing && (
+          {!isEditing && !formData.temporaryPassword && (
             <div className="admin-info-alert">
               ℹ️ El usuario recibirá un correo con instrucciones para establecer su contraseña.
             </div>
@@ -225,6 +228,25 @@ export default function UserForm() {
                     : 'Acceso básico al sistema (boxes, citas, pacientes)'}
                 </small>
               </div>
+
+              {!isEditing && (
+                <div className="admin-form-group">
+                  <label className="admin-form-label">Contraseña Temporal</label>
+                  <input
+                    name="temporaryPassword"
+                    type="text"
+                    value={formData.temporaryPassword}
+                    onChange={handleChange}
+                    className="admin-form-input"
+                    placeholder="Ej: Temporal123!"
+                    minLength={8}
+                  />
+                  <small className="admin-form-help">
+                    Si se deja en blanco, Cognito generará una y la enviará por email (si está configurado).
+                    Si la ingresas, deberás entregarla al usuario manualmente.
+                  </small>
+                </div>
+              )}
               
               {isEditing && (
                 <div className="admin-form-group">

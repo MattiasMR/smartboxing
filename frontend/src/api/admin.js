@@ -87,15 +87,17 @@ export async function createUser(data) {
 /**
  * Update user role or status
  */
-export async function updateUser(cognitoSub, data) {
-  const response = await api.put(`/admin/users/${cognitoSub}`, data);
+export async function updateUser(cognitoSub, data, tenantId = null) {
+  const params = tenantId ? `?tenantId=${tenantId}` : '';
+  const response = await api.put(`/admin/users/${cognitoSub}${params}`, data);
   return response.data;
 }
 
 /**
  * Delete user
  */
-export async function deleteUser(cognitoSub) {
-  const response = await api.delete(`/admin/users/${cognitoSub}`);
+export async function deleteUser(cognitoSub, tenantId = null) {
+  const params = tenantId ? `?tenantId=${tenantId}` : '';
+  const response = await api.delete(`/admin/users/${cognitoSub}${params}`);
   return response.data;
 }

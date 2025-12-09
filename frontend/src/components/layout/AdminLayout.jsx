@@ -59,28 +59,38 @@ function AdminLayout() {
                   <span className="nav-icon">📋</span>
                   Solicitudes
                 </NavLink>
+                <NavLink 
+                  to="/admin/users-global" 
+                  className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}
+                  onClick={handleCloseNav}
+                >
+                  <span className="nav-icon">👥</span>
+                  Usuarios
+                </NavLink>
+                <div className="admin-nav-divider"></div>
+                <NavLink 
+                  to="/admin/settings" 
+                  className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}
+                  onClick={handleCloseNav}
+                >
+                  <span className="nav-icon">⚙️</span>
+                  Configuración
+                </NavLink>
               </>
             )}
             
-            <NavLink 
-              to="/admin/users" 
-              className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}
-              onClick={handleCloseNav}
-            >
-              <span className="nav-icon">👥</span>
-              Usuarios
-            </NavLink>
-            
-            <div className="admin-nav-divider"></div>
-            
-            <NavLink 
-              to="/dashboard" 
-              className="admin-nav-link admin-nav-back"
-              onClick={handleCloseNav}
-            >
-              <span className="nav-icon">←</span>
-              Volver al Sistema
-            </NavLink>
+            {!isSuperAdmin() && (
+              <>
+                <NavLink 
+                  to="/dashboard" 
+                  className="admin-nav-link admin-nav-back"
+                  onClick={handleCloseNav}
+                >
+                  <span className="nav-icon">←</span>
+                  Volver al Sistema
+                </NavLink>
+              </>
+            )}
           </nav>
         </aside>
 

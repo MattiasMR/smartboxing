@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client.js';
+import { getClientSettings } from '../api/settings.js';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { FaSave, FaTimes, FaSpinner } from 'react-icons/fa';
 import './Forms.css';
@@ -53,6 +54,53 @@ export default function AppointmentForm() {
     resolver: zodResolver(ApptSchema),
     defaultValues: { id: '', idBox: '', idStaff: '', status: 'scheduled', startAt: '', endAt: '' }
   });
+
+  // Fetch client settings for schedule validation
+  const { data: clientSettings } = useQuery({
+    queryKey: ['settings', 'client'],
+    queryFn: getClientSettings,
+    staleTime: 5 * 60 * 1000
+  });
+
+  const validateSchedule = (data) => {
+    if (!clientSettings?.schedule) return true;
+
+    const start = new Date(data.startAt);
+    const end = new Date(data.endAt);
+    const day = start.getDay(); // 0 = Sunday, 1 = Monday, etc.
+
+    // Check work days
+    if (clientSettings.schedule.workDays && !clientSettings.schedule.workDays.includes(day)) {
+      setError('startAt', { 
+        type: 'manual', 
+        message: 'La organización no atiende este día de la semana' 
+      });
+      return false;
+    }
+
+    // Check work hours
+    const startTime = clientSettings.schedule.startTime || '08:00';
+    const endTime = clientSettings.schedule.endTime || '20:00';
+    
+    const [startHour, startMin] = startTime.split(':').map(Number);
+    const [endHour, endMin] = endTime.split(':').map(Number);
+
+    const apptStartMinutes = start.getHours() * 60 + start.getMinutes();
+    const apptEndMinutes = end.getHours() * 60 + end.getMinutes();
+    
+    const workStartMinutes = startHour * 60 + startMin;
+    const workEndMinutes = endHour * 60 + endMin;
+
+    if (apptStartMinutes < workStartMinutes || apptEndMinutes > workEndMinutes) {
+      setError('startAt', { 
+        type: 'manual', 
+        message: `Las citas deben estar entre ${startTime} y ${endTime}` 
+      });
+      return false;
+    }
+
+    return true;
+  };
 
   const { isLoading: loadingAppt } = useQuery({
     queryKey: ['appointment', id],
@@ -156,10 +204,15 @@ export default function AppointmentForm() {
   });
 
   const onSubmit = (values) => {
-    clearErrors(['idBox', 'idStaff']);
+    clearErrors(['idBox', 'idStaff', 'startAt']);
 
     if (!isEdit && !values.id) {
       setError('id', { type: 'manual', message: 'No pudimos generar un ID automático. Recarga e intenta nuevamente.' });
+      return;
+    }
+
+    // Validate working hours
+    if (!validateSchedule(values)) {
       return;
     }
 

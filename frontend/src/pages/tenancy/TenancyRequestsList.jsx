@@ -157,6 +157,12 @@ export default function TenancyRequestsList() {
                           {request.description.length > 100 ? '...' : ''}
                         </div>
                       )}
+                      {request.reason && (
+                        <div className="tenancy-reason-preview" style={{ fontSize: '0.85em', color: '#666', marginTop: '4px', fontStyle: 'italic' }}>
+                          Motivo: {request.reason.substring(0, 100)}
+                          {request.reason.length > 100 ? '...' : ''}
+                        </div>
+                      )}
                     </div>
                   </td>
                   <td>
@@ -203,12 +209,13 @@ export default function TenancyRequestsList() {
                     ) : (
                       <div className="tenancy-reviewed-info">
                         {request.status === 'rejected' && request.rejectionReason && (
-                          <span title={request.rejectionReason}>
-                            Ver motivo
-                          </span>
+                          <div style={{ color: '#dc2626', fontSize: '0.9em', marginTop: '5px' }}>
+                            <strong>Motivo rechazo:</strong><br/>
+                            {request.rejectionReason}
+                          </div>
                         )}
                         {request.reviewedAt && (
-                          <div className="tenant-email">
+                          <div className="tenant-email" style={{ marginTop: '5px' }}>
                             {new Date(request.reviewedAt).toLocaleDateString()}
                           </div>
                         )}

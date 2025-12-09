@@ -25,6 +25,18 @@ export const main = handler(async (event) => {
     error.statusCode = 400;
     throw error;
   }
+
+  // Allow Super Admin to specify tenantId via query param if not in context
+  let targetTenantId = admin.tenantId;
+  if (!targetTenantId && admin.role === ROLES.SUPER_ADMIN) {
+    targetTenantId = event.queryStringParameters?.tenantId;
+  }
+
+  if (!targetTenantId) {
+     const error = new Error('Tenant ID is required');
+     error.statusCode = 400;
+     throw error;
+  }
   
   // Get existing user using composite key (cognitoSub + tenantId)
   // Admin can only delete users in their own tenant
@@ -32,7 +44,7 @@ export const main = handler(async (event) => {
     TableName: T_TENANT_USERS,
     Key: { 
       cognitoSub: id,
-      tenantId: admin.tenantId,
+      tenantId: targetTenantId,
     },
   }));
   
@@ -55,7 +67,7 @@ export const main = handler(async (event) => {
   try {
     await cognito.send(new AdminDeleteUserCommand({
       UserPoolId: USER_POOL_ID,
-      Username: tenantUser.email,
+      Username: id, // Use SUB as username
     }));
   } catch (e) {
     // If user doesn't exist in Cognito, continue to clean up TenantUsers
@@ -69,7 +81,7 @@ export const main = handler(async (event) => {
     TableName: T_TENANT_USERS,
     Key: { 
       cognitoSub: id,
-      tenantId: admin.tenantId,
+      tenantId: targetTenantId,
     },
   }));
   
@@ -77,7 +89,7 @@ export const main = handler(async (event) => {
   try {
     await doc.send(new UpdateCommand({
       TableName: T_TENANTS,
-      Key: { id: tenantUser.tenantId },
+      Key: { id: targetTenantId },
       UpdateExpression: 'SET userCount = userCount - :one',
       ConditionExpression: 'userCount > :zero',
       ExpressionAttributeValues: {
