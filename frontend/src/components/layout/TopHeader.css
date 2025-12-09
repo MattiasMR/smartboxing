@@ -38,6 +38,9 @@
   margin: 0;
   color: var(--text-primary);
   letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .institution-name {
@@ -136,6 +139,31 @@
   text-overflow: ellipsis;
 }
 
+/* Ajustes para pantallas medianas: priorizar logo + título y ocultar centro si es necesario */
+@media (max-width: 1100px) {
+  .header-center {
+    display: none;
+  }
+  .header-title {
+    font-size: 1.2rem;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .header-logo {
+    height: 42px;
+    max-width: 140px;
+  }
+  .user-name {
+    max-width: 110px;
+    font-size: 0.95rem;
+  }
+  .header-left {
+    gap: 12px;
+  }
+}
+
 /* Regla para pantallas pequeñas */
 @media (max-width: 768px) {
   .top-header {
@@ -163,6 +191,9 @@
   .header-center {
     display: none;
   }
+  .header-title {
+    display: none;
+  }
   
   .header-right {
     gap: 8px;
@@ -177,8 +208,8 @@
 
   .user-name {
     margin-right: 4px;
-    max-width: 95px;
-    font-size: 0.95rem;
+    max-width: 80px;
+    font-size: 0.9rem;
     text-align: right;
     white-space: nowrap;
   }

@@ -131,8 +131,8 @@ function buildDataSummary({ tenant, appointments, boxes, staff, patients, period
     `- Tasa de no-show: ${appointments.noShowRate}%`,
     `- Tasa de completación: ${appointments.completionRate}%`,
     '',
-    '### Espacios/Boxes',
-    `- Total de boxes: ${boxes.total}`,
+    '### Recursos Agendables/Boxes',
+    `- Total de recursos: ${boxes.total}`,
     `- Disponibles: ${boxes.available}`,
     `- Ocupados: ${boxes.occupied}`,
     `- En mantenimiento: ${boxes.maintenance}`,
@@ -165,7 +165,7 @@ function buildDataSummary({ tenant, appointments, boxes, staff, patients, period
  */
 async function generateAISummary(tenant, dataSummary) {
   const tenantType = tenant.type || 'organización';
-  const tenantDescription = tenant.description || 'gestión de espacios físicos y citas';
+  const tenantDescription = tenant.description || 'gestión de recursos agendables y citas';
   
   const systemPrompt = `Eres un analista senior de operaciones para "${tenant.name}".
 ${tenant.description ? `Descripción de la organización: ${tenantDescription}` : ''}

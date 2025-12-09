@@ -741,7 +741,7 @@ export default function SettingsProfessionalNew() {
               <div className="settings-card">
                 <div className="settings-card-header">
                   <h2>Términos clave</h2>
-                  <p>Estas palabras se muestran solo de forma visual; no afectan la lógica ni las rutas</p>
+                  <p>Estas palabras se muestran solo de forma visual; no afectan la lógica ni las rutas. Cabe destacar que al colocar la palabra se hace en singular y el sistema según convenga le colocará la una "s" para simular su forma plural automáticamente.</p>
                 </div>
                 <div className="settings-card-body">
                   <div className="settings-form-group">
