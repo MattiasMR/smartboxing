@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaBars } from 'react-icons/fa';
 import { useAuth } from '../../auth/useAuth';
-import { logoutUrl } from '../../auth/cognito.js';
 import { switchTenant } from '../../api/tenancy';
 import TenantSelector from './TenantSelector.jsx';
 import './TopHeader.css';
