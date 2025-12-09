@@ -74,7 +74,7 @@ function Sidebar({ isOpen, onClose }) {
       // 2. Force token refresh to get clean claims
       await forceRefreshSession();
       
-      // 3. Clear local state
+      // 3. Clear local state (sets active_tenant_id to 'null')
       clearActiveTenant();
       
       // 4. Close sidebar

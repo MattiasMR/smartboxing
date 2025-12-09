@@ -35,7 +35,14 @@ function extractUserFromPayload(payload) {
   const localRole = localStorage.getItem('active_tenant_role');
   
   // Get tenant from token or local override
-  let tenantId = localTenantId || payload['custom:tenantId'] || null;
+  // Handle explicit 'null' string from localStorage which means "force no tenant"
+  let tenantId;
+  if (localTenantId === 'null') {
+    tenantId = null;
+  } else {
+    tenantId = localTenantId || payload['custom:tenantId'] || null;
+  }
+
   let tenantName = localTenantName || payload['custom:tenantName'] || null;
   
   // 'system' tenant means super_admin without active tenant selection
@@ -197,7 +204,8 @@ export function AuthProvider({ children }) {
       localStorage.setItem('active_tenant_name', tenantName || '');
       localStorage.setItem('active_tenant_role', role || 'tenant_admin');
     } else {
-      localStorage.removeItem('active_tenant_id');
+      // Explicitly set to 'null' string to override any stale token data
+      localStorage.setItem('active_tenant_id', 'null');
       localStorage.removeItem('active_tenant_name');
       localStorage.removeItem('active_tenant_role');
     }
@@ -219,7 +227,9 @@ export function AuthProvider({ children }) {
    */
   const clearActiveTenant = useCallback(() => {
     console.log('[AuthProvider] clearActiveTenant');
-    localStorage.removeItem('active_tenant_id');
+    // Set to 'null' string to ensure extractUserFromPayload sees it as null
+    // even if the token still has the old tenantId
+    localStorage.setItem('active_tenant_id', 'null');
     localStorage.removeItem('active_tenant_name');
     localStorage.removeItem('active_tenant_role');
     

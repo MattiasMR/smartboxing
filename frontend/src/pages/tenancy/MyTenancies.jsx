@@ -38,10 +38,10 @@ export default function MyTenancies() {
     queryFn: () => listTenancyRequests({ onlyMine: true }),
   });
 
-  // Switch tenant mutation - navigates to dashboard after switch
+  // Switch tenant mutation - navigates to dashboard (or specified path) after switch
   const switchMutation = useMutation({
-    mutationFn: switchTenant,
-    onSuccess: async (data, tenantId) => {
+    mutationFn: ({ tenantId }) => switchTenant(tenantId),
+    onSuccess: async (data, { tenantId, redirectPath }) => {
       // Get tenant info from our local data
       const tenancy = tenancies.find(t => t.tenantId === tenantId);
       
@@ -67,8 +67,8 @@ export default function MyTenancies() {
       }
       
       queryClient.invalidateQueries();
-      // Navigate to dashboard after successful switch
-      navigate('/dashboard');
+      // Navigate to dashboard (or specified path) after successful switch
+      navigate(redirectPath || '/dashboard');
     },
     onError: (error) => {
       console.error('Error switching tenant:', error);
@@ -77,9 +77,9 @@ export default function MyTenancies() {
   });
 
   // Handle entering a tenancy
-  const handleEnterTenancy = (tenantId) => {
+  const handleEnterTenancy = (tenantId, redirectPath = '/dashboard') => {
     setSwitchingTenantId(tenantId);
-    switchMutation.mutate(tenantId);
+    switchMutation.mutate({ tenantId, redirectPath });
   };
 
   const tenancies = tenanciesData?.tenancies || [];
@@ -179,12 +179,13 @@ export default function MyTenancies() {
                 </button>
                 {/* Secondary action - Manage users (only for current tenant) */}
                 {currentTenantId === tenancy.tenantId && (
-                  <Link 
-                    to="/admin/users" 
+                  <button 
                     className="tenancy-btn tenancy-btn-secondary tenancy-btn-full"
+                    onClick={() => handleEnterTenancy(tenancy.tenantId, '/staff')}
+                    disabled={switchMutation.isPending}
                   >
                     👥 Gestionar Usuarios
-                  </Link>
+                  </button>
                 )}
               </div>
             ))}
