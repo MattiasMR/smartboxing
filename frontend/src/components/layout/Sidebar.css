@@ -4,12 +4,14 @@
   flex-shrink: 0;
   background-color: var(--background-primary);
   border-right: 1px solid var(--border-secondary);
-  height: calc(100vh - 61px);
+  height: calc(100vh - 61px - env(safe-area-inset-bottom, 0px));
   position: sticky;
   top: 61px;
   display: flex;
   flex-direction: column;
   transition: width 0.3s ease, left 0.3s ease-in-out;
+  overflow-y: auto;
+  padding-bottom: 20px;
 }
 .sidebar.collapsed {
   width: 80px;

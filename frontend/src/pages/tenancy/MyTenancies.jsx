@@ -113,7 +113,7 @@ export default function MyTenancies() {
       <div className="tenancy-page-header">
         <h1 className="tenancy-page-title">🏢 Mis Tenencias</h1>
         <p className="tenancy-page-subtitle">
-          Administra tus espacios y solicita nuevos registros
+          Administra tus recursos agendables y solicita nuevos registros
         </p>
       </div>
 
@@ -241,3 +241,4 @@ export default function MyTenancies() {
     </div>
   );
 }
+

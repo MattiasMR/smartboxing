@@ -10,7 +10,7 @@ import { forceRefreshSession } from '../../auth/cognitoAuth.js';
 // Items que requieren una tenencia activa
 const tenantNavItems = [
   { id: 'dashboard', label: 'Dashboard', icon: <FaChartBar />, path: '/dashboard' },
-  { id: 'boxes', label: 'Boxes', icon: <FaTh />, path: '/boxes' },
+  { id: 'boxes', label: 'Recursos agendables', icon: <FaTh />, path: '/boxes' },
   { id: 'staff', label: 'Staff', icon: <FaUsers />, path: '/staff' },
   { id: 'appointments', label: 'Citas', icon: <FaCalendarAlt />, path: '/appointments' },
 ];

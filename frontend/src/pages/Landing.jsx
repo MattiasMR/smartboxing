@@ -126,7 +126,7 @@ export default function LandingPage() {
       <section id="features" className="features">
         <div className="features-container">
           <div className="section-header">
-            <h2>Todo lo que necesitas para gestionar tus espacios</h2>
+            <h2>Todo lo que necesitas para gestionar tus recursos agendables</h2>
             <p>Potentes herramientas diseñadas para simplificar tu día a día</p>
           </div>
           <div className="features-grid">

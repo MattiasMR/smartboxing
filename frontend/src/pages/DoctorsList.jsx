@@ -71,7 +71,7 @@ export default function DoctorsList() {
               <FaSearch />
               <input
                 type="search"
-                placeholder="Buscar por ID, nombre o especialidad"
+                placeholder="Buscar por ID, nombre o cargo"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="search-input"

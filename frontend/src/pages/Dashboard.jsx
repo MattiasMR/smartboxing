@@ -67,7 +67,7 @@ const Dashboard = () => {
     })
   );
 
-  // Preparar datos para gráfico de especialidades
+  // Preparar datos para gráfico de cargos
   const specialtyData = Object.entries(staffMetrics?.bySpecialty || {}).map(
     ([specialty, count]) => ({
       name: specialty,
@@ -133,7 +133,7 @@ const Dashboard = () => {
         />
 
         <MetricCard
-          title="Boxes Activos"
+          title="Recursos agendables activos"
           value={metrics?.summary?.activeBoxes || 0}
           subtitle={`${metrics?.boxes?.occupancyRate || 0}% ocupación`}
           icon="🏥"
@@ -143,7 +143,7 @@ const Dashboard = () => {
         <MetricCard
           title="Staff Activo"
           value={metrics?.summary?.activeStaff ?? metrics?.summary?.activeDoctors ?? 0}
-          subtitle={`${Object.keys(staffMetrics?.bySpecialty || {}).length} especialidades activas`}
+          subtitle={`${Object.keys(staffMetrics?.bySpecialty || {}).length} cargos activos`}
           icon="👥"
           color="info"
         />
@@ -160,7 +160,7 @@ const Dashboard = () => {
       {/* Métricas secundarias */}
       <div className="dashboard__secondary-metrics">
         <MetricCard
-          title="Pacientes Registrados"
+          title="Clientes Registrados"
           value={metrics?.summary?.totalPatients || 0}
           subtitle={`${metrics?.patients?.active || 0} activos`}
           icon="👥"
@@ -184,7 +184,7 @@ const Dashboard = () => {
         />
 
         <MetricCard
-          title="Boxes Disponibles"
+          title="Recursos agendables disponibles"
           value={metrics?.boxes?.available || 0}
           subtitle={`${metrics?.boxes?.occupied || 0} ocupados`}
           icon="🟢"
@@ -213,7 +213,7 @@ const Dashboard = () => {
         />
 
         <ChartCard
-          title="Especialidades Staff"
+          title="cargos Staff"
           type="pie"
           data={specialtyData}
           xKey="name"
@@ -247,3 +247,6 @@ const statusLabels = {
 };
 
 export default Dashboard;
+
+
+

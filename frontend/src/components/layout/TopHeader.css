@@ -22,6 +22,8 @@
   display: flex;
   align-items: center;
   gap: 16px;
+  flex: 1;
+  min-width: 0;
 }
 
 .header-titles {
@@ -120,6 +122,18 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
+  flex-grow: 0;
+  min-width: auto;
+  margin-left: auto;
+}
+
+.user-name {
+  font-weight: 600;
+  white-space: nowrap;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Regla para pantallas pequeñas */
@@ -138,6 +152,7 @@
   
   .header-left {
     gap: 12px;
+    min-width: 0;
   }
   
   .header-logo {
@@ -150,14 +165,37 @@
   }
   
   .header-right {
-    gap: 10px;
+    gap: 8px;
+    flex-shrink: 0;
+    flex-grow: 0;
+    min-width: auto;
+  }
+
+  .header-right .tenant-selector {
+    display: none;
+  }
+
+  .user-name {
+    margin-right: 4px;
+    max-width: 95px;
+    font-size: 0.95rem;
+    text-align: right;
+    white-space: nowrap;
   }
   
   .logout-btn {
-    padding: 12px 16px; /* Increased button padding */
+    padding: 10px 14px;
     font-size: 1em; /* Increased text size */
     min-height: 48px; /* Added minimum height for touch targets */
     min-width: 80px; /* Added minimum width */
+  }
+
+  .institution-name {
+    display: none;
+  }
+
+  .header-title {
+    font-size: 1.1rem;
   }
 }
 

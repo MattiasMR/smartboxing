@@ -79,11 +79,11 @@ export default function BoxForm() {
     mutationFn: async (values) => api.post('/boxes', { box: values }),
     onSuccess: () => {
       qc.invalidateQueries(['boxes']);
-      showFeedback('success', '✅ Box creado correctamente');
+      showFeedback('success', '✅ Recurso agendable creado correctamente');
       handleSuccessNavigation();
     },
     onError: (error) => {
-      showFeedback('error', getErrorMessage(error, 'No pudimos crear el box. Intenta nuevamente.'));
+      showFeedback('error', getErrorMessage(error, 'No pudimos crear el recurso agendable. Intenta nuevamente.'));
     }
   });
 
@@ -95,7 +95,7 @@ export default function BoxForm() {
       handleSuccessNavigation();
     },
     onError: (error) => {
-      showFeedback('error', getErrorMessage(error, 'No pudimos guardar los cambios. Revisa los datos.'));
+      showFeedback('error', getErrorMessage(error, 'No pudimos guardar los cambios. Revisa los datos del recurso agendable.'));
     }
   });
 
@@ -120,7 +120,7 @@ export default function BoxForm() {
     return (
       <div className="loading-container">
         <FaSpinner className="spinner" />
-        <p>Cargando...</p>
+        <p>Cargando recurso agendable...</p>
       </div>
     );
   }
@@ -129,9 +129,9 @@ export default function BoxForm() {
     <div className="form-page">
       <div className="form-container">
         <div className="form-header">
-          <h1 className="form-title">{isEdit ? 'Editar Box' : 'Nuevo Box'}</h1>
+          <h1 className="form-title">{isEdit ? 'Editar recurso agendable' : 'Nuevo recurso agendable'}</h1>
           <p className="form-subtitle">
-            {isEdit ? 'Modifica los datos del box' : 'Completa la información del nuevo box'}
+            {isEdit ? 'Modifica los datos del recurso agendable' : 'Completa la información del nuevo recurso agendable'}
           </p>
         </div>
 
@@ -145,7 +145,7 @@ export default function BoxForm() {
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="box-id" className="form-label">
-                ID del Box <span className="required">*</span>
+                ID del recurso agendable <span className="required">*</span>
               </label>
               <input 
                 id="box-id"
@@ -176,13 +176,13 @@ export default function BoxForm() {
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="box-pasillo" className="form-label">
-                Pasillo
+                Referencia
               </label>
               <input 
                 id="box-pasillo"
                 {...register('pasillo')}
                 className="form-input"
-                placeholder="Ej: Pasillo A"
+                placeholder="Ej: Referencia A"
               />
             </div>
 
@@ -210,7 +210,7 @@ export default function BoxForm() {
               {isSubmitting ? (
                 <><FaSpinner className="spinner-small" /> Guardando...</>
               ) : (
-                <><FaSave /> {isEdit ? 'Guardar Cambios' : 'Crear Box'}</>
+                <><FaSave /> {isEdit ? 'Guardar Cambios' : 'Crear recurso agendable'}</>
               )}
             </button>
           </div>

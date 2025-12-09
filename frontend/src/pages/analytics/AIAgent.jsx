@@ -44,12 +44,12 @@ ${report.summary}
 | Total Citas | ${report.dataPoints?.totalAppointments || 0} |
 | Citas Completadas | ${report.dataPoints?.completedAppointments || 0} |
 | Tasa No-Show | ${report.dataPoints?.noShowRate || 0}% |
-| Total Boxes | ${report.dataPoints?.totalBoxes || 0} |
-| Boxes Activos | ${report.dataPoints?.activeBoxes || 0} |
+| Total recursos agendables | ${report.dataPoints?.totalBoxes || 0} |
+| Recursos agendables activos | ${report.dataPoints?.activeBoxes || 0} |
 | Tasa Ocupación | ${report.dataPoints?.occupancyRate || 0}% |
 | Total Staff | ${report.dataPoints?.totalStaff || 0} |
 | Staff Activo | ${report.dataPoints?.activeStaff || 0} |
-| Total Pacientes | ${report.dataPoints?.totalPatients || 0} |
+| Total Clientes | ${report.dataPoints?.totalPatients || 0} |
 
 ---
 *Generado por SmartBoxing AI Agent*
@@ -110,7 +110,7 @@ ${report.summary}
             <div className="ai-feature-card">
               <span className="feature-icon">📊</span>
               <h3>Análisis Completo</h3>
-              <p>Analiza citas, boxes, staff y pacientes de los últimos 30 días</p>
+              <p>Analiza citas, recursos agendables, staff y clientes de los últimos 30 días</p>
             </div>
             <div className="ai-feature-card">
               <span className="feature-icon">🧠</span>
@@ -196,7 +196,7 @@ ${report.summary}
                 </div>
                 <div className="metric-card">
                   <span className="metric-value">{report.dataPoints?.totalBoxes || 0}</span>
-                  <span className="metric-label">Boxes</span>
+                  <span className="metric-label">Recursos agendables</span>
                 </div>
                 <div className="metric-card">
                   <span className="metric-value">{report.dataPoints?.occupancyRate || 0}%</span>
@@ -214,3 +214,7 @@ ${report.summary}
     </div>
   );
 }
+
+
+
+

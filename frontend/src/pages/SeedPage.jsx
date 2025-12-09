@@ -67,7 +67,7 @@ export default function SeedPage() {
     if (message) return message;
     
     const stepNames = {
-      boxes: '📦 Boxes',
+      boxes: '📦 Recursos agendables',
       staff: '👥 Staff',
       doctors: '👥 Staff',
       appointments: '📅 Citas'
@@ -82,14 +82,14 @@ export default function SeedPage() {
         <h1>🌱 Poblar Base de Datos</h1>
         <p className="seed-description">
           Crea datos de prueba realistas usando Faker.js. Los IDs serán correlativos 
-          <code>001</code>, <code>002</code>, etc. para boxes, staff y citas.
+          <code>001</code>, <code>002</code>, etc. para recursos agendables, staff y citas.
         </p>
 
         <div className="seed-config">
           <h2>Configuración</h2>
           <div className="config-grid">
             <div className="config-item">
-              <label htmlFor="numBoxes">Boxes:</label>
+              <label htmlFor="numBoxes">Recursos agendables:</label>
               <input
                 id="numBoxes"
                 type="number"
@@ -170,7 +170,7 @@ export default function SeedPage() {
             <h3>✅ Completado</h3>
             {results.boxes && (
               <div className="result-section">
-                <h4>📦 Boxes</h4>
+                <h4>📦 Recursos agendables</h4>
                 <p>
                   ✓ Creados: {results.boxes.success || results.boxes.deleted || 0}
                   {(results.boxes.failed > 0) && <span> | ✗ Fallidos: {results.boxes.failed}</span>}
@@ -202,10 +202,10 @@ export default function SeedPage() {
           <h3>ℹ️ Información</h3>
           <ul>
             <li><strong>Poblar BD (API):</strong> Crea registros uno por uno usando los endpoints normales. Más lento pero con progreso detallado.</li>
-            <li><strong>Boxes:</strong> Se crean con IDs correlativos (001, 002, ...)</li>
-            <li><strong>Staff:</strong> Nombres realistas en español con roles o especialidades</li>
+            <li><strong>Recursos agendables:</strong> Se crean con IDs correlativos (001, 002, ...)</li>
+            <li><strong>Staff:</strong> Nombres realistas en español con roles o cargos</li>
             <li><strong>Citas:</strong> Fechas entre -7 días y +14 días, horarios 8:00-18:00</li>
-            <li><strong>Limpiar BD:</strong> Borra todos los registros (citas → staff → boxes)</li>
+            <li><strong>Limpiar BD:</strong> Borra todos los registros (citas → staff → recursos agendables)</li>
           </ul>
         </div>
       </div>

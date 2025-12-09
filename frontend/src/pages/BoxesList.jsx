@@ -37,7 +37,7 @@ export default function BoxesList() {
   }, [data, search]);
 
   const handleDelete = (id) => {
-    if (window.confirm('¿Estás seguro de eliminar este box?')) {
+    if (window.confirm('¿Estás seguro de eliminar este recurso agendable?')) {
       mutation.mutate(id);
     }
   };
@@ -46,7 +46,7 @@ export default function BoxesList() {
     return (
       <div className="loading-container">
         <FaSpinner className="spinner" />
-        <p>Cargando boxes...</p>
+        <p>Cargando recursos agendables...</p>
       </div>
     );
   }
@@ -55,19 +55,19 @@ export default function BoxesList() {
     <div className="boxes-list-page">
       <div className="page-header">
         <div className="page-header-content">
-          <h1 className="page-title">Boxes</h1>
-          <p className="page-subtitle">Gestiona tus boxes y espacios físicos</p>
+          <h1 className="page-title">Recursos agendables</h1>
+          <p className="page-subtitle">Gestiona tus recursos agendables y sus referencias</p>
         </div>
         <Link to="/boxes/new" className="btn-primary">
-          <FaPlus /> Nuevo Box
+          <FaPlus /> Nuevo recurso agendable
         </Link>
       </div>
 
       {data.length === 0 ? (
         <div className="empty-state">
-          <p>No hay boxes registrados</p>
+          <p>No hay recursos agendables registrados</p>
           <Link to="/boxes/new" className="btn-primary">
-            <FaPlus /> Crear primer box
+            <FaPlus /> Crear primer recurso agendable
           </Link>
         </div>
       ) : (
@@ -77,7 +77,7 @@ export default function BoxesList() {
               <FaSearch />
               <input
                 type="search"
-                placeholder="Buscar por ID, nombre o pasillo"
+                placeholder="Buscar por ID, nombre o referencia"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="search-input"
@@ -87,7 +87,7 @@ export default function BoxesList() {
 
           {filteredBoxes.length === 0 ? (
             <div className="empty-state">
-              <p>No encontramos boxes que coincidan con “{search}”.</p>
+              <p>No encontramos recursos agendables que coincidan con {search}.</p>
             </div>
           ) : (
             <div className="boxes-grid">

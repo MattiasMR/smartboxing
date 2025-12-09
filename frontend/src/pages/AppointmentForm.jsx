@@ -21,7 +21,7 @@ const statusLabels = {
 
 const ApptSchema = z.object({
   id: z.string().min(1, 'El ID es requerido'),
-  idBox: z.string().min(1, 'El Box es requerido'),
+  idBox: z.string().min(1, 'El recurso agendable es requerido'),
   idStaff: z.string().min(1, 'El Staff es requerido'),
   status: z.enum(statusOptions).default('scheduled'),
   startAt: z.string().min(1, 'La fecha de inicio es requerida'),
@@ -167,7 +167,7 @@ export default function AppointmentForm() {
       if (!boxConflictReported && current.idBox === values.idBox) {
         setError('idBox', {
           type: 'manual',
-          message: `El box ${values.idBox} ya está asignado en ese horario.`
+          message: `El recurso agendable ${values.idBox} ya está asignado en ese horario.`
         });
         boxConflictReported = true;
         conflict = true;
@@ -290,17 +290,17 @@ export default function AppointmentForm() {
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="appt-box" className="form-label">
-                Box <span className="required">*</span>
+                Recurso agendable <span className="required">*</span>
               </label>
               <select
                 id="appt-box"
                 {...register('idBox')}
                 className={`form-select ${errors.idBox ? 'error' : ''}`}
               >
-                <option value="">Selecciona un box</option>
+                <option value="">Selecciona un recurso agendable</option>
                 {boxes.map((box) => (
                   <option key={box.id} value={box.id}>
-                    {`Box ${box.id} - ${box.nombre || 'Sin nombre'}${box.pasillo ? ` · Pasillo ${box.pasillo}` : ''}`}
+                    {`Recurso agendable ${box.id} - ${box.nombre || 'Sin nombre'}${box.pasillo ? ` · Referencia ${box.pasillo}` : ''}`}
                   </option>
                 ))}
               </select>
@@ -372,3 +372,11 @@ export default function AppointmentForm() {
     </div>
   );
 }
+
+
+
+
+
+
+
+

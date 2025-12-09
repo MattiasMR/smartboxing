@@ -232,7 +232,7 @@ export default function UserForm() {
                 <small className="admin-form-help">
                   {formData.role === 'tenant_admin' 
                     ? 'Puede gestionar usuarios y configuración de la organización'
-                    : 'Acceso básico al sistema (boxes, citas, pacientes)'}
+                    : 'Acceso básico al sistema (recursos agendables, citas, clientes)'}
                 </small>
               </div>
 
@@ -310,3 +310,5 @@ export default function UserForm() {
     </div>
   );
 }
+
+

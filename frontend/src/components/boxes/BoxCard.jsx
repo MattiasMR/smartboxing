@@ -53,7 +53,7 @@ export default function BoxCard({ box, onDelete }) {
         <button 
           onClick={() => onDelete(box.id)} 
           className="btn-delete"
-          title="Eliminar box"
+          title="Eliminar recurso agendable"
         >
           <FaTrash /> Eliminar
         </button>

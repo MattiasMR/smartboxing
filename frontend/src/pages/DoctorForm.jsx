@@ -113,7 +113,7 @@ export default function DoctorForm() {
                 {...register('id')} 
                 readOnly
                 className={`form-input ${errors.id ? 'error' : ''}`}
-                placeholder="Ej: 001"
+                                placeholder="Ej: Coordinador clinico"
                 title="El ID se asigna automáticamente"
               />
               <span className="form-hint">El ID se genera automáticamente y no puede modificarse.</span>
@@ -144,20 +144,20 @@ export default function DoctorForm() {
                 id="staff-nombre"
                 {...register('nombre')}
                 className={`form-input ${errors.nombre ? 'error' : ''}`}
-                placeholder="Ej: Ana Pérez"
+                                placeholder="Ej: Coordinador clinico"
               />
               {errors.nombre && <span className="error-message">{errors.nombre.message}</span>}
             </div>
 
             <div className="form-group">
               <label htmlFor="staff-especialidad" className="form-label">
-                Especialidad
+                Cargo
               </label>
               <input 
                 id="staff-especialidad"
                 {...register('especialidad')}
                 className="form-input"
-                placeholder="Ej: Cardiología"
+                placeholder="Ej: Coordinador clinico"
               />
             </div>
           </div>
@@ -179,3 +179,4 @@ export default function DoctorForm() {
     </div>
   );
 }
+

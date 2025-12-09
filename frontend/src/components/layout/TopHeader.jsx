@@ -121,7 +121,7 @@ function TopHeader({ onMenuClick, isOpen }) {
 
         <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <TenantSelector />
-          <span style={{ color: 'var(--text-primary)' }}>{user?.name || 'Usuario'}</span>
+          <span className="user-name" style={{ color: 'var(--text-primary)' }}>{user?.name || 'Usuario'}</span>
           <button onClick={handleLogout} className="logout-btn">
             Log Out
           </button>

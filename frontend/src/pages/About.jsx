@@ -78,7 +78,7 @@ export default function AboutPage() {
             <h2>Lo que hacemos</h2>
             <p>
               Acompañamos a coworkings, clínicas, gimnasios y organizaciones que requieren control absoluto
-              de sus espacios. Combinamos backend serverless en AWS, autenticación con Cognito y un frontend
+              de sus recursos agendables. Combinamos backend serverless en AWS, autenticación con Cognito y un frontend
               optimizado para que la adopción sea rápida y segura.
             </p>
           </div>

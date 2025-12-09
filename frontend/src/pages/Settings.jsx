@@ -106,8 +106,8 @@ const DEFAULT_CLIENT_SETTINGS = {
   texts: {
     appName: 'SmartBoxing',
     institutionName: 'Mi Institución de Salud',
-    welcomeMessage: 'Bienvenido al sistema de gestión de boxes y staff',
-    tagline: 'Gestiona tu staff y boxes eficientemente',
+    welcomeMessage: 'Bienvenido al sistema de gestión de recursos agendables y staff',
+    tagline: 'Gestiona tus recursos agendables y staff eficientemente',
   },
   schedule: {
     startTime: '08:00',
@@ -555,7 +555,7 @@ export default function SettingsProfessionalNew() {
                       className="settings-input"
                       value={clientSettings.texts.welcomeMessage}
                       onChange={(e) => updateClientField('texts', 'welcomeMessage', e.target.value)}
-                      placeholder="Bienvenido al sistema de gestión de boxes y staff"
+                      placeholder="Bienvenido al sistema de gestión de recursos agendables y staff"
                     />
                   </div>
 
@@ -966,9 +966,9 @@ export default function SettingsProfessionalNew() {
                         onChange={(e) => updateClientField('operational', 'requirePatientConfirmation', e.target.checked)}
                       />
                       <div>
-                        <span className="settings-checkbox-title">Requerir confirmación del paciente</span>
+                        <span className="settings-checkbox-title">Requerir confirmación del cliente</span>
                         <p className="settings-checkbox-description">
-                          Los pacientes deben confirmar su cita antes de la fecha programada
+                          Los clientes deben confirmar su cita antes de la fecha programada
                         </p>
                       </div>
                     </label>
@@ -1002,7 +1002,7 @@ export default function SettingsProfessionalNew() {
                       <div>
                         <span className="settings-checkbox-title">Habilitar lista de espera</span>
                         <p className="settings-checkbox-description">
-                          Permite a los pacientes registrarse en lista de espera cuando no hay horarios disponibles
+                          Permite a los clientes registrarse en lista de espera cuando no hay horarios disponibles
                         </p>
                       </div>
                     </label>
@@ -1025,7 +1025,7 @@ export default function SettingsProfessionalNew() {
                       <div>
                         <span className="settings-checkbox-title">Enviar recordatorios automáticos</span>
                         <p className="settings-checkbox-description">
-                          Envía recordatorios por email a los pacientes antes de su cita
+                          Envía recordatorios por email a los clientes antes de su cita
                         </p>
                       </div>
                     </label>
@@ -1151,3 +1151,4 @@ export default function SettingsProfessionalNew() {
     </div>
   );
 }
+

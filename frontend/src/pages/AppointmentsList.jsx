@@ -67,10 +67,10 @@ export default function AppointmentsList() {
 
     return (
       <div className="box-cell">
-        <span className="box-cell__name">{box.nombre || `Box ${box.id}`}</span>
+        <span className="box-cell__name">{box.nombre || `Recurso agendable ${box.id}`}</span>
         <span className="box-cell__meta">
           ID {box.id}
-          {box.pasillo ? ` · Pasillo ${box.pasillo}` : ''}
+          {box.pasillo ? ` · Referencia ${box.pasillo}` : ''}
         </span>
       </div>
     );
@@ -109,7 +109,7 @@ export default function AppointmentsList() {
           <h1 className="page-title">
             <FaCalendarAlt /> Asignaciones de Staff
           </h1>
-          <p className="page-subtitle">Gestiona las citas de tu organización asignando staff a boxes</p>
+          <p className="page-subtitle">Gestiona las citas de tu organización asignando staff a recursos agendables</p>
         </div>
         <Link to="/appointments/new" className="btn-primary">
           <FaPlus /> Nueva Cita
@@ -170,7 +170,7 @@ export default function AppointmentsList() {
             <thead>
               <tr>
                 <th>Fecha y Hora</th>
-                <th>Box</th>
+                <th>Recurso agendable</th>
                 <th>Staff</th>
                 <th>Estado</th>
                 <th>Duración</th>
