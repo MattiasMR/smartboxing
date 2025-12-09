@@ -23,6 +23,7 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
  * Requires tenant_admin role and active tenancy
  */
 export const main = handler(async (event) => {
+  // VPC disabled for internet access
   const user = requireTenantAdmin(event);
   
   const tenantId = user.tenantId;
@@ -35,7 +36,7 @@ export const main = handler(async (event) => {
   
   // Check if OpenAI is configured
   if (!OPENAI_API_KEY) {
-    const error = new Error('AI service not configured. Contact administrator.');
+    const error = new Error('AI service not configured. Please set OPENAI_API_KEY in environment variables.');
     error.statusCode = 503;
     throw error;
   }
@@ -182,7 +183,6 @@ Analiza los siguientes datos y proporciona:
 Importante:
 - Mantén el tono profesional pero accesible
 - El resumen debe ser útil para la dirección
-- Usa emojis para hacer el texto más visual (📈, ✅, ⚠️, 💡, etc.)
 - Formatea en Markdown para buena presentación
 - Adapta el análisis al tipo de organización (${tenantType})`;
 

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { FaBars } from 'react-icons/fa';
 import { useAuth } from '../../auth/useAuth';
 import { logoutUrl } from '../../auth/cognito.js';
+import { switchTenant } from '../../api/tenancy';
 import TenantSelector from './TenantSelector.jsx';
 import './TopHeader.css';
 
@@ -53,11 +54,22 @@ function TopHeader({ onMenuClick, isOpen }) {
   });
   const formattedTime = now.toLocaleTimeString('es-CL');
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      // Intentar limpiar la tenencia en el backend antes de salir
+      // Esto asegura que el próximo login no tenga tenencia seleccionada
+      if (user && user.tenantId) {
+        await switchTenant(null);
+      }
+    } catch (error) {
+      console.error('Error clearing tenancy on logout:', error);
+      // Continuamos con el logout aunque falle esto
+    }
+
     // Limpiar tokens locales
     logout();
-    // Redirigir a Cognito logout para limpiar sesión del Hosted UI
-    window.location.href = logoutUrl();
+    // Redirigir a Login
+    window.location.href = '/login';
   };
 
   const handleMenuClick = (e) => {

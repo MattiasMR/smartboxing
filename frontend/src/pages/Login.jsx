@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { signIn } from '../auth/cognitoAuth';
 import { useAuth } from '../auth/useAuth';
+import { switchTenant } from '../api/tenancy';
 import './AuthPages.css';
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, clearActiveTenant, refreshUser } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,9 +22,30 @@ export default function LoginPage() {
       const { accessToken, idToken } = await signIn(email, password);
       
       // Use existing auth context login
-      await login({ access_token: accessToken, id_token: idToken });
+      const user = await login({ access_token: accessToken, id_token: idToken });
       
-      navigate('/dashboard');
+      // Force clear tenancy if one exists from a previous session
+      // This ensures we always start fresh at the selection screen
+      if (user && user.tenantId) {
+        try {
+          await switchTenant(null);
+          // Also clear it from the local auth state immediately
+          // so the UI doesn't think we are in a tenant
+          clearActiveTenant();
+          
+          // IMPORTANT: Refresh the token to ensure localStorage has a token WITHOUT tenantId
+          // Otherwise, a page reload would read the old token and redirect to dashboard
+          if (refreshUser) {
+            await refreshUser();
+          }
+        } catch (clearErr) {
+          console.warn('Could not clear previous tenancy:', clearErr);
+        }
+      }
+
+      // Redirect to My Tenancies by default, not Dashboard
+      // Dashboard requires an active tenant, which we don't have yet
+      navigate('/account/tenancies');
     } catch (err) {
       console.error('Login error:', err);
       

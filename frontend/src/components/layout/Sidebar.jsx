@@ -4,6 +4,8 @@ import { Link, useLocation } from 'react-router-dom';
 import './Sidebar.css';
 import { FaTh, FaCalendarAlt, FaUsers, FaTimes, FaCog, FaChartBar, FaUserShield, FaBuilding, FaRobot } from 'react-icons/fa';
 import { useAuthContext } from '../../auth/AuthContext.js';
+import { switchTenant } from '../../api/tenancy.js';
+import { forceRefreshSession } from '../../auth/cognitoAuth.js';
 
 // Items que requieren una tenencia activa
 const tenantNavItems = [
@@ -14,7 +16,7 @@ const tenantNavItems = [
 
 function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
-  const { isTenantAdmin, isSuperAdmin, tenantId } = useAuthContext();
+  const { isTenantAdmin, isSuperAdmin, tenantId, clearActiveTenant } = useAuthContext();
   
   // Determinar si el usuario tiene una tenencia activa
   const hasTenancy = !!tenantId;
@@ -62,6 +64,30 @@ function Sidebar({ isOpen, onClose }) {
 
   const handleLinkClick = () => {
     onClose();
+  };
+
+  const handleExitTenancy = async () => {
+    try {
+      // 1. Call backend to clear tenant from Cognito attributes
+      await switchTenant(null);
+      
+      // 2. Force token refresh to get clean claims
+      await forceRefreshSession();
+      
+      // 3. Clear local state
+      clearActiveTenant();
+      
+      // 4. Close sidebar
+      handleLinkClick();
+      
+      // 5. Redirect
+      window.location.href = '/account/tenancies';
+    } catch (error) {
+      console.error('Error exiting tenancy:', error);
+      // Fallback: just clear local and redirect
+      clearActiveTenant();
+      window.location.href = '/account/tenancies';
+    }
   };
 
   const renderMainMenu = () => (
@@ -117,13 +143,31 @@ function Sidebar({ isOpen, onClose }) {
               </Link>
             </li>
           ))}
-          
+
           {/* Exit Tenancy Option */}
           <li className="exit-tenancy-link">
-            <Link to="/account/tenancies" onClick={handleLinkClick} style={{ color: 'var(--text-secondary)', borderTop: '1px solid var(--border-color)', marginTop: '10px', paddingTop: '10px' }}>
-              <FaBuilding />
+            <button 
+              onClick={handleExitTenancy} 
+              className="nav-btn-link"
+              style={{ 
+                color: 'var(--text-secondary)', 
+                marginTop: '10px', 
+                paddingTop: '10px',
+                background: 'none',
+                border: 'none',
+                borderTop: '1px solid var(--border-color)',
+                width: '100%',
+                textAlign: 'left',
+                display: 'flex',
+                alignItems: 'center',
+                padding: '10px 15px',
+                cursor: 'pointer',
+                fontSize: '1rem'
+              }}
+            >
+              <FaBuilding style={{ marginRight: '10px' }} />
               <span className="nav-label">Salir de Tenencia</span>
-            </Link>
+            </button>
           </li>
         </>
       )}

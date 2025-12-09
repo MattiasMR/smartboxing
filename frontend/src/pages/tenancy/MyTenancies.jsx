@@ -8,14 +8,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getUserTenancies, listTenancyRequests, switchTenant } from '../../api/tenancy.js';
 import { useAuthContext } from '../../auth/AuthContext.js';
-import { forceRefreshSession } from '../../auth/cognitoAuth.js';
 import './TenancyPages.css';
 
 export default function MyTenancies() {
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user, switchTenantLocally } = useAuthContext();
+  const { user, switchTenantLocally, refreshUser } = useAuthContext();
   const [successMessage, setSuccessMessage] = useState(location.state?.message || null);
   const [switchingTenantId, setSwitchingTenantId] = useState(null);
 
@@ -56,10 +55,13 @@ export default function MyTenancies() {
       }
 
       // Force token refresh to get new claims (tenantId, role) from Cognito
+      // AND save them to localStorage so subsequent API calls use the correct token
       try {
         console.log('Refreshing session to get new tenant claims...');
-        await forceRefreshSession();
-        console.log('Session refreshed successfully');
+        if (refreshUser) {
+          await refreshUser();
+          console.log('Session refreshed successfully');
+        }
       } catch (e) {
         console.error('Failed to refresh session after tenant switch:', e);
       }

@@ -658,6 +658,7 @@ functions:
   generateAIReport:
     handler: backend/src/handlers/analytics/ai-report.main
     timeout: 30
+    vpc: null # Disable VPC to allow internet access for OpenAI API
     environment:
       OPENAI_API_KEY: ${env:OPENAI_API_KEY, ''}
     events:

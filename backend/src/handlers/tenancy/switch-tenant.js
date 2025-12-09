@@ -36,6 +36,30 @@ export const main = handler(async (event) => {
     table: T_TENANT_USERS 
   });
 
+  // Allow switching to "null" (leaving tenancy)
+  if (tenantId === null) {
+    console.log('Clearing active tenant for user:', user.sub);
+    
+    await cognito.send(new AdminUpdateUserAttributesCommand({
+      UserPoolId: USER_POOL_ID,
+      Username: user.sub,
+      UserAttributes: [
+        { Name: 'custom:tenantId', Value: '' }, // Empty string to clear
+        { Name: 'custom:tenantName', Value: '' },
+        // We keep the role or reset to default? 
+        // Let's keep the role as is, or maybe reset to 'staff' or 'user'?
+        // Usually role is tied to tenant. If no tenant, role is ambiguous.
+        // But for safety, let's not clear role, just tenant.
+      ],
+    }));
+
+    return {
+      message: 'Tenencia cerrada exitosamente',
+      tenant: null,
+      requiresTokenRefresh: true,
+    };
+  }
+
   if (!tenantId) {
     const error = new Error('tenantId is required');
     error.statusCode = 400;
