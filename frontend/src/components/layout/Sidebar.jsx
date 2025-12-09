@@ -18,11 +18,7 @@ const tenantNavItems = [
 function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
   const { user, isTenantAdmin, isSuperAdmin, tenantId, clearActiveTenant } = useAuthContext();
-  
-  // If super admin, do not render sidebar at all (they use AdminLayout)
-  if (isSuperAdmin()) {
-    return null;
-  }
+  const isSuper = isSuperAdmin();
   
   // Determinar si el usuario tiene una tenencia activa
   const hasTenancy = !!tenantId;
@@ -97,9 +93,14 @@ function Sidebar({ isOpen, onClose }) {
     }
   };
 
+  // Super admin uses AdminLayout; avoid rendering sidebar in MainLayout
+  if (isSuper) {
+    return null;
+  }
+
   const renderMainMenu = () => {
     // Super Admin: No sidebar at all in MainLayout, they use AdminLayout exclusively
-    if (isSuperAdmin()) {
+    if (isSuper) {
       return null;
     }
 

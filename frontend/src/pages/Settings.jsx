@@ -156,7 +156,7 @@ export default function SettingsProfessionalNew() {
   const [previewLogo, setPreviewLogo] = useState('');
   const [selectedThemeId, setSelectedThemeId] = useState(() => detectThemePreset(DEFAULT_CLIENT_SETTINGS.theme));
 
-  const { user, isTenantAdmin, isSuperAdmin } = useAuthContext();
+  const { user } = useAuthContext();
   const isStaff = user?.role === 'staff';
   const hasTenant = !!user?.tenantId;
   const isSuperAdminUser = user?.role === 'super_admin';
@@ -167,7 +167,7 @@ export default function SettingsProfessionalNew() {
     if ((isStaff || !hasTenant) && !isSuperAdminUser) {
       setActiveSection('user');
     }
-  }, []); // Run only on mount
+  }, [isStaff, hasTenant, isSuperAdminUser]);
 
   const loadSettings = useCallback(async () => {
     try {
@@ -224,7 +224,7 @@ export default function SettingsProfessionalNew() {
       setActiveSection('user');
     }
     loadSettings();
-  }, [loadSettings]);
+  }, [isSuperAdminUser, loadSettings]);
 
   const showMessage = (type, text) => {
     setMessage({ type, text });
