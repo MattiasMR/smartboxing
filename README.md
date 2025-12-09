@@ -1,555 +1,482 @@
-# SmartBoxing 🥊
+# SmartBoxing
 
-Sistema de gestión de boxes y citas médicas con arquitectura serverless en AWS.
+Sistema SaaS multi-tenant para la gestion de espacios fisicos (boxes) y citas, orientado a clinicas, gimnasios, centros de rehabilitacion y organizaciones similares. Construido con arquitectura serverless sobre AWS.
 
 ---
 
-## 🚀 Quick Start
+## Descripcion General
 
-### Prerequisitos
+SmartBoxing permite a multiples organizaciones (tenants) gestionar de forma independiente sus espacios fisicos reservables, personal, pacientes y citas. Cada organizacion tiene sus datos completamente aislados, con roles diferenciados para administradores de sistema, administradores de organizacion y personal operativo.
 
-- **Node.js 22+** (verificar con `node --version`)
-- **npm** (incluido con Node.js)
-- **AWS CLI** configurado (instalar desde https://aws.amazon.com/cli/)
-- **Cuenta AWS** (AWS Academy o cuenta personal)
-- **Serverless Framework** instalado globalmente:
+El sistema no esta atado a un tipo especifico de negocio. Puede usarse para centros medicos, gimnasios, estudios de yoga, centros de kinesiologia o cualquier organizacion que necesite administrar espacios y agendar citas.
+
+---
+
+## Tabla de Contenidos
+
+- [Requisitos Previos](#requisitos-previos)
+- [Instalacion y Deploy](#instalacion-y-deploy)
+- [Arquitectura Multi-Tenant](#arquitectura-multi-tenant)
+- [Roles y Permisos](#roles-y-permisos)
+- [Flujos de Usuario](#flujos-de-usuario)
+- [API Reference](#api-reference)
+- [Stack Tecnologico](#stack-tecnologico)
+- [Estructura del Proyecto](#estructura-del-proyecto)
+- [Desarrollo Local](#desarrollo-local)
+- [Testing](#testing)
+- [CI/CD](#cicd)
+- [Seguridad](#seguridad)
+- [Costos Estimados](#costos-estimados)
+- [Troubleshooting](#troubleshooting)
+
+---
+
+## Requisitos Previos
+
+- Node.js 22 o superior
+- npm (incluido con Node.js)
+- AWS CLI configurado
+- Cuenta AWS (AWS Academy o cuenta personal)
+- Serverless Framework 4 instalado globalmente:
   ```bash
   npm install -g serverless
   ```
 
-### Instalación y Primer Deploy
+---
 
-**IMPORTANTE:** Sigue estos pasos en orden para un deploy exitoso.
+## Instalacion y Deploy
+
+### Primer Deploy
 
 ```bash
-# 1. Clonar repositorio
+# Clonar repositorio
 git clone https://github.com/MattiasMR/smartboxing.git
 cd smartboxing
 
-# 2. Instalar dependencias del proyecto raíz
+# Instalar dependencias
 npm install
+cd backend && npm install && cd ..
+cd frontend && npm install && cd ..
 
-# 3. Instalar dependencias del backend
-cd backend
-npm install
-cd ..
-
-# 4. Instalar dependencias del frontend
-cd frontend
-npm install
-cd ..
-
-# 5. Configurar credenciales AWS
+# Configurar credenciales AWS
 # Para AWS Academy (incluye session token):
-set AWS_ACCESS_KEY_ID=tu_access_key_id
-set AWS_SECRET_ACCESS_KEY=tu_secret_access_key
-set AWS_SESSION_TOKEN=tu_session_token
+export AWS_ACCESS_KEY_ID=tu_access_key_id
+export AWS_SECRET_ACCESS_KEY=tu_secret_access_key
+export AWS_SESSION_TOKEN=tu_session_token
 
-# Para cuenta AWS personal (sin session token):
-set AWS_ACCESS_KEY_ID=tu_access_key_id
-set AWS_SECRET_ACCESS_KEY=tu_secret_access_key
+# Para cuenta AWS personal:
+export AWS_ACCESS_KEY_ID=tu_access_key_id
+export AWS_SECRET_ACCESS_KEY=tu_secret_access_key
 
-# Opcional: Configurar región (por defecto: us-east-1)
-set AWS_REGION=us-east-1
-
-# 6. Verificar credenciales AWS
+# Verificar credenciales
 aws sts get-caller-identity
 
-# 7. (OPCIONAL) Ejecutar tests antes del deploy
-cd backend
-npm test
-cd ../frontend
-npm test
-cd ..
-
-# 8. Deploy completo (backend + frontend)
-# Tiempo estimado: 6-8 minutos
+# Deploy completo (backend + frontend)
+# Tiempo estimado: 8-12 minutos
 sls deploy
-
-# 9. Al finalizar, verás:
-# ✔ Service deployed to stack smartboxing-dev
-# endpoints: https://xxx.execute-api.us-east-1.amazonaws.com/...
-# Frontend URL: https://xxx.cloudfront.net
 ```
 
-5. **Costos estimados de SmartBoxing**:
+Al finalizar el deploy, la consola mostrara las URLs del API Gateway y CloudFront.
 
-   - **DynamoDB**: ~$0-2 USD/mes (PAY_PER_REQUEST, depende del uso)
-   - **Lambda**: Free tier cubre hasta 1M requests/mes
-   - **S3**: ~$0.50-1 USD/mes (3 buckets)
-   - **CloudFront**: ~$0-1 USD/mes (bajo tráfico)
-   - **API Gateway**: ~$3.50 USD/millón requests
-   - **Cognito**: Free tier hasta 50,000 MAU
-   - **TOTAL ESTIMADO**: $0-5 USD/mes con tráfico bajo
-
-### Eliminar Recursos (Limpiar Deploy)
-
-Para eliminar todos los recursos y evitar costos:
+### Eliminar Recursos
 
 ```bash
-# 1. Eliminar el stack completo de CloudFormation
+# Eliminar stack completo
 sls remove
 
-# 2. Verificar que se eliminaron los recursos
-aws cloudformation list-stacks --stack-status-filter DELETE_COMPLETE --query "StackSummaries[?StackName=='smartboxing-dev']"
-
-# 3. (Opcional) Limpiar buckets S3 manualmente si quedaron archivos
-aws s3 rb s3://smartboxing-frontend-dev-v3 --force
-aws s3 rb s3://smartboxing-assets-dev-v3 --force
-aws s3 rb s3://smartboxing-deployment-dev-384722508633 --force
-```
-
-**IMPORTANTE**: `sls remove` elimina:
-
-- Todas las funciones Lambda
-- Tablas DynamoDB (¡se pierden los datos!)
-- API Gateway
-- Cognito User Pool y dominio
-- CloudFront distribution
-- Buckets S3 (si están vacíos)
-
-**NO elimina automáticamente**:
-
-- Logs de CloudWatch (estos se borran después de 30 días)
-- Buckets S3 con contenido (hay que vaciarlos primero)
-
----
-
-## 🐤 CI/CD y Canary Deployment
-
-### Estrategia Dual de Deployment
-
-SmartBoxing utiliza una estrategia dual para deployments seguros y controlados:
-
-#### 1. **Development (Automático)**
-- **Trigger:** Push a la rama `main`
-- **Tipo:** Deployment normal (sin canary)
-- **Duración:** ~5-8 minutos
-- **Propósito:** Testing rápido de nuevas features
-
-```bash
-# Hacer push a main dispara el deploy automático a dev
-git push origin main
-```
-
-#### 2. **Production (Manual con Canary)**
-- **Trigger:** Manual via GitHub Actions
-- **Tipo:** Canary deployment progresivo
-- **Configuración:** 10% → 50% → 100%
-- **Timeline:** 10% (5min) → 50% (10min) → 100% (5min)
-- **Duración total:** ~20-25 minutos
-- **Rollback:** Automático si falla CloudWatch Alarms
-
-**Cómo ejecutar deploy canary a producción:**
-
-1. Ir a **Actions** en GitHub
-2. Seleccionar workflow **"🚀 Deploy SmartBoxing"**
-3. Click en **"Run workflow"**
-4. Seleccionar `stage: prod`
-5. Aprobar deployment (requiere aprobación manual)
-6. Monitorear progreso del canary
-
-### Monitoreo del Canary Deployment
-
-El script `canary-monitor.mjs` permite monitorear en tiempo real:
-
-```bash
-# Monitorear deployment en producción (timeout 20min)
-node scripts/canary-monitor.mjs --stage=prod --timeout=20
-
-# Monitorear deployment en desarrollo (si se configura)
-node scripts/canary-monitor.mjs --stage=dev
-
-# Ver opciones disponibles
-node scripts/canary-monitor.mjs --help
-```
-
-**Output del monitoring:**
-- ✅ Estado del deployment (InProgress, Succeeded, Failed)
-- 📊 Métricas de CloudWatch (errores, latencia, throttles)
-- 🕐 Timeline y progreso (10% → 50% → 100%)
-- ⚠️ Alertas en tiempo real
-- 🔄 Detección automática de rollback
-
-### Funciones con Canary Deployment
-
-Las siguientes 11 funciones críticas usan canary deployment en producción:
-
-| Categoría | Funciones |
-|-----------|-----------|
-| **Boxes** | `listBoxes`, `getBox`, `createBox` |
-| **Staff** | `listStaff`, `createStaffMember` |
-| **Appointments** | `listAppointments`, `getAppointment`, `createAppointment` |
-| **Patients** | `listPatients` |
-| **Settings** | `getClientSettings` |
-| **Analytics** | `getDashboard` |
-
-**Nota:** Operaciones de actualización y eliminación NO usan canary para evitar inconsistencias de datos.
-
-### CloudWatch Alarms (Rollback Automático)
-
-El canary deployment se revierte automáticamente si se disparan estas alarmas:
-
-- **CanaryErrorAlarm:** >5 errores en 2 minutos
-- **CanaryLatencyAlarm:** P99 latency >2000ms
-- **CanaryThrottleAlarm:** >5 throttles en 2 minutos
-
-Las alertas se envían a: **milan.munoz@udd.cl** vía SNS.
-
-### Testing del Canary Deployment
-
-Valida el canary deployment con el script de testing:
-
-```bash
-# Test de rollback con simulación de errores
-node scripts/test-canary-rollback.mjs \
-  --scenario=errors \
-  --function=listBoxes \
-  --stage=prod \
-  --iterations=10
-
-# Test de rollback con simulación de latencia alta
-node scripts/test-canary-rollback.mjs \
-  --scenario=latency \
-  --function=getBox \
-  --stage=prod \
-  --iterations=15
-
-# Test de rollback con simulación de throttles
-node scripts/test-canary-rollback.mjs \
-  --scenario=throttle \
-  --function=createBox \
-  --stage=prod \
-  --iterations=20
-
-# Ver ayuda y opciones
-node scripts/test-canary-rollback.mjs --help
-```
-
-**Escenarios de Testing:**
-- **errors:** Simula >5 errores/2min para disparar CanaryErrorAlarm
-- **latency:** Simula latencia p99 >2000ms para disparar CanaryLatencyAlarm
-- **throttle:** Simula >5 throttles/2min para disparar CanaryThrottleAlarm
-
-El script activa chaos mode, ejecuta invocaciones, valida alarmas, y desactiva chaos mode automáticamente.
-
-📖 **Documentación Completa:**
-- Testing Guide: `docs/TESTING_GUIDE.md`
-- Evidencia Académica: `docs/EVIDENCIA_CANARY.md`
-- Plan de Implementación: `docs/CANARY_DEPLOYMENT_PLAN.md`
-- Estado Actual: `docs/estadoCanario.md`
-
----
-
-### Desarrollo Local
-
-```bash
-# Frontend (http://localhost:5173)
-cd frontend
-npm run dev
-
-# Ver logs de backend en tiempo real
-sls logs -f listBoxes --tail
-
-# Ver logs de una función específica
-sls logs -f createAppointment --tail
-
-# Invocar función localmente
-sls invoke local -f health
+# Si quedan buckets S3 con contenido, vaciarlos primero:
+aws s3 rm s3://smartboxing-frontend-dev-v2 --recursive
+aws s3 rb s3://smartboxing-frontend-dev-v2 --force
 ```
 
 ---
 
-## Stack Tecnológico
+## Arquitectura Multi-Tenant
+
+## Roles y Permisos
+
+### super_admin
+- Gestiona el sistema completo
+- Crea, edita y elimina tenants
+- Revisa y aprueba/rechaza solicitudes de tenencia
+- Accede a metricas globales
+
+### tenant_admin
+- Administra una o varias organizaciones
+- Gestiona usuarios dentro de su tenant
+- Configura parametros del tenant (branding, horarios, etc.)
+- Opera recursos: boxes, staff, citas, pacientes
+
+---
+
+## Flujos de Usuario
+
+### Registro de Nueva Organizacion
+
+1. Usuario se registra en `/register`
+2. Sistema crea cuenta en Cognito sin tenant asignado
+3. Usuario es redirigido a `/account/tenancies`
+4. Usuario solicita crear organizacion en `/account/request-tenancy`
+5. super_admin revisa y aprueba la solicitud
+6. Sistema crea el tenant y asigna al usuario como tenant_admin
+7. Usuario puede ingresar al tenant desde `/account/tenancies`
+
+### Cambio de Tenant Activo
+
+1. Usuario con multiples tenencias accede a `/account/tenancies`
+2. Selecciona "Ingresar" en el tenant deseado
+3. Sistema actualiza claims de Cognito via `/tenancy/switch`
+4. Usuario es redirigido al dashboard del tenant seleccionado
+
+### Creacion de Usuarios por tenant_admin
+
+1. tenant_admin accede a `/admin/users` (dentro del Mis Tenencias y Gestionar Usuarios)
+2. Crea usuario con nombre, email y rol
+3. Sistema crea usuario en Cognito y lo asocia al tenant activo
+4. Nuevo usuario puede iniciar sesion inmediatamente
+
+---
+
+## API Reference
+
+### Endpoints Publicos
+
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| GET | /health | Health check del sistema |
+| GET | /tenants | Lista tenants disponibles (registro) |
+| GET | /canary/evaluate | Evalua feature flags |
+
+### Recursos de Negocio (requieren JWT + tenantId)
+
+#### Boxes
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| GET | /boxes | Lista boxes del tenant |
+| GET | /boxes/{id} | Detalle de un box |
+| POST | /boxes | Crea box |
+| PUT | /boxes/{id} | Actualiza box |
+| DELETE | /boxes/{id} | Elimina box |
+
+#### Staff
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| GET | /staff | Lista staff del tenant |
+| GET | /staff/{id} | Detalle de staff member |
+| POST | /staff | Crea staff member |
+| PUT | /staff/{id} | Actualiza staff member |
+| DELETE | /staff/{id} | Elimina staff member |
+
+#### Appointments
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| GET | /appointments | Lista citas del tenant |
+| GET | /appointments/{id} | Detalle de cita |
+| POST | /appointments | Crea cita |
+| PUT | /appointments/{id} | Actualiza cita |
+| DELETE | /appointments/{id} | Elimina cita |
+
+#### Patients
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| GET | /patients | Lista pacientes del tenant |
+| GET | /patients/{id} | Detalle de paciente |
+| POST | /patients | Crea paciente |
+| PUT | /patients/{id} | Actualiza paciente |
+| DELETE | /patients/{id} | Elimina paciente |
+
+### Configuracion
+
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| GET | /settings/client | Configuracion del tenant |
+| PUT | /settings/client | Actualiza configuracion |
+| GET | /settings/user | Preferencias del usuario |
+| PUT | /settings/user | Actualiza preferencias |
+| POST | /settings/upload-logo | Obtiene presigned URL para logo |
+
+### Analytics
+
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| GET | /analytics/dashboard | Metricas del tenant |
+| POST | /analytics/ai-report | Genera reporte con IA (requiere OpenAI key) |
+
+### Tenancy Management
+
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| POST | /tenancy/requests | Crea solicitud de tenencia |
+| GET | /tenancy/requests | Lista solicitudes |
+| POST | /tenancy/requests/{id}/review | Aprueba/rechaza solicitud |
+| GET | /tenancy/my-tenants | Lista tenencias del usuario |
+| POST | /tenancy/switch | Cambia tenant activo |
+
+### Admin - Tenants (super_admin)
+
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| GET | /admin/tenants | Lista todos los tenants |
+| GET | /admin/tenants/{id} | Detalle de tenant |
+| POST | /admin/tenants | Crea tenant |
+| PUT | /admin/tenants/{id} | Actualiza tenant |
+| DELETE | /admin/tenants/{id} | Elimina tenant |
+
+### Admin - Users (tenant_admin/super_admin)
+
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| GET | /admin/users | Lista usuarios |
+| GET | /admin/users/{id} | Detalle de usuario |
+| POST | /admin/users | Crea usuario |
+| PUT | /admin/users/{id} | Actualiza usuario |
+| DELETE | /admin/users/{id} | Elimina usuario |
+
+### Feature Flags (Canary)
+
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| GET | /canary/flags | Lista feature flags |
+| GET | /canary/flags/{flagName} | Detalle de flag |
+| POST | /canary/flags | Crea/actualiza flag |
+| PATCH | /canary/flags/{flagName}/rollout | Actualiza rollout |
+| POST | /canary/flags/{flagName}/rollback | Rollback de flag |
+| DELETE | /canary/flags/{flagName} | Elimina flag |
+
+---
+
+## Stack Tecnologico
 
 ### Backend
+- Runtime: Node.js 22
+- Framework: Serverless Framework 4
+- API: AWS API Gateway HTTP v2 + Lambda
+- Base de datos: DynamoDB (PAY_PER_REQUEST)
+- Autenticacion: AWS Cognito (JWT)
+- Validacion: Zod
+- Almacenamiento: S3 + CloudFront
+- Observabilidad: AWS Lambda Powertools
 
-- **Runtime:** Node.js 22
-- **Framework:** Serverless Framework 4
-- **API:** AWS API Gateway HTTP + Lambda
-- **Database:** DynamoDB (PAY_PER_REQUEST)
-- **Auth:** AWS Cognito (OAuth2 + JWT)
-- **Validation:** Zod
-- **Storage:** S3 + CloudFront
+### Frontend
+- Framework: React 19
+- Build: Vite 7
+- Routing: React Router 7
+- Estado servidor: TanStack Query 5
+- Formularios: React Hook Form + Zod
+- Graficos: Recharts
+- Estilos: CSS con variables custom
+
+### Infraestructura
+- VPC con subnets publicas y privadas
+- VPC Endpoints para DynamoDB y S3 (gateway, sin costo)
+- VPC Endpoint para Cognito IDP (interface)
+- Security Groups restrictivos
+- Network ACLs
+- VPC Flow Logs para auditoria
+- CloudWatch Alarms para monitoreo
+
+---
+
+## Estructura del Proyecto
+
+```
+smartboxing/
+├── backend/
+│   ├── src/
+│   │   ├── handlers/
+│   │   │   ├── admin/          # Gestion de tenants y usuarios
+│   │   │   ├── analytics/      # Dashboard y reportes IA
+│   │   │   ├── appointments/   # CRUD de citas
+│   │   │   ├── boxes/          # CRUD de boxes
+│   │   │   ├── deployment/     # Feature flags (canary)
+│   │   │   ├── patients/       # CRUD de pacientes
+│   │   │   ├── seed/           # Datos de prueba
+│   │   │   ├── settings/       # Configuracion
+│   │   │   ├── staff/          # CRUD de staff
+│   │   │   └── tenancy/        # Gestion de tenencias
+│   │   └── lib/
+│   │       ├── auth.js         # Autorizacion multi-tenant
+│   │       ├── db.js           # Cliente DynamoDB
+│   │       ├── http.js         # Wrapper de handlers
+│   │       └── obs.js          # Observabilidad
+│   └── scripts/                # Scripts de mantenimiento
+├── frontend/
+│   └── src/
+│       ├── api/                # Clientes de API
+│       ├── auth/               # Contexto y hooks de auth
+│       ├── components/         # Componentes reutilizables
+│       ├── hooks/              # Custom hooks
+│       ├── pages/              # Paginas de la app
+│       │   ├── admin/          # Paginas de admin
+│       │   ├── analytics/      # Reportes y AI
+│       │   └── tenancy/        # Gestion de tenencias
+│       └── styles/             # Estilos globales
+├── scripts/                    # Scripts de deploy y monitoreo
+├── docs/                       # Documentacion adicional
+└── serverless.yml              # Configuracion de infraestructura
+```
+
+---
+
+## Desarrollo Local
 
 ### Frontend
 
-- **Framework:** React 19
-- **Build:** Vite 7
-- **Routing:** React Router 7
-- **State:** TanStack Query 5
-- **Forms:** React Hook Form + Zod
-- **UI:** CSS personalizado + variables theming
-
-### DevOps
-
-- **CI/CD:** GitHub Actions (dual deployment strategy)
-  - **Development:** Normal deployment on push to `main`
-  - **Production:** Canary deployment with manual trigger (10% → 50% → 100%)
-- **Canary Deployment:** AWS CodeDeploy with automatic rollback
-  - CloudWatch Alarms: Error rate, latency (p99), throttle rate
-  - Pre/Post-traffic Lambda hooks for validation
-  - Real-time monitoring with `scripts/canary-monitor.mjs`
-  - 11 critical functions with progressive deployment
-- **IaC:** CloudFormation (via Serverless)
-- **Hosting:** S3 + CloudFront
-- **Logs:** CloudWatch
-- **Chaos Engineering:** Fault injection automático 🌪️
-
-### Testing
-
-- **Unit Tests:** Vitest
-- **Integration Tests:** Canary deployment with rollback validation
-- **Security:** OWASP ZAP, npm audit, Gitleaks
-- **Accessibility:** axe-core, jest-axe, Lighthouse CI, Pa11y
-- **Chaos Engineering:** Fault injection with `test-canary-rollback.mjs`
-- **Coverage:** ~78% OWASP Top 10, ~75% WCAG 2.1 AA
-
-**Canary Testing Commands:**
 ```bash
-# Run unit tests
-npm test
+cd frontend
+npm run dev
+# Disponible en http://localhost:5173
+```
 
-# Test canary rollback (requires AWS credentials)
-node scripts/test-canary-rollback.mjs --scenario=errors --function=listBoxes --stage=prod
+### Logs del Backend
 
-# Monitor active canary deployment
-node scripts/canary-monitor.mjs --stage=prod
+```bash
+# Ver logs en tiempo real
+sls logs -f listBoxes --tail
+
+# Logs de la ultima hora
+sls logs -f createAppointment --startTime 1h
+
+# Invocar funcion localmente
+sls invoke local -f health
+```
+
+### Scripts de Base de Datos
+
+```bash
+cd backend
+
+# Limpiar datos
+npm run db:clear
+
+# Cargar datos de prueba
+npm run db:seed
+
+# Reset completo
+npm run db:reset
 ```
 
 ---
 
-## API Endpoints
+## Testing
 
-**Base URL:** `https://7dkjmfntz3.execute-api.us-east-1.amazonaws.com`
-**Frontend URL:** `https://d2t6idr08mvsaj.cloudfront.net`
-
-### Recursos Principales
-
-| Recurso                | Endpoints                                                                              |
-| ---------------------- | -------------------------------------------------------------------------------------- |
-| **Health**       | `GET /health`                                                                        |
-| **Boxes**        | `GET POST PUT DELETE /boxes`                                                         |
-| **Doctors**      | `GET POST PUT DELETE /doctors`                                                       |
-| **Appointments** | `GET POST PUT DELETE /appointments`                                                  |
-| **Patients**     | `GET POST PUT DELETE /patients`                                                      |
-| **Analytics**    | `GET /analytics/dashboard?startDate&endDate&boxId&doctorId`                          |
-| **Settings**     | `GET PUT /settings/client` `GET PUT /settings/user` `POST /settings/upload-logo` |
-| **Seed**         | `POST /seed/bulk` `DELETE /seed/clear`                                             |
-
-**Total:** 29 funciones Lambda | **Auth:** JWT (excepto `/health`)
-
-### Settings API (Parametrización)
-
-El sistema permite parametrización completa por cliente:
+### Backend
 
 ```bash
-# Obtener configuración actual
-GET /settings/client
+cd backend
+npm test                    # Todos los tests
+npm run test:security       # Tests de seguridad OWASP
+npm run test:coverage       # Con reporte de cobertura
+```
 
-# Actualizar configuración
-PUT /settings/client
-{
-  "theme": {
-    "primaryColor": "#3B82F6",
-    "secondaryColor": "#10B981",
-    "accentColor": "#F59E0B",
-    "darkMode": false,
-    "logoUrl": "https://..."
-  },
-  "texts": {
-    "appName": "MiClinica",
-    "institutionName": "Centro Médico XYZ",
-    "welcomeMessage": "Bienvenido",
-    "tagline": "Tu salud es nuestra prioridad"
-  },
-  "schedule": {
-    "startTime": "08:00",
-    "endTime": "20:00",
-    "slotDuration": 30,
-    "workDays": [1,2,3,4,5]
-  },
-  "operational": {
-    "allowOverlapping": false,
-    "requireConfirmation": true,
-    "sendReminders": true,
-    "reminderHours": 24,
-    "maxAppointmentsPerDay": 50,
-    "enableWaitlist": true
-  },
-  "branding": {
-    "companyName": "Centro Médico XYZ",
-    "contactEmail": "contacto@ejemplo.cl",
-    "contactPhone": "+56912345678",
-    "website": "https://ejemplo.cl",
-    "address": "Av. Principal 123"
-  }
-}
+### Frontend
 
-# Upload de logo (presigned URL)
-POST /settings/upload-logo
-{
-  "fileName": "logo.png",
-  "fileType": "image/png"
-}
-# Response: { "uploadUrl": "https://s3...", "fileUrl": "https://cloudfront..." }
+```bash
+cd frontend
+npm test                    # Todos los tests
+npm run test:a11y           # Tests de accesibilidad
+npm run test:coverage       # Con reporte de cobertura
 ```
 
 ---
 
-## Scripts Útiles
+## CI/CD
+
+### Development
+
+Push a `main` dispara deploy automatico al stage `dev`:
 
 ```bash
-# ===== DEPLOY Y GESTIÓN =====
-sls deploy              # Deploy completo a AWS (6-8 min)
-sls deploy -f health    # Deploy solo una función específica
-sls info                # Ver info del deployment actual
-sls remove              # Eliminar todo el stack de AWS
-
-# ===== LOGS Y MONITOREO =====
-sls logs -f listBoxes --tail           # Ver logs en tiempo real
-sls logs -f createAppointment --startTime 1h  # Logs última hora
-sls invoke -f health                   # Invocar función en AWS
-sls invoke local -f health             # Invocar función localmente
-
-# ===== TESTING =====
-cd backend && npm test                 # Todos los tests backend
-cd backend && npm run test:security    # Solo tests OWASP
-cd backend && npm run test:coverage    # Con cobertura
-
-cd frontend && npm test                # Tests de accesibilidad
-cd frontend && npm run test:a11y       # Solo WCAG tests
-cd frontend && npm run test:coverage   # Con cobertura
-
-# ===== DESARROLLO LOCAL =====
-cd frontend && npm run dev             # Frontend local (localhost:5173)
-cd backend && npm run dev              # Serverless offline (si está configurado)
-
-# ===== CHAOS ENGINEERING 🌪️ =====
-npm run chaos:enable                   # Habilitar fault injection (10% error, 10% latency)
-npm run chaos:disable                  # Deshabilitar chaos
-npm run chaos:status                   # Ver estado actual
-
-# Personalizar chaos
-node scripts/chaos-toggle.mjs enable --error-rate=0.2 --latency-rate=0.3
-
-# ===== AWS CLI ÚTILES =====
-# Ver estado del stack
-aws cloudformation describe-stacks --stack-name smartboxing-dev --region us-east-1
-
-# Listar todos los buckets
-aws s3 ls
-
-# Ver User Pools de Cognito
-aws cognito-idp list-user-pools --max-results 10 --region us-east-1
-
-# Ver tablas DynamoDB
-aws dynamodb list-tables --region us-east-1
-
-# Ver funciones Lambda
-aws lambda list-functions --region us-east-1 --query "Functions[?starts_with(FunctionName, 'smartboxing')].FunctionName"
-
-# Verificar costos actuales
-aws ce get-cost-and-usage --time-period Start=2025-12-01,End=2025-12-31 --granularity MONTHLY --metrics "UnblendedCost"
+git push origin main
 ```
 
-sls remove              # Eliminar stack
-sls info                # Ver info del deployment
+### Production
 
-# Testing
+Deploy manual via GitHub Actions con canary progresivo:
+1. Ir a Actions en GitHub
+2. Seleccionar workflow "Deploy SmartBoxing"
+3. Ejecutar con `stage: prod`
+4. El canary avanza 10% -> 50% -> 100%
+5. Rollback automatico si hay errores
 
-cd backend && npm test          # Todos los tests
-cd backend && npm run test:security    # Solo tests OWASP
-cd backend && npm run test:coverage    # Con cobertura
+### Monitoreo de Deploy
 
-cd frontend && npm test         # Tests de accesibilidad
-cd frontend && npm run test:a11y       # Solo WCAG tests
-cd frontend && npm run test:coverage   # Con cobertura
-
-# Desarrollo
-
-cd frontend && npm run dev      # Frontend local
-cd backend && npm run dev       # Serverless offline
-
-# Chaos Engineering 🌪️
-
-npm run chaos:enable     # Habilitar fault injection (10% error, 10% latency)
-npm run chaos:disable    # Deshabilitar chaos
-npm run chaos:status     # Ver estado actual
-
-# Personalizar chaos
-
-node scripts/chaos-toggle.mjs enable --error-rate=0.2 --latency-rate=0.3
+```bash
+node scripts/canary-monitor.mjs --stage=prod --timeout=20
+```
 
 ---
 
-## Autenticación
+## Seguridad
 
-- **Tipo:** OAuth2 Implicit Flow
-- **Provider:** AWS Cognito
-- **Token:** JWT Bearer en header `Authorization`
-- **Multi-tenancy:** Claim `custom:tenantId`
+### VPC y Networking
 
-### Crear primer usuario
+- Lambdas ejecutan en subnets privadas
+- Acceso a DynamoDB y S3 via VPC Endpoints (sin internet)
+- Cognito accesible via VPC Endpoint interface
+- Security Groups permiten solo HTTPS saliente
+- Network ACLs como capa adicional
 
-```bash
-# Opción 1: Desde la consola AWS
-# https://console.aws.amazon.com/cognito → User Pools → smartboxing-dev-v3
+### Autenticacion
 
-# Opción 2: AWS CLI
-aws cognito-idp sign-up \
-  --client-id TU_CLIENT_ID \
-  --username admin@ejemplo.com \
-  --password TuPassword123! \
-  --user-attributes Name=email,Value=admin@ejemplo.com
+- Cognito User Pool con MFA opcional
+- Tokens JWT con custom claims para role y tenantId
+- Password policy: 8+ caracteres, mayusculas, minusculas, numeros
+- Frontend usa id_token (contiene custom claims)
 
-# Confirmar usuario (admin)
-aws cognito-idp admin-confirm-sign-up \
-  --user-pool-id us-east-1_yPICowaHF \
-  --username admin@ejemplo.com
-```
+### CloudWatch Alarms
+
+- Error rate > 5 en 2 minutos
+- Latencia p99 > 3000ms
+- Alertas via SNS
+
+---
+
+## Costos Estimados
+
+Con trafico bajo (desarrollo/staging):
+
+| Servicio | Costo Mensual |
+|----------|---------------|
+| DynamoDB | $0-2 USD |
+| Lambda | Free tier (1M req/mes) |
+| S3 | ~$0.50 USD |
+| CloudFront | ~$0-1 USD |
+| API Gateway | ~$3.50/millon requests |
+| Cognito | Free tier (50K MAU) |
+| VPC Endpoints | ~$7-14 USD (interface endpoint) |
+| **Total** | **$10-20 USD/mes** |
 
 ---
 
 ## Troubleshooting
 
-### Error: "Stack does not exist"
+### Credenciales AWS expiradas (AWS Academy)
+
+Las credenciales de AWS Academy expiran cada 4 horas:
 
 ```bash
-# El stack fue eliminado o es el primer deploy
-# Solución: Continuar con sls deploy
+# Obtener nuevas credenciales del Learner Lab
+export AWS_ACCESS_KEY_ID=nueva_key
+export AWS_SECRET_ACCESS_KEY=nueva_secret
+export AWS_SESSION_TOKEN=nuevo_token
 ```
 
-### Error: "Bucket already exists"
+### Error "Stack does not exist"
+
+Es el primer deploy o el stack fue eliminado. Ejecutar `sls deploy` normalmente.
+
+### Frontend no carga despues del deploy
+
+CloudFront puede tardar 5-10 minutos en propagar cambios. Esperar o invalidar cache:
 
 ```bash
-# Hay buckets huérfanos de deploys anteriores
-# Solución: Ya está resuelto con sufijo -v3 en el código
+aws cloudfront create-invalidation --distribution-id DIST_ID --paths "/*"
 ```
 
-### Error: "Domain already associated"
+### Lambda timeout conectando a Cognito
 
-```bash
-# Dominio de Cognito en uso
-# Solución: Ya está resuelto con sufijo -v3 en el código
-```
-
-### Error: Credenciales AWS expiradas (AWS Academy)
-
-```bash
-# Las credenciales AWS Academy expiran cada 4 horas
-# Solución: Obtener nuevas credenciales del Learner Lab
-set AWS_ACCESS_KEY_ID=nueva_key
-set AWS_SECRET_ACCESS_KEY=nueva_secret
-set AWS_SESSION_TOKEN=nuevo_token
-```
-
-### Frontend no carga después del deploy
-
-```bash
-# CloudFront puede tardar en propagarse
-# Solución: Esperar 5-10 minutos o usar la URL de S3 directamente
-```
+Verificar que el VPC Endpoint de Cognito este activo y que el Security Group permita trafico HTTPS.
 
 ---
 
@@ -559,4 +486,4 @@ MIT License
 
 ---
 
-**Versión:** 1.0 | **Estado:** Producción
+Version: 2.0 | Ultima actualizacion: Diciembre 2025
