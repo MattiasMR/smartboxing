@@ -167,7 +167,7 @@ export default function SettingsProfessionalNew() {
     if ((isStaff || !hasTenant) && !isSuperAdminUser) {
       setActiveSection('user');
     }
-  }, [isStaff, hasTenant, isSuperAdminUser]); // Run only on mount
+  }, [isStaff, hasTenant, isSuperAdminUser]);
 
   const loadSettings = useCallback(async () => {
     try {
@@ -224,7 +224,7 @@ export default function SettingsProfessionalNew() {
       setActiveSection('user');
     }
     loadSettings();
-  }, [loadSettings, isSuperAdminUser]);
+  }, [isSuperAdminUser, loadSettings]);
 
   const showMessage = (type, text) => {
     setMessage({ type, text });

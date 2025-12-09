@@ -59,6 +59,9 @@ export default function TermsPage() {
             <Link to="/login" className="btn-nav-secondary">Iniciar Sesión</Link>
             <Link to="/register" className="btn-nav-primary">Comenzar Gratis</Link>
           </div>
+          <div className="nav-mobile-actions">
+            <Link to="/login" className="btn-nav-secondary">Iniciar Sesión</Link>
+          </div>
         </div>
       </nav>
 

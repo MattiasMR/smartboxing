@@ -95,9 +95,14 @@ function Sidebar({ isOpen, onClose }) {
     }
   };
 
+  // Super admin uses AdminLayout; avoid rendering sidebar in MainLayout
+  if (isSuper) {
+    return null;
+  }
+
   const renderMainMenu = () => {
     // Super Admin: No sidebar at all in MainLayout, they use AdminLayout exclusively
-    if (isSuperAdmin()) {
+    if (isSuper) {
       return null;
     }
 
@@ -198,7 +203,7 @@ function Sidebar({ isOpen, onClose }) {
         
         <div className="developer-info">
           <p className="developed-by">FM IT Solutions</p>
-          <p className="developers">Mattias Morales y Francisco Polo</p>
+          <p className="developers">Mattias Morales, Francisco Polo y Milan Kurte</p>
         </div>
       </aside>
     </>
