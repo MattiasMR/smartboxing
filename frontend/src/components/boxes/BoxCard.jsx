@@ -2,7 +2,7 @@
 import { Link } from 'react-router-dom';
 import { FaEdit, FaTrash, FaCheckCircle, FaTimesCircle, FaTools } from 'react-icons/fa';
 import './BoxCard.css';
-import { useVocabulary, formatPlural } from '../../hooks/useVocabulary.js';
+import { useVocabulary } from '../../hooks/useVocabulary.js';
 
 export default function BoxCard({ box, onDelete }) {
   const vocab = useVocabulary();

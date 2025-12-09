@@ -8,7 +8,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { FaSave, FaTimes, FaSpinner } from 'react-icons/fa';
 import './Forms.css';
 import { nextSequentialId } from '../utils/idHelpers.js';
-import { useVocabulary, formatPlural } from '../hooks/useVocabulary.js';
+import { useVocabulary } from '../hooks/useVocabulary.js';
 
 const DoctorSchema = z.object({
   id: z.string().min(1, 'El ID es requerido'),

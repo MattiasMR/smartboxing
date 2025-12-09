@@ -1,5 +1,5 @@
 // src/components/layout/TopHeader.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FaBars } from 'react-icons/fa';
 import { useAuth } from '../../auth/useAuth';
 import { switchTenant } from '../../api/tenancy';
@@ -14,18 +14,19 @@ function TopHeader({ onMenuClick, isOpen }) {
   const [institutionName, setInstitutionName] = useState(() => {
     return localStorage.getItem('institution-name') || '';
   });
-  const getTenantKey = () => {
-    return localStorage.getItem('active_tenant_id') || (user?.tenantId ?? null);
-  };
+  const { logout, user } = useAuth();
 
-  const getStoredLogo = () => {
+  const getTenantKey = useCallback(() => {
+    return localStorage.getItem('active_tenant_id') || (user?.tenantId ?? null);
+  }, [user?.tenantId]);
+
+  const getStoredLogo = useCallback(() => {
     const key = getTenantKey();
     const storageKey = key ? `app-logo-${key}` : 'app-logo';
     return localStorage.getItem(storageKey) || '';
-  };
+  }, [getTenantKey]);
 
   const [logoUrl, setLogoUrl] = useState(() => getStoredLogo());
-  const { logout, user } = useAuth();
 
   useEffect(() => {
     const timerId = setInterval(() => setNow(new Date()), 1000);
@@ -61,12 +62,12 @@ function TopHeader({ onMenuClick, isOpen }) {
     window.addEventListener('logoChanged', handleLogoChange);
     
     return () => {
-      window.removeEventListener('appNameChanged', handleAppNameChange);
       window.removeEventListener('institutionNameChanged', handleInstitutionNameChange);
       window.removeEventListener('logoChanged', handleLogoChange);
     };
-  }, [getTenantKey]);
+  }, [getTenantKey, getStoredLogo]);
 
+  // Actualizar logo cuando cambie el tenant activo/usuario
   // Actualizar logo cuando cambie el tenant activo/usuario
   useEffect(() => {
     setLogoUrl(getStoredLogo());
