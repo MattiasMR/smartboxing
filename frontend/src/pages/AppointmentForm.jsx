@@ -53,9 +53,6 @@ export default function AppointmentForm() {
   const isEdit = !!id;
   const qc = useQueryClient();
 
-  const isEdit = !!id;
-  const qc = useQueryClient();
-
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
     resolver: zodResolver(ApptSchema),
     defaultValues: {
