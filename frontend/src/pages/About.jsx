@@ -25,23 +25,37 @@ const team = [
 export default function AboutPage() {
   return (
     <div className="about-page">
+      <nav className="static-nav">
+        <div className="nav-container">
+          <Link to="/" className="nav-logo">
+            <div className="nav-logo-icon">📦</div>
+            <span>SmartBoxing</span>
+          </Link>
+          <div className="nav-links">
+            <Link to="/about">Sobre Nosotros</Link>
+            <Link to="/terms">Términos y Condiciones</Link>
+            <Link to="/login" className="btn-nav-secondary">Iniciar Sesión</Link>
+            <Link to="/register" className="btn-nav-primary">Comenzar Gratis</Link>
+          </div>
+        </div>
+      </nav>
+
       <header className="about-hero">
         <div className="about-hero__content">
           <p className="about-tag">FM IT Solutions</p>
           <h1>Sobre Nosotros</h1>
           <p className="about-subtitle">
-            Construimos SmartBoxing para que la gestión de espacios sea sencilla, segura y lista para crecer.
+            Construimos SmartBoxing para que la gestión de recursos agendables sea sencilla, segura y lista para crecer.
           </p>
           <div className="about-actions">
             <Link to="/" className="btn-about-secondary">Volver al Home</Link>
-            <Link to="/register" className="btn-about-primary">Comenzar Gratis</Link>
           </div>
         </div>
         <div className="about-hero__card">
           <h3>Contactar Ventas</h3>
           <p>Hablemos de cómo SmartBoxing se adapta a tu organización.</p>
           <div className="about-contact-chip">
-            <span>f.polov@udd.cl</span>
+            <span>f.polov@udd.cl - +56 9 4116 6845</span>
           </div>
           <Link to="/register" className="btn-about-primary ghost">Agenda una demo</Link>
         </div>
@@ -53,7 +67,7 @@ export default function AboutPage() {
             <h2>Quiénes somos</h2>
             <p>
               Somos FM IT Solutions, un equipo apasionado por diseñar y operar productos SaaS críticos. 
-              SmartBoxing nace de la necesidad de gestionar espacios físicos con eficiencia, visibilidad
+              SmartBoxing nace de la necesidad de gestionar recursos agendables con eficiencia, visibilidad
               en tiempo real y una experiencia cuidada para administradores y equipos.
             </p>
           </div>
