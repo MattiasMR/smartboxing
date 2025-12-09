@@ -19,11 +19,6 @@ function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
   const { user, isTenantAdmin, isSuperAdmin, tenantId, clearActiveTenant } = useAuthContext();
   
-  // If super admin, do not render sidebar at all (they use AdminLayout)
-  if (isSuperAdmin()) {
-    return null;
-  }
-  
   // Determinar si el usuario tiene una tenencia activa
   const hasTenancy = !!tenantId;
   const isStaff = user?.role === 'staff';
@@ -58,16 +53,19 @@ function Sidebar({ isOpen, onClose }) {
       if (window.innerWidth <= 768) {
         document.body.style.overflow = 'hidden';
       }
-    } else {
-      document.body.style.overflow = 'unset';
     }
 
     return () => {
       document.removeEventListener('touchstart', handleOutsideClick);
       document.removeEventListener('mousedown', handleOutsideClick);
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = '';
     };
   }, [isOpen, onClose]);
+
+  // If super admin, do not render sidebar at all (they use AdminLayout)
+  if (isSuperAdmin()) {
+    return null;
+  }
 
   const handleLinkClick = () => {
     onClose();

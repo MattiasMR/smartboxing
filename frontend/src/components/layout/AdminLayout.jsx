@@ -61,7 +61,7 @@ function AdminLayout() {
                 </NavLink>
                 <NavLink 
                   to="/admin/users-global" 
-                  className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}
+                  className={({ isActive }) => `admin-nav-link ${isActive || window.location.pathname.includes('/admin/users-global') ? 'active' : ''}`}
                   onClick={handleCloseNav}
                 >
                   <span className="nav-icon">👥</span>

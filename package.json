@@ -8,6 +8,7 @@
     "build:backend": "cd backend && npm run build",
     "build:frontend": "cd frontend && npm install && npm run build",
     "generate:env": "node scripts/generate-frontend-env.js",
+    "generate:env:prod": "cross-env STAGE=prod node scripts/generate-frontend-env.js",
     "predeploy": "npm run build:frontend",
     "deploy": "serverless deploy --verbose",
     "deploy:dev": "serverless deploy --stage dev --verbose",
@@ -40,6 +41,7 @@
   "devDependencies": {
     "@aws-sdk/client-cloudformation": "^3.947.0",
     "@aws-sdk/client-lambda": "^3.927.0",
+    "cross-env": "^10.1.0",
     "serverless": "^4.4.7",
     "serverless-plugin-canary-deployments": "^0.8.0",
     "serverless-s3-sync": "^3.2.0",

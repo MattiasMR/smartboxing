@@ -65,9 +65,12 @@ export const main = handler(async (event) => {
   
   // Delete from Cognito
   try {
+    // IMPORTANT: AdminDeleteUser requires the Username.
+    // In our User Pool, Username is the 'sub' (UUID), NOT the email.
+    // Even though users login with email, the internal Username is the sub.
     await cognito.send(new AdminDeleteUserCommand({
       UserPoolId: USER_POOL_ID,
-      Username: id, // Use SUB as username
+      Username: id, 
     }));
   } catch (e) {
     // If user doesn't exist in Cognito, continue to clean up TenantUsers

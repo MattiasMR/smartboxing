@@ -71,8 +71,9 @@ export async function listUsers(tenantId = null) {
 /**
  * Get single user details
  */
-export async function getUser(cognitoSub) {
-  const response = await api.get(`/admin/users/${cognitoSub}`);
+export async function getUser(cognitoSub, tenantId = null) {
+  const params = tenantId ? `?tenantId=${tenantId}` : '';
+  const response = await api.get(`/admin/users/${cognitoSub}${params}`);
   return response.data;
 }
 

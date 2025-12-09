@@ -24,6 +24,18 @@ export const main = handler(async (event) => {
     error.statusCode = 400;
     throw error;
   }
+
+  // Allow Super Admin to specify tenantId via query param if not in context
+  let targetTenantId = admin.tenantId;
+  if (!targetTenantId && admin.role === ROLES.SUPER_ADMIN) {
+    targetTenantId = event.queryStringParameters?.tenantId;
+  }
+
+  if (!targetTenantId) {
+     const error = new Error('Tenant ID is required');
+     error.statusCode = 400;
+     throw error;
+  }
   
   // Get user from TenantUsers using composite key (cognitoSub + tenantId)
   // Admin can only see users in their own tenant
@@ -31,7 +43,7 @@ export const main = handler(async (event) => {
     TableName: T_TENANT_USERS,
     Key: { 
       cognitoSub: id,
-      tenantId: admin.tenantId,
+      tenantId: targetTenantId,
     },
   }));
   
@@ -47,7 +59,7 @@ export const main = handler(async (event) => {
   try {
     const cognitoUser = await cognito.send(new AdminGetUserCommand({
       UserPoolId: USER_POOL_ID,
-      Username: tenantUser.email,
+      Username: id, // Use SUB as username
     }));
     
     return {

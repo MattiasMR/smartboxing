@@ -156,7 +156,7 @@ export default function SettingsProfessionalNew() {
   const [previewLogo, setPreviewLogo] = useState('');
   const [selectedThemeId, setSelectedThemeId] = useState(() => detectThemePreset(DEFAULT_CLIENT_SETTINGS.theme));
 
-  const { user, isTenantAdmin, isSuperAdmin } = useAuthContext();
+  const { user } = useAuthContext();
   const isStaff = user?.role === 'staff';
   const hasTenant = !!user?.tenantId;
   const isSuperAdminUser = user?.role === 'super_admin';
@@ -167,7 +167,7 @@ export default function SettingsProfessionalNew() {
     if ((isStaff || !hasTenant) && !isSuperAdminUser) {
       setActiveSection('user');
     }
-  }, []); // Run only on mount
+  }, [isStaff, hasTenant, isSuperAdminUser]); // Run only on mount
 
   const loadSettings = useCallback(async () => {
     try {
@@ -224,7 +224,7 @@ export default function SettingsProfessionalNew() {
       setActiveSection('user');
     }
     loadSettings();
-  }, [loadSettings]);
+  }, [loadSettings, isSuperAdminUser]);
 
   const showMessage = (type, text) => {
     setMessage({ type, text });
@@ -473,15 +473,6 @@ export default function SettingsProfessionalNew() {
                     >
                       <span className="settings-nav-icon">📅</span>
                       <span>Horarios</span>
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      className={`settings-nav-link ${activeSection === 'operational' ? 'active' : ''}`}
-                      onClick={() => setActiveSection('operational')}
-                    >
-                      <span className="settings-nav-icon">⚙️</span>
-                      <span>Operacional</span>
                     </button>
                   </li>
                 </ul>
@@ -1100,21 +1091,6 @@ export default function SettingsProfessionalNew() {
                       <option value="light">🌞 Modo Claro</option>
                       <option value="dark">🌙 Modo Oscuro</option>
                       <option value="auto">⚡ Automático (según sistema)</option>
-                    </select>
-                  </div>
-
-                  <div className="settings-form-group">
-                    <label className="settings-form-label" htmlFor="language">
-                      Idioma
-                    </label>
-                    <select
-                      id="language"
-                      className="settings-select"
-                      value={userPreferences.language}
-                      onChange={(e) => updateUserField('language', e.target.value)}
-                    >
-                      <option value="es">🇪🇸 Español</option>
-                      <option value="en">🇺🇸 English</option>
                     </select>
                   </div>
                 </div>

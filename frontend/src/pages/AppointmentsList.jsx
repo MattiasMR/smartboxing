@@ -17,7 +17,7 @@ export default function AppointmentsList() {
   const [filters, setFilters] = useState({ from: '', to: '' });
   const [draftFrom, setDraftFrom] = useState('');
   const [draftTo, setDraftTo] = useState('');
-  const { data = [], isLoading } = useQuery({
+  const { data = [], isLoading, refetch } = useQuery({
     queryKey: ['appointments', filters],
     queryFn: () => fetchAppointments(filters)
   });
@@ -142,10 +142,13 @@ export default function AppointmentsList() {
             />
           </div>
           <button
-            onClick={() => setFilters({ 
-              from: draftFrom ? new Date(draftFrom).toISOString() : '', 
-              to: draftTo ? new Date(draftTo).toISOString() : '' 
-            })}
+            onClick={() => {
+              setFilters({ 
+                from: draftFrom ? new Date(draftFrom).toISOString() : '', 
+                to: draftTo ? new Date(draftTo).toISOString() : '' 
+              });
+              setTimeout(() => refetch(), 0);
+            }}
             className="btn-filter"
           >
             <FaFilter /> Aplicar Filtros

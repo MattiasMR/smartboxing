@@ -100,6 +100,11 @@ provider:
             - !Sub "arn:aws:s3:::${self:service}-*/*"
         - Effect: Allow
           Action:
+            - ses:SendEmail
+            - ses:SendRawEmail
+          Resource: "*"
+        - Effect: Allow
+          Action:
             - s3:ListBucket
           Resource:
             - !Sub "arn:aws:s3:::${self:service}-*"
@@ -151,7 +156,7 @@ provider:
   # Lambdas ejecutan en subnets privadas con acceso a DynamoDB/S3 via VPC Endpoints
   vpc:
     securityGroupIds:
-      - !Ref LambdaSecurityGroup
+      - !Ref LambdaSecurityGroupFixed
     subnetIds:
       - !Ref PrivateSubnetA
       - !Ref PrivateSubnetB
@@ -599,6 +604,7 @@ functions:
   # Switch active tenant
   switchTenant:
     handler: backend/src/handlers/tenancy/switch-tenant.main
+    vpc: null # Disable VPC to allow public internet access to Cognito (PrivateLink issue)
     events:
       - httpApi:
           path: /tenancy/switch
@@ -624,6 +630,7 @@ functions:
   
   createAdminUser:
     handler: backend/src/handlers/admin/users/create.main
+    vpc: null # Disable VPC to allow public internet access to Cognito (PrivateLink issue)
     events:
       - httpApi:
           path: /admin/users
@@ -632,6 +639,7 @@ functions:
   
   updateAdminUser:
     handler: backend/src/handlers/admin/users/update.main
+    vpc: null # Disable VPC to allow public internet access to Cognito (PrivateLink issue)
     events:
       - httpApi:
           path: /admin/users/{id}
@@ -640,6 +648,7 @@ functions:
   
   deleteAdminUser:
     handler: backend/src/handlers/admin/users/delete.main
+    vpc: null # Disable VPC to allow public internet access to Cognito (PrivateLink issue)
     events:
       - httpApi:
           path: /admin/users/{id}
@@ -1242,10 +1251,10 @@ resources:
     # ────────────────────────────────────────────────────────────────
     # 5. SECURITY GROUPS
     # ────────────────────────────────────────────────────────────────
-    LambdaSecurityGroup:
+    LambdaSecurityGroupFixed:
       Type: AWS::EC2::SecurityGroup
       Properties:
-        GroupName: ${self:service}-lambda-sg-${sls:stage}
+        GroupName: ${self:service}-lambda-sg-fixed-${sls:stage}
         GroupDescription: Security Group for Lambda functions in VPC
         VpcId: !Ref VPC
         # NO Ingress rules - Lambdas no reciben conexiones directas (solo via API Gateway)
@@ -1265,7 +1274,7 @@ resources:
             Description: HTTPS to AWS Services (Cognito, CloudWatch Logs)
         Tags:
           - Key: Name
-            Value: ${self:service}-lambda-sg-${sls:stage}
+            Value: ${self:service}-lambda-sg-fixed-${sls:stage}
           - Key: Purpose
             Value: Lambda VPC Security
           - Key: Security
@@ -1369,7 +1378,7 @@ resources:
           - IpProtocol: tcp
             FromPort: 443
             ToPort: 443
-            SourceSecurityGroupId: !Ref LambdaSecurityGroup
+            SourceSecurityGroupId: !Ref LambdaSecurityGroupFixed
         Tags:
           - Key: Name
             Value: ${self:service}-${sls:stage}-vpc-endpoint-sg
@@ -1673,7 +1682,7 @@ resources:
 
     LambdaSecurityGroupId:
       Description: Lambda Security Group ID
-      Value: !Ref LambdaSecurityGroup
+      Value: !Ref LambdaSecurityGroupFixed
       Export:
         Name: ${self:service}-LambdaSG-${sls:stage}
 

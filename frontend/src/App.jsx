@@ -110,7 +110,6 @@ function AppContent() {
           <Route path="/appointments/new" element={<AppointmentForm />} />
           <Route path="/appointments/:id/edit" element={<AppointmentForm />} />
 
-          <Route path="/settings" element={<Settings />} />
           <Route path="/seed" element={<SeedPage />} />
           
           {/* AI Agent - requires tenant_admin */}
@@ -126,6 +125,7 @@ function AppContent() {
         <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
           <Route path="/account/tenancies" element={<MyTenancies />} />
           <Route path="/account/request-tenancy" element={<RequestTenancy />} />
+          <Route path="/settings" element={<Settings />} />
         </Route>
 
         {/* Admin routes - require tenant_admin or super_admin */}
@@ -140,6 +140,8 @@ function AppContent() {
 
           {/* Users - super_admin (uses AdminLayout) */}
           <Route path="/admin/users-global" element={<AdminRoute requireSuperAdmin><UsersList /></AdminRoute>} />
+          <Route path="/admin/users-global/new" element={<AdminRoute requireSuperAdmin><UserForm /></AdminRoute>} />
+          <Route path="/admin/users-global/:id/edit" element={<AdminRoute requireSuperAdmin><UserForm /></AdminRoute>} />
 
           {/* Settings for super_admin (inside AdminLayout) */}
           <Route path="/admin/settings" element={<AdminRoute requireSuperAdmin><Settings /></AdminRoute>} />

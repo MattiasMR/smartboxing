@@ -10,7 +10,7 @@ import { FaChevronDown, FaExchangeAlt } from 'react-icons/fa';
 import './TenantSelector.css';
 
 export default function TenantSelector() {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, switchTenantLocally } = useAuth();
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -23,17 +23,32 @@ export default function TenantSelector() {
   });
 
   const switchMutation = useMutation({
-    mutationFn: switchTenant,
-    onSuccess: async () => {
+    mutationFn: async (tenantId) => {
+      await switchTenant(tenantId);
+      return tenantId;
+    },
+    onSuccess: async (tenantId) => {
       setIsOpen(false);
-      // Refresh user data
+      
+      // Find tenant details to update local state immediately
+      const targetTenant = data?.tenancies?.find(t => t.tenantId === tenantId);
+      if (targetTenant && switchTenantLocally) {
+        switchTenantLocally({
+          tenantId: targetTenant.tenantId,
+          tenantName: targetTenant.name,
+          role: targetTenant.role
+        });
+      }
+
+      // Refresh user data from Cognito to ensure token is updated
       if (refreshUser) {
         await refreshUser();
       }
+      
       // Invalidate all queries to reload data for new tenant
       queryClient.invalidateQueries();
-      // Reload page to ensure clean state
-      window.location.reload();
+      // Navigate to dashboard to ensure clean state
+      window.location.href = '/dashboard';
     },
   });
 

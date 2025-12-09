@@ -3,7 +3,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getUser, createUser, updateUser, listTenants } from '../../api/admin.js';
 import { useAuthContext, ROLES } from '../../auth/AuthContext.js';
@@ -12,6 +12,13 @@ import './AdminPages.css';
 export default function UserForm() {
   const navigate = useNavigate();
   const { id } = useParams(); // cognitoSub
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const tenantIdParam = searchParams.get('tenantId');
+  
+  const isGlobalView = location.pathname.includes('users-global');
+  const basePath = isGlobalView ? '/admin/users-global' : '/admin/users';
+  
   const isEditing = Boolean(id);
   const queryClient = useQueryClient();
   const { isSuperAdmin, tenantId: currentTenantId, tenantName: currentTenantName } = useAuthContext();
@@ -20,7 +27,7 @@ export default function UserForm() {
     email: '',
     name: '',
     role: 'staff',
-    tenantId: currentTenantId || '',
+    tenantId: tenantIdParam || currentTenantId || '',
     status: 'active',
     temporaryPassword: '',
   });
@@ -36,8 +43,8 @@ export default function UserForm() {
   
   // Load existing user if editing
   const { data: existingUser, isLoading: isLoadingUser } = useQuery({
-    queryKey: ['admin', 'users', id],
-    queryFn: () => getUser(id),
+    queryKey: ['admin', 'users', id, tenantIdParam],
+    queryFn: () => getUser(id, tenantIdParam),
     enabled: isEditing,
   });
   
@@ -58,16 +65,16 @@ export default function UserForm() {
     mutationFn: createUser,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
-      navigate('/admin/users');
+      navigate(basePath);
     },
     onError: (err) => setError(err.message),
   });
   
   const updateMutation = useMutation({
-    mutationFn: (data) => updateUser(id, data),
+    mutationFn: (data) => updateUser(id, data, tenantIdParam || formData.tenantId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
-      navigate('/admin/users');
+      navigate(basePath);
     },
     onError: (err) => setError(err.message),
   });
@@ -228,6 +235,21 @@ export default function UserForm() {
                     : 'Acceso básico al sistema (boxes, citas, pacientes)'}
                 </small>
               </div>
+
+              {isEditing && (
+                <div className="admin-form-group">
+                  <label className="admin-form-label">Estado</label>
+                  <select
+                    name="status"
+                    value={formData.status}
+                    onChange={handleChange}
+                    className="admin-form-select"
+                  >
+                    <option value="active">Activo</option>
+                    <option value="inactive">Inactivo</option>
+                  </select>
+                </div>
+              )}
 
               {!isEditing && (
                 <div className="admin-form-group">

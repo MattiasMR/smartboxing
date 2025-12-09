@@ -2,10 +2,13 @@ import { GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { handler, parseBody } from '../../lib/http.js';
 import { doc } from '../../lib/db.js';
 import { AppointmentInput } from './schemas.js';
-import { getRequiredTenantId } from '../../lib/auth.js';
+import { getRequiredTenantId, extractUser } from '../../lib/auth.js';
+import { sendNotification } from '../../lib/notifications.js';
 
 export const main = handler(async (event) => {
   const tenantId = getRequiredTenantId(event);
+  const user = extractUser(event);
+  const userSub = user.sub;
   const body = parseBody(event);
   const appt = AppointmentInput.parse(body.appointment);
 
@@ -19,6 +22,15 @@ export const main = handler(async (event) => {
     Item: { tenantId, ...appt },
     ConditionExpression: 'attribute_not_exists(tenantId) AND attribute_not_exists(startAt)'
   }));
+
+  // Send notification
+  await sendNotification(
+    tenantId, 
+    userSub, 
+    'Nueva Cita Creada', 
+    `Se ha creado una nueva cita para el paciente ${appt.patientName} el ${new Date(appt.startAt).toLocaleString()}.`
+  );
+
   return { created: true, id: appt.id };
 });
 

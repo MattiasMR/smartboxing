@@ -4,15 +4,19 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { listUsers, deleteUser, listTenants } from '../../api/admin.js';
 import { useAuthContext } from '../../auth/AuthContext.js';
 import './AdminPages.css';
 
 export default function UsersList() {
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { isSuperAdmin } = useAuthContext();
+  
+  const isGlobalView = location.pathname.includes('users-global');
+  const basePath = isGlobalView ? '/admin/users-global' : '/admin/users';
   
   const [selectedTenant, setSelectedTenant] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -84,7 +88,7 @@ export default function UsersList() {
             Gestiona los usuarios de la organización
           </p>
         </div>
-        <Link to="/admin/users/new" className="admin-btn admin-btn-primary">
+        <Link to={`${basePath}/new`} className="admin-btn admin-btn-primary">
           + Crear Usuario
         </Link>
       </div>
@@ -154,7 +158,10 @@ export default function UsersList() {
                     <div className="admin-table-actions">
                       <button
                         className="admin-btn admin-btn-secondary admin-btn-sm"
-                        onClick={() => navigate(`/admin/users/${user.cognitoSub}/edit`)}
+                        onClick={() => {
+                          const tenantParam = user.tenantId ? `?tenantId=${user.tenantId}` : '';
+                          navigate(`${basePath}/${user.cognitoSub}/edit${tenantParam}`);
+                        }}
                       >
                         Editar
                       </button>
