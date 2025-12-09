@@ -244,7 +244,7 @@ export default function SettingsProfessionalNew() {
     } finally {
       setLoading(false);
     }
-  }, [isTenantAdminUser, hasTenant]);
+  }, [isTenantAdminUser, hasTenant, user?.tenantId, user?.tenantName]);
 
   useEffect(() => {
     // If super admin, default to user settings

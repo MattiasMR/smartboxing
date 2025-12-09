@@ -6,7 +6,6 @@ import { useVocabulary, formatPlural } from '../../hooks/useVocabulary.js';
 
 export default function BoxCard({ box, onDelete }) {
   const vocab = useVocabulary();
-  const resourceLabel = formatPlural(vocab.resource);
   const referenceLabel = vocab.reference || 'Referencia';
 
   const getStatusInfo = (estado) => {

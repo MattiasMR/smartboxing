@@ -8,7 +8,6 @@ import { getClientSettings } from '../api/settings.js';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { FaSave, FaTimes, FaSpinner } from 'react-icons/fa';
 import './Forms.css';
-import { nextSequentialId } from '../utils/idHelpers.js';
 import { useVocabulary, formatPlural } from '../hooks/useVocabulary.js';
 
 const statusOptions = ['scheduled', 'confirmed', 'completed', 'cancelled', 'no-show'];
@@ -47,22 +46,19 @@ const fromIsoToLocal = (iso) => {
 
 export default function AppointmentForm() {
   const vocab = useVocabulary();
-  const resourceLabel = formatPlural(vocab.resource);
   const reservationLabel = formatPlural(vocab.reservation);
-  const staffLabel = formatPlural(vocab.staff);
-  const customerLabel = formatPlural(vocab.customer);
 
   const nav = useNavigate();
   const { id } = useParams();
   const isEdit = !!id;
   const qc = useQueryClient();
 
-  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm({
+  const isEdit = !!id;
+  const qc = useQueryClient();
+
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({
     resolver: zodResolver(ApptSchema),
     defaultValues: {
-      id: '',
-      idBox: '',
-      idStaff: '',
       status: 'scheduled',
       startAt: '',
       endAt: ''

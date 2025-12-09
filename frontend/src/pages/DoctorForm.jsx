@@ -24,7 +24,6 @@ export default function DoctorForm() {
   const nav = useNavigate();
   const qc = useQueryClient();
   const vocab = useVocabulary();
-  const staffLabel = formatPlural(vocab.staff);
   const roleLabel = vocab.role || 'Cargo';
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({

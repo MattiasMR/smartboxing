@@ -197,6 +197,8 @@ provider:
     ALLOWED_ORIGINS: ${self:custom.allowedOrigins.${sls:stage}, '*'}
     # Observabilidad
     LOG_LEVEL: ${self:custom.logLevel.${sls:stage}, 'DEBUG'}
+    # AI Configuration
+    OPENAI_API_KEY: ${env:OPENAI_API_KEY}
     # Chaos Engineering - Deshabilitado por defecto
     CHAOS_ENABLED: 'false'
 

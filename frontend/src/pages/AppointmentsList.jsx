@@ -19,7 +19,6 @@ export default function AppointmentsList() {
   const [draftFrom, setDraftFrom] = useState('');
   const [draftTo, setDraftTo] = useState('');
   const vocab = useVocabulary();
-  const resourceLabel = formatPlural(vocab.resource);
   const reservationLabel = formatPlural(vocab.reservation);
   const staffLabel = formatPlural(vocab.staff);
   const referenceLabel = vocab.reference || 'Referencia';

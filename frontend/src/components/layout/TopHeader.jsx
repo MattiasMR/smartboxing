@@ -70,7 +70,7 @@ function TopHeader({ onMenuClick, isOpen }) {
   // Actualizar logo cuando cambie el tenant activo/usuario
   useEffect(() => {
     setLogoUrl(getStoredLogo());
-  }, [user]);
+  }, [user, getStoredLogo]);
 
   const formattedDate = now.toLocaleDateString('es-CL', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
