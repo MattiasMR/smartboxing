@@ -47,6 +47,21 @@ const sections = [
 export default function TermsPage() {
   return (
     <div className="terms-page">
+      <nav className="static-nav">
+        <div className="nav-container">
+          <Link to="/" className="nav-logo">
+            <div className="nav-logo-icon">📦</div>
+            <span>SmartBoxing</span>
+          </Link>
+          <div className="nav-links">
+            <Link to="/about">Sobre Nosotros</Link>
+            <Link to="/terms">Términos y Condiciones</Link>
+            <Link to="/login" className="btn-nav-secondary">Iniciar Sesión</Link>
+            <Link to="/register" className="btn-nav-primary">Comenzar Gratis</Link>
+          </div>
+        </div>
+      </nav>
+
       <header className="terms-hero">
         <div>
           <p className="terms-tag">Términos y Condiciones</p>
@@ -57,7 +72,6 @@ export default function TermsPage() {
         </div>
         <div className="terms-actions">
           <Link to="/" className="btn-terms-secondary">Volver al Home</Link>
-          <Link to="/register" className="btn-terms-primary">Crear cuenta</Link>
         </div>
       </header>
 

@@ -22,13 +22,103 @@
   min-height: 100vh;
   background: var(--terms-bg);
   color: var(--terms-text);
-  padding: 48px 20px 64px;
+  padding: 0 20px 64px;
   overflow-y: auto;
 }
 
+.static-nav {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  backdrop-filter: blur(14px);
+  background: rgba(255, 255, 255, 0.9);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="dark"] .static-nav {
+  background: rgba(5, 9, 20, 0.9);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.static-nav .nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+}
+
+.static-nav .nav-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--terms-text);
+  text-decoration: none;
+}
+
+.static-nav .nav-logo-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(120deg, var(--terms-accent), #0ea5e9);
+  display: grid;
+  place-items: center;
+  font-size: 1.35rem;
+  color: #fff;
+  box-shadow: 0 10px 30px rgba(37, 99, 235, 0.35);
+}
+
+.static-nav .nav-links {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.static-nav .nav-links a {
+  color: var(--terms-muted);
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+.static-nav .nav-links a:hover {
+  color: var(--terms-text);
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.static-nav .btn-nav-primary,
+.static-nav .btn-nav-secondary {
+  padding: 0.55rem 0.95rem;
+  border-radius: 10px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.static-nav .btn-nav-primary {
+  background: linear-gradient(135deg, var(--terms-accent), #0ea5e9);
+  color: #0b1221;
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.35);
+}
+
+.static-nav .btn-nav-secondary {
+  border: 1px solid var(--terms-border);
+  color: var(--terms-text);
+  background: transparent;
+}
+
+.static-nav .btn-nav-primary:hover,
+.static-nav .btn-nav-secondary:hover {
+  transform: translateY(-1px);
+  opacity: 0.95;
+}
 .terms-hero {
   max-width: 1100px;
-  margin: 0 auto 28px;
+  margin: 32px auto 28px;
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;

@@ -29,19 +29,10 @@ export default function LandingPage() {
               Iniciar Sesión
             </Link>
           )}
-          {user && (
-            <Link to="/dashboard" className="nav-mobile-login">
-              Dashboard
-            </Link>
-          )}
           <div className="nav-links">
-            <a href="#features">Características</a>
-            <a href="#pricing">Precios</a>
-            {user ? (
-              <Link to="/dashboard" className="btn-nav-primary">
-                Ir al Dashboard
-              </Link>
-            ) : (
+            <Link to="/about">Sobre Nosotros</Link>
+            <Link to="/terms">Términos y Condiciones</Link>
+            {!user && (
               <>
                 <Link to="/login" className="btn-nav-secondary">
                   Iniciar Sesión
@@ -61,10 +52,10 @@ export default function LandingPage() {
           <div className="hero-content">
             <div className="hero-badge" id="hero-tag">
               <span className="badge-icon">✨</span>
-              Gestión de Espacios Inteligente
+              Gestión de Recursos Agendables Inteligente
             </div>
             <h1 className="hero-title" id="hero-title">
-              Gestiona tus <span className="hero-highlight">Espacios Físicos</span>
+              Gestiona tus <span className="hero-highlight">Recursos Agendables</span>
               <br />
               de forma simple y eficiente
             </h1>
@@ -210,7 +201,7 @@ export default function LandingPage() {
                 <span className="price-period">/mes</span>
               </div>
               <ul className="pricing-features">
-                <li>✓ Hasta 5 espacios</li>
+                <li>✓ Hasta 5 recursos</li>
                 <li>✓ 50 reservas/mes</li>
                 <li>✓ 3 usuarios</li>
                 <li>✓ Soporte por email</li>
@@ -233,7 +224,7 @@ export default function LandingPage() {
                 <span className="price-period">/mes</span>
               </div>
               <ul className="pricing-features">
-                <li>✓ Espacios ilimitados</li>
+                <li>✓ Recursos ilimitados</li>
                 <li>✓ Reservas ilimitadas</li>
                 <li>✓ 10 usuarios</li>
                 <li>✓ Soporte prioritario</li>
@@ -294,7 +285,7 @@ export default function LandingPage() {
               <div className="footer-logo-icon">📦</div>
               <span>SmartBoxing</span>
             </div>
-            <p>La plataforma de gestión de espacios más simple y poderosa.</p>
+            <p>La plataforma de gestión de recursos agendables más simple y poderosa.</p>
           </div>
           <div className="footer-links">
             <div className="footer-column">
@@ -314,7 +305,6 @@ export default function LandingPage() {
               <Link to="/terms">Privacidad</Link>
               <Link to="/terms">Términos</Link>
               <Link to="/terms">Seguridad</Link>
-              <Link to="/terms">GDPR</Link>
             </div>
           </div>
         </div>
