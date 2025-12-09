@@ -21,11 +21,11 @@
 }
 
 .about-page {
-  min-height: 100vh;
+  min-height: 100dvh;
   overflow-y: auto;
   background: var(--about-bg);
   color: var(--about-text);
-  padding-bottom: 64px;
+  padding-bottom: calc(64px + var(--safe-bottom));
 }
 
 .static-nav {
@@ -117,6 +117,33 @@
 .static-nav .btn-nav-secondary:hover {
   transform: translateY(-1px);
   opacity: 0.95;
+}
+
+.static-nav .nav-mobile-actions {
+  display: none;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .static-nav .nav-container {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  .static-nav .nav-links {
+    display: none;
+  }
+  .static-nav .nav-mobile-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .static-nav .btn-nav-primary,
+  .static-nav .btn-nav-secondary {
+    padding: 0.45rem 0.9rem;
+    font-size: 0.95rem;
+  }
 }
 
 .about-hero {

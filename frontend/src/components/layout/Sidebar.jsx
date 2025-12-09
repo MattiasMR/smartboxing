@@ -200,7 +200,7 @@ function Sidebar({ isOpen, onClose }) {
         
         <div className="developer-info">
           <p className="developed-by">FM IT Solutions</p>
-          <p className="developers">Mattias Morales y Francisco Polo</p>
+          <p className="developers">Mattias Morales, Francisco Polo y Milan Kurte</p>
         </div>
       </aside>
     </>

@@ -31,7 +31,7 @@
 
 
 .landing-page {
-  min-height: 100vh;
+  min-height: 100dvh;
   background: var(--landing-bg);
   font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   color: var(--landing-text);
@@ -39,6 +39,7 @@
   display: flex;
   flex-direction: column;
   position: relative;
+  padding-bottom: calc(32px + var(--safe-bottom));
 }
 .landing-nav {
   position: sticky;
@@ -492,7 +493,7 @@
 .landing-footer {
   background: #020617;
   color: #cbd5f5;
-  padding: 3rem 1.5rem 2rem;
+  padding: 4rem 1.5rem calc(3rem + var(--safe-bottom));
 }
 
 .footer-container {
